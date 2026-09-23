@@ -15,6 +15,8 @@ import numpy as np
 PUSH_DV = 0.3          # m/s jump in base velocity within one tick = external push
 SLIP_SPEED = 0.15      # m/s horizontal speed of a foot that stays in contact
 PUSH_MEMORY_S = 1.5    # how long a push counts as "recent"
+SLIP_MEMORY_WINDOWS = 3  # slip is reported as the worst of this window and the previous 3 (~2 s): a slippery
+                         # floor doesn't become grippy because one half-second happened to go well
 STANCE_FORCE_N = 60.0  # normal force per contact point above which the foot is bearing weight
 MIN_AIR_S = 0.1        # s a foot must be airborne before its landing counts as a step (as in g1pipe.evaluate)
 
@@ -55,6 +57,7 @@ def contact_slip(m, d, feet) -> np.ndarray:
 
 class PPORobot:
     """Sensor access for g1pipe.evaluate.PolicyRunner (Playground G1 model)."""
+    name = "v1"
 
     def __init__(self, runner):
         self.r, self.dt = runner, runner.ctrl_dt
@@ -97,6 +100,7 @@ class PPORobot:
 
 class VendorRobot:
     """Sensor access for g1pipe.sim.G1Sim (Unitree 12-DoF model)."""
+    name = "vendor"
 
     def __init__(self, sim, dt: float = 0.02):
         self.s, self.dt = sim, dt
@@ -139,9 +143,18 @@ class VendorRobot:
         return float(self.s.d.qpos[2])
 
 
+def load_calibration(name: str) -> dict | None:
+    """This robot's normal-walking levels (jev_agent/calibration.json), or None to use absolute buckets."""
+    import json
+    from pathlib import Path
+    f = Path(__file__).with_name("calibration.json")
+    return json.loads(f.read_text()).get(name) if f.is_file() else None
+
+
 class Perception:
     def __init__(self, robot):
         self.r = robot
+        self.calib = load_calibration(getattr(robot, "name", ""))
         self.reset()
 
     def reset(self):
@@ -153,6 +166,7 @@ class Perception:
         self.last_push_t = -1e9
         self.t = 0.0
         self.slip_hist = []   # last few per-foot contact-slip readings
+        self.slip_windows = []  # max_slip of recent windows
 
     def _tilt(self):
         """Tilt angle of the torso from vertical, and gravity in the pelvis frame."""
@@ -208,7 +222,7 @@ class Perception:
             "lean_fwd": float(g[0]),
             "lean_left": float(g[1]),
             "max_gyro": w.max_gyro,
-            "max_slip": w.max_slip,
+            "max_slip": max([w.max_slip, *self.slip_windows]),
             "vx_err": w.vx_err_sum / n,
             "lat_speed": w.lat_speed_sum / n,
             "step_err": float(np.mean(np.abs(w.step_errs))) if w.step_errs else 0.0,
@@ -218,6 +232,7 @@ class Perception:
         }
 
     def end_window(self):
+        self.slip_windows = (self.slip_windows + [self.win.max_slip])[-SLIP_MEMORY_WINDOWS:]
         self.win = Window()
 
 
@@ -229,10 +244,24 @@ def _bucket(x, edges, names):
     return names[-1]
 
 
-def describe(s: dict) -> dict:
-    """Semantic description of a snapshot. This is what goes into Jev's state."""
-    tilt = _bucket(s["max_tilt_deg"], (6, 12, 20), ("upright", "slightly tilted", "clearly tilted", "severely tilted"))
-    if tilt != "upright":
+# Words for "how far from this robot's normal walking": ratio to its calibrated p90 level.
+RATIO_EDGES = (1.3, 2.0, 3.5)
+
+
+def describe(s: dict, calib: dict | None = None) -> dict:
+    """Semantic description of a snapshot. This is what goes into Jev's state.
+    With a calibration, each reading is judged against this robot's own normal walking (a lively
+    policy that always wobbles a bit is "calm" when it wobbles as usual); without, absolute buckets."""
+    def level(key, absolute_edges):
+        if calib and calib.get(key):
+            return _bucket(s[key] / calib[key], RATIO_EDGES, (0, 1, 2, 3))
+        return _bucket(s[key], absolute_edges, (0, 1, 2, 3))
+
+    t = level("max_tilt_deg", (6, 12, 20))
+    if s["max_tilt_deg"] > 20:                       # absolute: a big tilt is bad whatever is "normal"
+        t = 3
+    tilt = ("upright", "slightly tilted", "clearly tilted", "severely tilted")[t]
+    if t:
         dirs = []
         if abs(s["lean_fwd"]) > 0.08:
             dirs.append("forward" if s["lean_fwd"] > 0 else "backward")
@@ -241,12 +270,13 @@ def describe(s: dict) -> dict:
         tilt += (" " + " and ".join(dirs)) if dirs else ""
     return {
         "torso_posture": tilt,
-        "body_rotation": _bucket(s["max_gyro"], (1.0, 2.5, 4.5), ("calm", "some wobble", "strong wobble", "spinning or tumbling")),
-        "foot_grip": _bucket(s["max_slip"], (0.08, 0.15, 0.4), ("feet firmly planted", "tiny foot movement while planted",
-                                                              "feet slipping on the ground", "feet sliding badly")),
-        "speed_tracking": _bucket(s["vx_err"], (0.1, 0.25, 0.5), ("on target", "slightly off target", "well off target", "not following the command")),
-        "sideways_drift": _bucket(s["lat_speed"], (0.1, 0.25), ("none", "some", "strong")),
-        "step_placement": _bucket(s["step_err"], (0.04, 0.08, 0.15), ("accurate", "a little off", "inaccurate", "erratic")),
+        "body_rotation": ("calm", "some wobble", "strong wobble", "spinning or tumbling")[level("max_gyro", (1.0, 2.5, 4.5))],
+        "foot_grip": ("feet firmly planted", "tiny foot movement while planted", "feet slipping on the ground",
+                      "feet sliding badly")[level("max_slip", (0.08, 0.15, 0.4))],
+        "speed_tracking": ("on target", "slightly off target", "well off target",
+                           "not following the command")[level("vx_err", (0.1, 0.25, 0.5))],
+        "sideways_drift": ("none", "some", "strong", "strong")[level("lat_speed", (0.1, 0.25, 0.4))],
+        "step_placement": ("accurate", "a little off", "inaccurate", "erratic")[level("step_err", (0.04, 0.08, 0.15))],
         "recent_push": ("pushed within the last second" if s["since_push_s"] < 1.0
                         else "pushed a moment ago" if s["since_push_s"] < PUSH_MEMORY_S
                         else "no push"),

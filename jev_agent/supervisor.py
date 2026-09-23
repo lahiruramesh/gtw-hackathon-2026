@@ -47,6 +47,7 @@ class Supervisor:
         self.attempt: dict | None = None   # stairs attempt: {size, gait, was_on, left}
         self.stairs_intent: str | None = None   # Jev's latest confident stairs_action
         self.reflex: str | None = None          # reason, while a code reflex holds the gait
+        self.clean_windows = 0                  # consecutive decision windows with good grip, no push, no big wobble
         self._tick = 0
 
     def __call__(self, t: float) -> str:
@@ -77,7 +78,7 @@ class Supervisor:
     # ------------------------------------------------------------------------
     def _decide(self, t: float):
         snap = self.perception.snapshot()
-        desc = describe(snap)
+        desc = describe(snap, self.perception.calib)
         terr = self._track(self.terrain()) if self.terrain else None
         self._close_outcome(snap, fell=False)
         self.perception.end_window()
@@ -107,6 +108,9 @@ class Supervisor:
 
     def _apply(self, t: float, snap: dict, desc: dict, terr, ans: Answers):
         feats = terr[1] if terr else None
+        clean = (desc["foot_grip"] == "feet firmly planted" and desc["recent_push"] == "no push"
+                 and desc["body_rotation"] in ("calm", "some wobble") and desc["torso_posture"] == "upright")
+        self.clean_windows = self.clean_windows + 1 if clean else 0
         sa = ans.choices.get("stairs_action")
         if sa and sa["confidence"] >= Q.CONF_ACT:
             self.stairs_intent = sa["choice"]
@@ -163,7 +167,10 @@ class Supervisor:
         if want > cur:
             if ans.gait_conf < Q.CONF_UPSHIFT and not bonus[best] > 0:
                 return self.mode, "hold_low_confidence", bonus, risks
-            return Q.MODE_ORDER[cur + 1], "speed_up_one_level", bonus, risks
+            nxt = Q.MODE_ORDER[cur + 1]
+            if nxt == Q.MODE_ORDER[-1] and self.clean_windows < Q.TOP_GAIT_CLEAN_WINDOWS:
+                return self.mode, "hold_until_ground_proven", bonus, risks
+            return nxt, "speed_up_one_level", bonus, risks
         return self.mode, "keep", bonus, risks
 
     def _stairs(self, f: dict):

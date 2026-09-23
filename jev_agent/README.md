@@ -64,6 +64,20 @@ Scenarios: `nominal, slippery, pushes, payload, delay, storm`. Outputs go to
 `runs/jev_agent/<tag>/`: `episodes.jsonl` (fell, distance, tracking error, modes used),
 `decisions.jsonl` (every state, Jev answer, choice, reason, outcome) and `learner.json`.
 
+## Perception calibration and speed rules
+
+* Descriptions are relative to each robot's own normal walking. `python -m jev_agent.calibrate`
+  records the 90th-percentile of each reading over normal flat walking into `calibration.json`. A
+  reading under 1.3× that level counts as normal, 1.3–2× as mild, 2–3.5× as strong, and above 3.5× as
+  extreme. Without this, the lively v1 policy read as "strong wobble, erratic steps" on perfect ground,
+  and Jev never let it walk fast.
+* Slip is measured at weight-bearing contact points and has to last 60 ms, so heel-strike doesn't count.
+  It's also remembered for 2 s, because a slippery floor doesn't become grippy after one good half-second.
+* The fastest gait has to be earned: 1.5 s of clean footing (`TOP_GAIT_CLEAN_WINDOWS`) before stride.
+* Benchmark on v1, 18 episodes per agent (`results/bench/agent_vs_fixed.md`): the Jev agent had 0/12 falls
+  outside the delay and storm cases, covered 1.6× the distance of fixed cautious on hurry missions, and
+  had no slippery-floor falls, where fixed normal and stride fell 3/3.
+
 ## Stairs world
 
 ```bash
@@ -125,6 +139,7 @@ terrain, every frame is scored.
 | `brain.py` | `JevBrain` (TypeSafe SDK, pinned model, short retries) and `OfflineBrain` (rule stub for dry runs, not Jev) |
 | `supervisor.py` | Decision loop; plugs into `PolicyRunner.run(schedule=...)` with no change to `g1pipe` |
 | `learner.py` | Experience bandit, fall-risk logistic regression, and the stairs skill memory, persisted as JSON |
+| `calibrate.py`, `calibration.json` | Per-robot normal-walking levels used by the descriptions |
 | `run.py` | Scenario × mission episodes, baselines, logging, learning |
 | `live.py`, `live.html` | Real-time preview server (MJPEG stream + dashboard), `--world flat|stairs` |
 | `vision.py`, `vision_check.py` | Simulated head depth camera, elevation map, scoring against simulator truth |

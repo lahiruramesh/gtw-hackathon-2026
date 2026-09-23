@@ -60,7 +60,9 @@ def build_state(mission: str, description: dict, current_gait: str, terrain: str
 
 
 class JevBrain:
-    def __init__(self, model: str = Q.MODEL, timeout_s: float = 2.0, terrain: bool = False):
+    # Jev latency varies a lot over a day (0.3 s .. 2+ s observed), so the per-request limit leaves room;
+    # the live loop is asynchronous and the reflexes don't wait on it anyway.
+    def __init__(self, model: str = Q.MODEL, timeout_s: float = 4.0, terrain: bool = False):
         from typesafe_sdk import RetryPolicy, TypeSafeClient
 
         key = load_api_key()
@@ -133,19 +135,23 @@ class OfflineBrain:
 
 class FallbackBrain:
     """Jev first; after max_errors consecutive failures, answer from the offline stub and
-    probe Jev again every probe_every_s. Errors before the switch still reach the supervisor."""
+    probe Jev again every probe_every_s or every probe_every_n questions, whichever comes first
+    (fast offline simulation can run many decisions per wall-clock second). Errors before the switch
+    still reach the supervisor."""
 
-    def __init__(self, primary, backup, max_errors: int = 3, probe_every_s: float = 15.0):
+    def __init__(self, primary, backup, max_errors: int = 3, probe_every_s: float = 15.0, probe_every_n: int = 20):
         self.primary, self.backup = primary, backup
-        self.max_errors, self.probe_every_s = max_errors, probe_every_s
-        self.errors, self.last_error, self.next_probe = 0, "", 0.0
+        self.max_errors, self.probe_every_s, self.probe_every_n = max_errors, probe_every_s, probe_every_n
+        self.errors, self.last_error, self.next_probe, self.since_probe = 0, "", 0.0, 0
 
     @property
     def offline(self) -> bool:
         return self.errors >= self.max_errors
 
     def ask(self, state: dict) -> Answers:
-        if not self.offline or time.monotonic() >= self.next_probe:
+        self.since_probe += 1
+        if not self.offline or time.monotonic() >= self.next_probe or self.since_probe >= self.probe_every_n:
+            self.since_probe = 0
             try:
                 ans = self.primary.ask(state)
                 self.errors = 0
@@ -175,7 +181,8 @@ def make_brain(kind: str, terrain: bool = False, require_jev: bool = False):
         if require_jev:
             raise
         print(f"Jev unavailable ({e}) -> OFFLINE MODE", flush=True)
-        fb = FallbackBrain(None, OfflineBrain(terrain=terrain), max_errors=0, probe_every_s=float("inf"))
+        fb = FallbackBrain(None, OfflineBrain(terrain=terrain), max_errors=0, probe_every_s=float("inf"),
+                           probe_every_n=10**9)
         fb.last_error = str(e)
         return fb
     return FallbackBrain(jev, OfflineBrain(terrain=terrain))

@@ -63,7 +63,8 @@ def main():
     missions = [a.mission] if a.mission else MISSIONS
     with open(out / "episodes.jsonl", "a") as ep_f, open(out / "decisions.jsonl", "a") as dec_f:
         for ep in range(a.episodes):
-            scen, mission = scen_names[ep % len(scen_names)], missions[ep % len(missions)]
+            # every scenario meets every mission (episode i: scenario i % S, mission (i // S) % M)
+            scen, mission = scen_names[ep % len(scen_names)], missions[(ep // len(scen_names)) % len(missions)]
             renderer = None
             if a.video and ep == a.episodes - 1:
                 import mujoco
@@ -80,7 +81,8 @@ def main():
             dist = sum(v * runner.ctrl_dt for v in log["vx"])
             rec = {"episode": ep, "scenario": scen, "mission": mission, "agent": tag,
                    "fell": summary["fell"], "fall_time": summary["fall_time"],
-                   "distance_m": round(dist, 2), "vx_abs_err": summary["vx_abs_err"],
+                   "distance_m": round(dist, 2),
+                   "vx_abs_err": None if summary["vx_abs_err"] != summary["vx_abs_err"] else summary["vx_abs_err"],
                    "wall_s": round(wall, 1)}
             if sup:
                 decs = sup.finish(summary["fall_time"])

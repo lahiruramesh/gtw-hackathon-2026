@@ -25,6 +25,8 @@ DECIDE_EVERY_S = 0.5     # supervisor rate (2 Hz); the PPO policy runs at 50 Hz 
 # Confidence gating (see docs.typesafe.ai/confidence)
 CONF_ACT = 0.35          # below this, don't change mode unless the change is to a safer one
 CONF_UPSHIFT = 0.60      # speeding up needs a confident answer, and only one mode at a time
+TOP_GAIT_CLEAN_WINDOWS = 3  # the fastest gait also needs this many clean decision windows in a row (1.5 s):
+                            # on unknown ground you only find out it's slippery by slipping
 
 # Hard safety filter, enforced in code whatever Jev says
 SAFETY_TILT_DEG = 25.0   # torso tilt that forces "stop"

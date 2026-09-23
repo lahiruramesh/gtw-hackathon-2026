@@ -39,37 +39,45 @@ it learns that 8 cm stairs are too tall for its walking policy and stops in fron
 | 0:45-1:05 | Scenario **8 cm steps**, Mission A. Point at the "Learned stairs skill" panel. | "Now the mission says climb, but the robot stops anyway, and the reason reads `learned_too_hard`. Nobody hard-coded that 8 cm is too tall. In earlier training episodes (run with the offline stub brain) it fell on mid-height steps with every gait: cautious 0 of 3 crossed, normal 0 of 3, stride 0 of 2. Once every gait has failed at least twice, the skill memory says stop." (`runs/jev_agent/stairs_jev/learner.json`, `stairs.mid_steps`; the live page's learner `runs/jev_agent/live_stairs/learner.json` has the same mid_steps counts, but more low_steps and tall_steps entries, so the panel will not match table 5B exactly.) |
 | 1:05-1:25 | "Head depth camera vs. simulator truth" panel | "On this page, step heights come from a simulated head depth camera turned into an elevation map, and we scored it against the simulator's true terrain. On 8 cm stairs the mean height error along the walking line is about 0.6 cm. The camera is for the stair detector. The walking policy itself is blind, and Jev never sees the image, only words like 'very low steps'." (`results/vision/camera_check_8cm.json`, 30 frames) |
 | 1:25-1:45 | "What Jev sees" and "Jev's answer" panels | "This is the actual request: plain text, words like 'feet firmly planted', a terrain sentence, and the mission. No images. The answer is typed: a gait Choice with probabilities, a stability Score, and yes/no Nouls, each with a confidence. Jev makes the judgment call. Code owns the arithmetic and the safety limits, and can override Jev." |
-| 1:45-2:00 | `results/bench/agent_vs_fixed.md` | "An honest result. Over 12 episodes (nominal, slippery, pushes, payload, delay, storm) the Jev agent tied the safest fixed gait on falls, 3/12, and fell half as often as fixed-normal, which fell 6/12. It didn't beat the best fixed gait, and it picked cautious almost every time. One reason: a perception bug made it think its feet were slipping on normal ground. That bug is fixed, but in a short check it still walked cautiously on a hurry mission, so more calibration comes before the rerun." |
+| 1:45-2:00 | `results/bench/agent_vs_fixed.md` | "Does it help? 18 episodes per agent on the trained v1 policy: nominal, slippery, pushes, payload, delay, storm, each with a 'hurry', a 'fragile' and a 'no rush' mission. Outside the delay and storm cases, which knock over every agent, the Jev agent never fell, 0 of 12. On hurry missions it covered 1.6 times the distance of the safest fixed gait, 4.33 m vs 2.70 m. Fixed normal and stride fell on every slippery floor; Jev didn't. The safest fixed gait still has one fewer fall overall, 5 vs 6." |
 
 ## 4. Q&A prep: honest limits
 
 - **How tall a step can it climb?** About 4 cm. Unitree's blind, flat-ground policy crosses 4 cm steps with fast long strides and falls on 6 cm and higher with every gait we swept (`jev_agent/README.md`, "Stairs world"). In the learning run (offline stub brain, 17 episodes) it fell in all 8 attempts at 8 cm, then stopped before the stairs in the last 2 episodes. It also fell once at 4 cm with the normal gait and crossed 6 of 7 times at 4 cm (`runs/jev_agent/stairs_offline_learn/episodes.jsonl`). The agent decides whether to climb. The walking policy sets what is physically possible.
 - **A stairs-trained policy?** A PPO stairs environment exists (`g1pipe/stairs_env.py`, `g1pipe/stairs_eval.py`). The pipeline passes a smoke test, but the policy is still training, and an untrained smoke policy falls in every cell. We have no stairs-PPO results to show.
 - **Jev latency?** On the 147 real calls in `runs/jev_agent/stairs_jev/decisions.jsonl`, the median is 389 ms and p95 is 2065 ms (max 5789 ms). In the benchmark (`wf_bench_jev`, 234 calls), the median is 370 ms and p95 is 784 ms. One run that ran alongside 8 others (`wf_stairs_9`, concurrency per checker log) had a median of 2003 ms and p95 of 3896 ms, so latency under load is real. That is why the stairs reflex and the tilt filter run in code at 10 Hz and every tick, and why Jev is called asynchronously in the live preview.
-- **What happens without network?** Each request times out at 2 s (`jev_agent/brain.py`). After 3 consecutive errors the agent switches to the offline stub and shows it in red. Unknown stairs intent now defaults to stopping. In the offline check with the "wait" mission, the robot stopped before the stairs with no fall and recorded 2 brain errors (`runs/jev_agent/wf_netoff_stairs/episodes.jsonl`). Before the fix, the same setup walked onto the stairs and fell (checker log).
+- **What happens without network?** Each request times out at 4 s (`jev_agent/brain.py`; Jev latency varied from about 0.4 s to 2 s over the day, so 2 s caused false timeouts). After 3 consecutive errors the agent switches to the offline stub, shows it on the dashboard, and retries Jev every 15 s or every 20 decisions. Unknown stairs intent defaults to stopping. In the offline check with the "wait" mission, the robot stopped before the stairs with no fall (`runs/jev_agent/wf_netoff_stairs/episodes.jsonl`). Before the fix, the same setup walked onto the stairs and fell (checker log).
 - **What is Jev, what is code, what is learned?**
   - *Jev:* judgment from words. It picks the gait (Choice), rates stability (Score), answers the slipping, disturbed, mission-speed and mission-care questions (Nouls), and gives the stairs intent (climb, stop_before, no_stairs).
   - *Code:* perception buckets, the safety filter (tilt > 25° or stability < 0.75 means stop), confidence gating (slowing down is always allowed; speeding up is one level at a time and needs gait confidence ≥ 0.6 or a positive learned bonus), the stairs reflex, and the offline fallback.
   - *Learned:* a per-situation gait bandit, a logistic fall-risk model, and the stairs skill memory (crossed and failed counts per step size and gait), all stored in `learner.json`.
   - Jev's weights are never fine-tuned.
-- **Why not beat the fixed gait?** The benchmark ran before the perception fix. On nominal ground, `foot_grip` read "sliding badly" or "slipping" in all 46 windows (max_slip 0.22-1.72 m/s), so Jev's slipping answer averaged 0.96 and it chose cautious every time. After the fix, nominal reads "firmly planted" or "tiny foot movement" in 15 of 15 windows (max_slip 0.014-0.092 m/s), and slipping averages 0.12 (`runs/jev_agent/wf_bench_jev/decisions.jsonl` vs `runs/jev_agent/wf_flat_jev_fix/decisions.jsonl`). Even so, on a nominal "hurry" mission the agent still walked cautious in 15 of 15 decisions (Jev's top gait was cautious in all 14 answered calls; 1 call timed out) (`runs/jev_agent/wf_flat_jev_speed/decisions.jsonl`). The remaining wobble and step-placement thresholds still need calibration.
-- **Sample size?** 12 episodes per agent, so a one-fall difference is noise. Scenario and mission are also confounded: each scenario only ever got one mission.
+- **Why does fixed cautious still have fewer falls?** One extra fall, in storm (slippery + pushes + payload), where every agent fell in at least 2 of 3 episodes. Cautious also never goes fast: on hurry missions it covers 38% less distance than the Jev agent (2.70 vs 4.33 m); on fragile and no-rush missions they are about equal (2.67 vs 2.48 m, 2.75 vs 2.75 m). Outside delay and storm, the Jev agent had 0/12 falls (`results/bench/agent_vs_fixed.md`).
+- **What changed since the first benchmark?** The first run (12 episodes) had Jev tie cautious at 3/12 and choose cautious 216 of 234 times. A slip detector counted normal heel-strike as slipping, so Jev was told "feet sliding badly" constantly. Fixes: slip is now measured at loaded contact points and must last 60 ms, descriptions are calibrated to each robot's normal walking (`jev_agent/calibration.json`), slip is remembered for 2 s, and the fastest gait needs 1.5 s of clean footing.
+- **Sample size?** 18 episodes per agent, 3 per scenario, so a one-fall difference is noise. Every scenario now meets every mission (the first benchmark confounded them).
 
 ## 5. Results (one page)
 
-### A. Agent vs fixed gaits, flat world, v1 PPO policy, 12 episodes x 12 s each (`results/bench/agent_vs_fixed.md`, `.json`)
+### A. Agent vs fixed gaits, flat world, v1 PPO policy, 18 episodes x 12 s each (`results/bench/agent_vs_fixed.md`, `.json`)
 
-These runs came before the perception fix.
+| agent | falls (18) | falls excl. delay (15) | mean distance | hurry (6) | fragile (6) | no rush (6) | gait decisions |
+|---|---|---|---|---|---|---|---|
+| fixed cautious | 5/18 | 2/15 | 2.71 m | 1/6 falls, 2.70 m | 2/6 falls, 2.67 m | 2/6 falls, 2.75 m | - |
+| fixed normal | 9/18 | 6/15 | 3.43 m | 3/6 falls, 3.38 m | 3/6 falls, 3.29 m | 3/6 falls, 3.61 m | - |
+| fixed stride | 8/18 | 5/15 | 6.13 m | 2/6 falls, 6.40 m | 3/6 falls, 6.18 m | 3/6 falls, 5.82 m | - |
+| offline-brain agent | 7/18 | 4/15 | 2.79 m | 2/6 falls, 2.34 m | 2/6 falls, 2.56 m | 3/6 falls, 3.46 m | cautious 221, normal 62, stop 30 |
+| Jev agent | 6/18 | 3/15 | 3.19 m | 2/6 falls, 4.33 m | 2/6 falls, 2.48 m | 2/6 falls, 2.75 m | cautious 252, stride 35, normal 28, stop 12 |
 
-| agent | falls | mean distance (m) | mean vx abs err (m/s) | Jev latency, mean of per-episode means (ms) | brain errors | modes |
-|---|---|---|---|---|---|---|
-| fixed cautious | 3/12 | 2.721 | 0.108 | - | - | - |
-| fixed normal | 6/12 | 3.495 | 0.274 | - | - | - |
-| fixed stride | 5/12 | 6.112 | 0.430 | - | - | - |
-| **Jev agent** | **3/12** | 2.615 | **0.102** | 448.7 | 0 | cautious 216, stop 18 |
-| offline stub | 4/12 | 2.543 | 0.106 | - | 0 | cautious 206, stop 21 |
+| scenario | fixed cautious | fixed normal | fixed stride | offline-brain agent | Jev agent |
+|---|---|---|---|---|---|
+| nominal | 0/3, 3.3 m | 0/3, 5.5 m | 0/3, 9.5 m | 0/3, 3.9 m | 0/3, 4.2 m |
+| slippery | 0/3, 3.6 m | 3/3, 1.3 m | 3/3, 1.4 m | 0/3, 3.8 m | 0/3, 3.9 m |
+| pushes | 0/3, 3.1 m | 0/3, 5.5 m | 0/3, 9.0 m | 1/3, 3.1 m | 0/3, 3.5 m |
+| payload | 0/3, 3.1 m | 0/3, 5.7 m | 0/3, 9.0 m | 0/3, 3.9 m | 0/3, 4.6 m |
+| delay | 3/3, 0.8 m | 3/3, 0.6 m | 3/3, 1.4 m | 3/3, 0.6 m | 3/3, 0.7 m |
+| storm | 2/3, 2.4 m | 3/3, 2.0 m | 2/3, 6.5 m | 3/3, 1.4 m | 3/3, 2.1 m |
 
-Fixed normal and fixed stride fell in 2 of 2 slippery episodes each. The Jev agent and fixed cautious fell in 0 of 2. Every agent fell in 2 of 2 delay episodes. (Per-call mean Jev latency from `wf_bench_jev/decisions.jsonl` is 453.9 ms.)
+Jev agent: 327 decisions answered by jev-1.13.0, 2 API errors (fell back to cautious for that decision), latency median 394 ms, p95 585 ms. Reasons: {'keep': 214, 'hold_low_confidence': 56, 'speed_up_one_level': 24, 'hold_until_ground_proven': 14, 'slow_down': 12, 'risk_veto': 4}
 
 ### B. Stairs world, Unitree policy (`runs/jev_agent/<tag>/episodes.jsonl`)
 

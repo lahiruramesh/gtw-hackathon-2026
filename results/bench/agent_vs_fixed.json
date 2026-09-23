@@ -1,1104 +1,1368 @@
 {
- "agents": {
-  "fixed cautious": {
-   "tag": "wf_bench_base_cautious",
-   "n": 12,
-   "falls": 3,
-   "mean_distance_m": 2.721,
-   "mean_vx_abs_err": 0.108,
-   "episodes": [
-    {
-     "episode": 0,
-     "scenario": "nominal",
-     "mission": "Walk to the charging dock at the end of the hall. No rush.",
-     "agent": "wf_bench_base_cautious",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 3.26,
-     "vx_abs_err": 0.07539047051638875,
-     "wall_s": 2.2
-    },
-    {
-     "episode": 1,
-     "scenario": "slippery",
-     "mission": "Hurry to the door, a person is waiting.",
-     "agent": "wf_bench_base_cautious",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 3.56,
-     "vx_abs_err": 0.07383218270793065,
-     "wall_s": 1.8
-    },
-    {
-     "episode": 2,
-     "scenario": "pushes",
-     "mission": "Carry a fragile box across the room carefully.",
-     "agent": "wf_bench_base_cautious",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 3.23,
-     "vx_abs_err": 0.12494956136153229,
-     "wall_s": 0.9
-    },
-    {
-     "episode": 3,
-     "scenario": "payload",
-     "mission": "Walk to the charging dock at the end of the hall. No rush.",
-     "agent": "wf_bench_base_cautious",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 3.11,
-     "vx_abs_err": 0.07711662052589474,
-     "wall_s": 0.9
-    },
-    {
-     "episode": 4,
-     "scenario": "delay",
-     "mission": "Hurry to the door, a person is waiting.",
-     "agent": "wf_bench_base_cautious",
-     "fell": true,
-     "fall_time": 1.76,
-     "distance_m": 0.75,
-     "vx_abs_err": NaN,
-     "wall_s": 0.1
-    },
-    {
-     "episode": 5,
-     "scenario": "storm",
-     "mission": "Carry a fragile box across the room carefully.",
-     "agent": "wf_bench_base_cautious",
-     "fell": true,
-     "fall_time": 10.94,
-     "distance_m": 2.56,
-     "vx_abs_err": 0.14292923504260618,
-     "wall_s": 0.7
-    },
-    {
-     "episode": 6,
-     "scenario": "nominal",
-     "mission": "Walk to the charging dock at the end of the hall. No rush.",
-     "agent": "wf_bench_base_cautious",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 3.26,
-     "vx_abs_err": 0.07539047051638875,
-     "wall_s": 0.8
-    },
-    {
-     "episode": 7,
-     "scenario": "slippery",
-     "mission": "Hurry to the door, a person is waiting.",
-     "agent": "wf_bench_base_cautious",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 3.56,
-     "vx_abs_err": 0.07383218270793065,
-     "wall_s": 0.5
-    },
-    {
-     "episode": 8,
-     "scenario": "pushes",
-     "mission": "Carry a fragile box across the room carefully.",
-     "agent": "wf_bench_base_cautious",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 2.95,
-     "vx_abs_err": 0.16892047556936401,
-     "wall_s": 0.4
-    },
-    {
-     "episode": 9,
-     "scenario": "payload",
-     "mission": "Walk to the charging dock at the end of the hall. No rush.",
-     "agent": "wf_bench_base_cautious",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 3.11,
-     "vx_abs_err": 0.07711662052589474,
-     "wall_s": 0.5
-    },
-    {
-     "episode": 10,
-     "scenario": "delay",
-     "mission": "Hurry to the door, a person is waiting.",
-     "agent": "wf_bench_base_cautious",
-     "fell": true,
-     "fall_time": 1.76,
-     "distance_m": 0.75,
-     "vx_abs_err": NaN,
-     "wall_s": 0.1
-    },
-    {
-     "episode": 11,
-     "scenario": "storm",
-     "mission": "Carry a fragile box across the room carefully.",
-     "agent": "wf_bench_base_cautious",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 2.55,
-     "vx_abs_err": 0.18786462619087235,
-     "wall_s": 0.5
-    }
-   ]
+ "fixed_cautious": [
+  {
+   "episode": 0,
+   "scenario": "nominal",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_base_cautious",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.26,
+   "vx_abs_err": 0.07539047051638875,
+   "wall_s": 0.5
   },
-  "fixed normal": {
-   "tag": "wf_bench_base_normal",
-   "n": 12,
-   "falls": 6,
-   "mean_distance_m": 3.495,
-   "mean_vx_abs_err": 0.274,
-   "episodes": [
-    {
-     "episode": 0,
-     "scenario": "nominal",
-     "mission": "Walk to the charging dock at the end of the hall. No rush.",
-     "agent": "wf_bench_base_normal",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 5.48,
-     "vx_abs_err": 0.1850133436155054,
-     "wall_s": 2.0
-    },
-    {
-     "episode": 1,
-     "scenario": "slippery",
-     "mission": "Hurry to the door, a person is waiting.",
-     "agent": "wf_bench_base_normal",
-     "fell": true,
-     "fall_time": 3.62,
-     "distance_m": 1.28,
-     "vx_abs_err": 0.410157870944343,
-     "wall_s": 0.3
-    },
-    {
-     "episode": 2,
-     "scenario": "pushes",
-     "mission": "Carry a fragile box across the room carefully.",
-     "agent": "wf_bench_base_normal",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 5.79,
-     "vx_abs_err": 0.17889202682853705,
-     "wall_s": 1.6
-    },
-    {
-     "episode": 3,
-     "scenario": "payload",
-     "mission": "Walk to the charging dock at the end of the hall. No rush.",
-     "agent": "wf_bench_base_normal",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 5.65,
-     "vx_abs_err": 0.1302403234520277,
-     "wall_s": 0.9
-    },
-    {
-     "episode": 4,
-     "scenario": "delay",
-     "mission": "Hurry to the door, a person is waiting.",
-     "agent": "wf_bench_base_normal",
-     "fell": true,
-     "fall_time": 2.24,
-     "distance_m": 0.56,
-     "vx_abs_err": 0.41009043803633916,
-     "wall_s": 0.1
-    },
-    {
-     "episode": 5,
-     "scenario": "storm",
-     "mission": "Carry a fragile box across the room carefully.",
-     "agent": "wf_bench_base_normal",
-     "fell": true,
-     "fall_time": 4.74,
-     "distance_m": 2.88,
-     "vx_abs_err": 0.40462189826226225,
-     "wall_s": 0.4
-    },
-    {
-     "episode": 6,
-     "scenario": "nominal",
-     "mission": "Walk to the charging dock at the end of the hall. No rush.",
-     "agent": "wf_bench_base_normal",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 5.48,
-     "vx_abs_err": 0.1850133436155054,
-     "wall_s": 0.6
-    },
-    {
-     "episode": 7,
-     "scenario": "slippery",
-     "mission": "Hurry to the door, a person is waiting.",
-     "agent": "wf_bench_base_normal",
-     "fell": true,
-     "fall_time": 3.62,
-     "distance_m": 1.28,
-     "vx_abs_err": 0.410157870944343,
-     "wall_s": 0.2
-    },
-    {
-     "episode": 8,
-     "scenario": "pushes",
-     "mission": "Carry a fragile box across the room carefully.",
-     "agent": "wf_bench_base_normal",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 5.71,
-     "vx_abs_err": 0.21362654770840941,
-     "wall_s": 0.8
-    },
-    {
-     "episode": 9,
-     "scenario": "payload",
-     "mission": "Walk to the charging dock at the end of the hall. No rush.",
-     "agent": "wf_bench_base_normal",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 5.65,
-     "vx_abs_err": 0.1302403234520277,
-     "wall_s": 0.4
-    },
-    {
-     "episode": 10,
-     "scenario": "delay",
-     "mission": "Hurry to the door, a person is waiting.",
-     "agent": "wf_bench_base_normal",
-     "fell": true,
-     "fall_time": 2.24,
-     "distance_m": 0.56,
-     "vx_abs_err": 0.41009043803633916,
-     "wall_s": 0.1
-    },
-    {
-     "episode": 11,
-     "scenario": "storm",
-     "mission": "Carry a fragile box across the room carefully.",
-     "agent": "wf_bench_base_normal",
-     "fell": true,
-     "fall_time": 3.86,
-     "distance_m": 1.62,
-     "vx_abs_err": 0.2190707436933841,
-     "wall_s": 0.1
-    }
-   ]
+  {
+   "episode": 1,
+   "scenario": "slippery",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_base_cautious",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.56,
+   "vx_abs_err": 0.07383218270793065,
+   "wall_s": 0.3
   },
-  "fixed stride": {
-   "tag": "wf_bench_base_stride",
-   "n": 12,
-   "falls": 5,
-   "mean_distance_m": 6.112,
-   "mean_vx_abs_err": 0.43,
-   "episodes": [
-    {
-     "episode": 0,
-     "scenario": "nominal",
-     "mission": "Walk to the charging dock at the end of the hall. No rush.",
-     "agent": "wf_bench_base_stride",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 9.48,
-     "vx_abs_err": 0.08536174320811839,
-     "wall_s": 1.3
-    },
-    {
-     "episode": 1,
-     "scenario": "slippery",
-     "mission": "Hurry to the door, a person is waiting.",
-     "agent": "wf_bench_base_stride",
-     "fell": true,
-     "fall_time": 2.06,
-     "distance_m": 1.36,
-     "vx_abs_err": 1.0611313031281313,
-     "wall_s": 0.3
-    },
-    {
-     "episode": 2,
-     "scenario": "pushes",
-     "mission": "Carry a fragile box across the room carefully.",
-     "agent": "wf_bench_base_stride",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 9.11,
-     "vx_abs_err": 0.12450661667928696,
-     "wall_s": 1.5
-    },
-    {
-     "episode": 3,
-     "scenario": "payload",
-     "mission": "Walk to the charging dock at the end of the hall. No rush.",
-     "agent": "wf_bench_base_stride",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 9.01,
-     "vx_abs_err": 0.12183553633781093,
-     "wall_s": 0.8
-    },
-    {
-     "episode": 4,
-     "scenario": "delay",
-     "mission": "Hurry to the door, a person is waiting.",
-     "agent": "wf_bench_base_stride",
-     "fell": true,
-     "fall_time": 2.44,
-     "distance_m": 1.44,
-     "vx_abs_err": 0.9159676415557468,
-     "wall_s": 0.2
-    },
-    {
-     "episode": 5,
-     "scenario": "storm",
-     "mission": "Carry a fragile box across the room carefully.",
-     "agent": "wf_bench_base_stride",
-     "fell": true,
-     "fall_time": 7.0600000000000005,
-     "distance_m": 4.54,
-     "vx_abs_err": 0.27097671203077534,
-     "wall_s": 0.4
-    },
-    {
-     "episode": 6,
-     "scenario": "nominal",
-     "mission": "Walk to the charging dock at the end of the hall. No rush.",
-     "agent": "wf_bench_base_stride",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 9.48,
-     "vx_abs_err": 0.08536174320811839,
-     "wall_s": 0.7
-    },
-    {
-     "episode": 7,
-     "scenario": "slippery",
-     "mission": "Hurry to the door, a person is waiting.",
-     "agent": "wf_bench_base_stride",
-     "fell": true,
-     "fall_time": 2.06,
-     "distance_m": 1.36,
-     "vx_abs_err": 1.0611313031281313,
-     "wall_s": 0.2
-    },
-    {
-     "episode": 8,
-     "scenario": "pushes",
-     "mission": "Carry a fragile box across the room carefully.",
-     "agent": "wf_bench_base_stride",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 8.98,
-     "vx_abs_err": 0.15440458246538755,
-     "wall_s": 0.7
-    },
-    {
-     "episode": 9,
-     "scenario": "payload",
-     "mission": "Walk to the charging dock at the end of the hall. No rush.",
-     "agent": "wf_bench_base_stride",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 9.01,
-     "vx_abs_err": 0.12183553633781093,
-     "wall_s": 0.4
-    },
-    {
-     "episode": 10,
-     "scenario": "delay",
-     "mission": "Hurry to the door, a person is waiting.",
-     "agent": "wf_bench_base_stride",
-     "fell": true,
-     "fall_time": 2.44,
-     "distance_m": 1.44,
-     "vx_abs_err": 0.9159676415557468,
-     "wall_s": 0.1
-    },
-    {
-     "episode": 11,
-     "scenario": "storm",
-     "mission": "Carry a fragile box across the room carefully.",
-     "agent": "wf_bench_base_stride",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 8.13,
-     "vx_abs_err": 0.2357233680170932,
-     "wall_s": 0.4
-    }
-   ]
+  {
+   "episode": 2,
+   "scenario": "pushes",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_base_cautious",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.23,
+   "vx_abs_err": 0.12494956136153229,
+   "wall_s": 0.3
   },
-  "Jev agent": {
-   "tag": "wf_bench_jev",
-   "n": 12,
-   "falls": 3,
-   "mean_distance_m": 2.615,
-   "mean_vx_abs_err": 0.102,
+  {
+   "episode": 3,
+   "scenario": "payload",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_base_cautious",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.11,
+   "vx_abs_err": 0.07711662052589474,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 4,
+   "scenario": "delay",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_base_cautious",
+   "fell": true,
+   "fall_time": 1.76,
+   "distance_m": 0.75,
+   "vx_abs_err": null,
+   "wall_s": 0.0
+  },
+  {
+   "episode": 5,
+   "scenario": "storm",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_base_cautious",
+   "fell": true,
+   "fall_time": 10.94,
+   "distance_m": 2.56,
+   "vx_abs_err": 0.14292923504260618,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 6,
+   "scenario": "nominal",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_base_cautious",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.26,
+   "vx_abs_err": 0.07539047051638875,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 7,
+   "scenario": "slippery",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_base_cautious",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.56,
+   "vx_abs_err": 0.07383218270793065,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 8,
+   "scenario": "pushes",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_base_cautious",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 2.95,
+   "vx_abs_err": 0.16892047556936401,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 9,
+   "scenario": "payload",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_base_cautious",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.11,
+   "vx_abs_err": 0.07711662052589474,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 10,
+   "scenario": "delay",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_base_cautious",
+   "fell": true,
+   "fall_time": 1.76,
+   "distance_m": 0.75,
+   "vx_abs_err": null,
+   "wall_s": 0.0
+  },
+  {
+   "episode": 11,
+   "scenario": "storm",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_base_cautious",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 2.55,
+   "vx_abs_err": 0.18786462619087235,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 12,
+   "scenario": "nominal",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_base_cautious",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.26,
+   "vx_abs_err": 0.07539047051638875,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 13,
+   "scenario": "slippery",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_base_cautious",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.56,
+   "vx_abs_err": 0.07383218270793065,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 14,
+   "scenario": "pushes",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_base_cautious",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.2,
+   "vx_abs_err": 0.14873611104150208,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 15,
+   "scenario": "payload",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_base_cautious",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.11,
+   "vx_abs_err": 0.07711662052589474,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 16,
+   "scenario": "delay",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_base_cautious",
+   "fell": true,
+   "fall_time": 1.76,
+   "distance_m": 0.75,
+   "vx_abs_err": null,
+   "wall_s": 0.0
+  },
+  {
+   "episode": 17,
+   "scenario": "storm",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_base_cautious",
+   "fell": true,
+   "fall_time": 7.66,
+   "distance_m": 2.16,
+   "vx_abs_err": 0.1705446460812341,
+   "wall_s": 0.2
+  }
+ ],
+ "fixed_normal": [
+  {
+   "episode": 0,
+   "scenario": "nominal",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_base_normal",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 5.48,
+   "vx_abs_err": 0.1850133436155054,
+   "wall_s": 0.5
+  },
+  {
+   "episode": 1,
+   "scenario": "slippery",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_base_normal",
+   "fell": true,
+   "fall_time": 3.62,
+   "distance_m": 1.28,
+   "vx_abs_err": 0.410157870944343,
+   "wall_s": 0.1
+  },
+  {
+   "episode": 2,
+   "scenario": "pushes",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_base_normal",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 5.79,
+   "vx_abs_err": 0.17889202682853705,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 3,
+   "scenario": "payload",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_base_normal",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 5.65,
+   "vx_abs_err": 0.1302403234520277,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 4,
+   "scenario": "delay",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_base_normal",
+   "fell": true,
+   "fall_time": 2.24,
+   "distance_m": 0.56,
+   "vx_abs_err": 0.41009043803633916,
+   "wall_s": 0.1
+  },
+  {
+   "episode": 5,
+   "scenario": "storm",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_base_normal",
+   "fell": true,
+   "fall_time": 4.74,
+   "distance_m": 2.88,
+   "vx_abs_err": 0.40462189826226225,
+   "wall_s": 0.1
+  },
+  {
+   "episode": 6,
+   "scenario": "nominal",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_base_normal",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 5.48,
+   "vx_abs_err": 0.1850133436155054,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 7,
+   "scenario": "slippery",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_base_normal",
+   "fell": true,
+   "fall_time": 3.62,
+   "distance_m": 1.28,
+   "vx_abs_err": 0.410157870944343,
+   "wall_s": 0.1
+  },
+  {
+   "episode": 8,
+   "scenario": "pushes",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_base_normal",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 5.71,
+   "vx_abs_err": 0.21362654770840941,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 9,
+   "scenario": "payload",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_base_normal",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 5.65,
+   "vx_abs_err": 0.1302403234520277,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 10,
+   "scenario": "delay",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_base_normal",
+   "fell": true,
+   "fall_time": 2.24,
+   "distance_m": 0.56,
+   "vx_abs_err": 0.41009043803633916,
+   "wall_s": 0.1
+  },
+  {
+   "episode": 11,
+   "scenario": "storm",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_base_normal",
+   "fell": true,
+   "fall_time": 3.86,
+   "distance_m": 1.62,
+   "vx_abs_err": 0.2190707436933841,
+   "wall_s": 0.1
+  },
+  {
+   "episode": 12,
+   "scenario": "nominal",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_base_normal",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 5.48,
+   "vx_abs_err": 0.1850133436155054,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 13,
+   "scenario": "slippery",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_base_normal",
+   "fell": true,
+   "fall_time": 3.62,
+   "distance_m": 1.28,
+   "vx_abs_err": 0.410157870944343,
+   "wall_s": 0.1
+  },
+  {
+   "episode": 14,
+   "scenario": "pushes",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_base_normal",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 5.12,
+   "vx_abs_err": 0.22950499264613794,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 15,
+   "scenario": "payload",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_base_normal",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 5.65,
+   "vx_abs_err": 0.1302403234520277,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 16,
+   "scenario": "delay",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_base_normal",
+   "fell": true,
+   "fall_time": 2.24,
+   "distance_m": 0.56,
+   "vx_abs_err": 0.41009043803633916,
+   "wall_s": 0.0
+  },
+  {
+   "episode": 17,
+   "scenario": "storm",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_base_normal",
+   "fell": true,
+   "fall_time": 4.86,
+   "distance_m": 1.65,
+   "vx_abs_err": 0.3268223235061786,
+   "wall_s": 0.1
+  }
+ ],
+ "fixed_stride": [
+  {
+   "episode": 0,
+   "scenario": "nominal",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_base_stride",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 9.48,
+   "vx_abs_err": 0.08536174320811839,
+   "wall_s": 0.4
+  },
+  {
+   "episode": 1,
+   "scenario": "slippery",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_base_stride",
+   "fell": true,
+   "fall_time": 2.06,
+   "distance_m": 1.36,
+   "vx_abs_err": 1.0611313031281313,
+   "wall_s": 0.1
+  },
+  {
+   "episode": 2,
+   "scenario": "pushes",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_base_stride",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 9.11,
+   "vx_abs_err": 0.12450661667928696,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 3,
+   "scenario": "payload",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_base_stride",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 9.01,
+   "vx_abs_err": 0.12183553633781093,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 4,
+   "scenario": "delay",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_base_stride",
+   "fell": true,
+   "fall_time": 2.44,
+   "distance_m": 1.44,
+   "vx_abs_err": 0.9159676415557468,
+   "wall_s": 0.1
+  },
+  {
+   "episode": 5,
+   "scenario": "storm",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_base_stride",
+   "fell": true,
+   "fall_time": 7.0600000000000005,
+   "distance_m": 4.54,
+   "vx_abs_err": 0.27097671203077534,
+   "wall_s": 0.2
+  },
+  {
+   "episode": 6,
+   "scenario": "nominal",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_base_stride",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 9.48,
+   "vx_abs_err": 0.08536174320811839,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 7,
+   "scenario": "slippery",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_base_stride",
+   "fell": true,
+   "fall_time": 2.06,
+   "distance_m": 1.36,
+   "vx_abs_err": 1.0611313031281313,
+   "wall_s": 0.0
+  },
+  {
+   "episode": 8,
+   "scenario": "pushes",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_base_stride",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 8.98,
+   "vx_abs_err": 0.15440458246538755,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 9,
+   "scenario": "payload",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_base_stride",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 9.01,
+   "vx_abs_err": 0.12183553633781093,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 10,
+   "scenario": "delay",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_base_stride",
+   "fell": true,
+   "fall_time": 2.44,
+   "distance_m": 1.44,
+   "vx_abs_err": 0.9159676415557468,
+   "wall_s": 0.1
+  },
+  {
+   "episode": 11,
+   "scenario": "storm",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_base_stride",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 8.13,
+   "vx_abs_err": 0.2357233680170932,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 12,
+   "scenario": "nominal",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_base_stride",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 9.48,
+   "vx_abs_err": 0.08536174320811839,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 13,
+   "scenario": "slippery",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_base_stride",
+   "fell": true,
+   "fall_time": 2.06,
+   "distance_m": 1.36,
+   "vx_abs_err": 1.0611313031281313,
+   "wall_s": 0.0
+  },
+  {
+   "episode": 14,
+   "scenario": "pushes",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_base_stride",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 8.84,
+   "vx_abs_err": 0.16139555576746964,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 15,
+   "scenario": "payload",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_base_stride",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 9.01,
+   "vx_abs_err": 0.12183553633781093,
+   "wall_s": 0.3
+  },
+  {
+   "episode": 16,
+   "scenario": "delay",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_base_stride",
+   "fell": true,
+   "fall_time": 2.44,
+   "distance_m": 1.44,
+   "vx_abs_err": 0.9159676415557468,
+   "wall_s": 0.1
+  },
+  {
+   "episode": 17,
+   "scenario": "storm",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_base_stride",
+   "fell": true,
+   "fall_time": 11.56,
+   "distance_m": 6.95,
+   "vx_abs_err": 0.32948416968876604,
+   "wall_s": 0.3
+  }
+ ],
+ "offline_agent": [
+  {
+   "episode": 0,
+   "scenario": "nominal",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_offline_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 5.06,
+   "vx_abs_err": 0.13362334553524058,
+   "wall_s": 0.4,
    "modes": {
-    "cautious": 216,
-    "stop": 18
+    "normal": 15,
+    "cautious": 8
+   },
+   "reasons": {
+    "speed_up_one_level": 3,
+    "keep": 18,
+    "slow_down": 2
    },
    "brain_errors": 0,
-   "mean_jev_latency_ms": 448.725,
-   "episodes": [
-    {
-     "episode": 0,
-     "scenario": "nominal",
-     "mission": "Walk to the charging dock at the end of the hall. No rush.",
-     "agent": "wf_bench_jev",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 3.26,
-     "vx_abs_err": 0.07539047051638875,
-     "wall_s": 10.2,
-     "modes": {
-      "cautious": 23
-     },
-     "reasons": {
-      "keep": 23
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 399.3
-    },
-    {
-     "episode": 1,
-     "scenario": "slippery",
-     "mission": "Hurry to the door, a person is waiting.",
-     "agent": "wf_bench_jev",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 3.56,
-     "vx_abs_err": 0.07383218270793065,
-     "wall_s": 10.0,
-     "modes": {
-      "cautious": 23
-     },
-     "reasons": {
-      "keep": 23
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 382.3
-    },
-    {
-     "episode": 2,
-     "scenario": "pushes",
-     "mission": "Carry a fragile box across the room carefully.",
-     "agent": "wf_bench_jev",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 3.09,
-     "vx_abs_err": 0.10463489674473604,
-     "wall_s": 8.7,
-     "modes": {
-      "cautious": 22,
-      "stop": 1
-     },
-     "reasons": {
-      "keep": 21,
-      "safety_filter": 1,
-      "speed_up_one_level": 1
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 343.0
-    },
-    {
-     "episode": 3,
-     "scenario": "payload",
-     "mission": "Walk to the charging dock at the end of the hall. No rush.",
-     "agent": "wf_bench_jev",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 3.11,
-     "vx_abs_err": 0.07711662052589474,
-     "wall_s": 9.6,
-     "modes": {
-      "cautious": 23
-     },
-     "reasons": {
-      "keep": 23
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 390.1
-    },
-    {
-     "episode": 4,
-     "scenario": "delay",
-     "mission": "Hurry to the door, a person is waiting.",
-     "agent": "wf_bench_jev",
-     "fell": true,
-     "fall_time": 1.6,
-     "distance_m": 0.52,
-     "vx_abs_err": NaN,
-     "wall_s": 1.5,
-     "modes": {
-      "stop": 3
-     },
-     "reasons": {
-      "slow_down": 1,
-      "safety_filter": 2
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 483.3
-    },
-    {
-     "episode": 5,
-     "scenario": "storm",
-     "mission": "Carry a fragile box across the room carefully.",
-     "agent": "wf_bench_jev",
-     "fell": true,
-     "fall_time": 10.94,
-     "distance_m": 2.56,
-     "vx_abs_err": 0.14292923504260618,
-     "wall_s": 9.6,
-     "modes": {
-      "cautious": 21
-     },
-     "reasons": {
-      "keep": 21
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 423.0
-    },
-    {
-     "episode": 6,
-     "scenario": "nominal",
-     "mission": "Walk to the charging dock at the end of the hall. No rush.",
-     "agent": "wf_bench_jev",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 3.26,
-     "vx_abs_err": 0.07539047051638875,
-     "wall_s": 24.7,
-     "modes": {
-      "cautious": 23
-     },
-     "reasons": {
-      "keep": 23
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 1036.4
-    },
-    {
-     "episode": 7,
-     "scenario": "slippery",
-     "mission": "Hurry to the door, a person is waiting.",
-     "agent": "wf_bench_jev",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 3.56,
-     "vx_abs_err": 0.07383218270793065,
-     "wall_s": 10.6,
-     "modes": {
-      "cautious": 23
-     },
-     "reasons": {
-      "keep": 23
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 423.6
-    },
-    {
-     "episode": 8,
-     "scenario": "pushes",
-     "mission": "Carry a fragile box across the room carefully.",
-     "agent": "wf_bench_jev",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 2.99,
-     "vx_abs_err": 0.12673866594601182,
-     "wall_s": 10.1,
-     "modes": {
-      "cautious": 21,
-      "stop": 2
-     },
-     "reasons": {
-      "keep": 19,
-      "safety_filter": 2,
-      "speed_up_one_level": 2
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 413.8
-    },
-    {
-     "episode": 9,
-     "scenario": "payload",
-     "mission": "Walk to the charging dock at the end of the hall. No rush.",
-     "agent": "wf_bench_jev",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 3.11,
-     "vx_abs_err": 0.07711662052589474,
-     "wall_s": 9.3,
-     "modes": {
-      "cautious": 23
-     },
-     "reasons": {
-      "keep": 23
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 385.1
-    },
-    {
-     "episode": 10,
-     "scenario": "delay",
-     "mission": "Hurry to the door, a person is waiting.",
-     "agent": "wf_bench_jev",
-     "fell": true,
-     "fall_time": 1.6,
-     "distance_m": 0.52,
-     "vx_abs_err": NaN,
-     "wall_s": 1.1,
-     "modes": {
-      "stop": 3
-     },
-     "reasons": {
-      "slow_down": 1,
-      "safety_filter": 2
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 356.9
-    },
-    {
-     "episode": 11,
-     "scenario": "storm",
-     "mission": "Carry a fragile box across the room carefully.",
-     "agent": "wf_bench_jev",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 1.84,
-     "vx_abs_err": 0.1917536579555093,
-     "wall_s": 8.8,
-     "modes": {
-      "cautious": 14,
-      "stop": 9
-     },
-     "reasons": {
-      "keep": 10,
-      "risk_veto": 6,
-      "speed_up_one_level": 4,
-      "slow_down": 3
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 347.9
-    }
-   ]
+   "jev_latency_ms": 0.0
   },
-  "offline agent": {
-   "tag": "wf_bench_offline",
-   "n": 12,
-   "falls": 4,
-   "mean_distance_m": 2.543,
-   "mean_vx_abs_err": 0.106,
+  {
+   "episode": 1,
+   "scenario": "slippery",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_offline_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 4.4,
+   "vx_abs_err": 0.11288523626909916,
+   "wall_s": 0.3,
    "modes": {
-    "cautious": 206,
-    "stop": 21
+    "normal": 10,
+    "cautious": 13
+   },
+   "reasons": {
+    "speed_up_one_level": 3,
+    "keep": 18,
+    "slow_down": 2
    },
    "brain_errors": 0,
-   "mean_jev_latency_ms": 0.0,
-   "episodes": [
-    {
-     "episode": 0,
-     "scenario": "nominal",
-     "mission": "Walk to the charging dock at the end of the hall. No rush.",
-     "agent": "wf_bench_offline",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 3.26,
-     "vx_abs_err": 0.07539047051638875,
-     "wall_s": 1.6,
-     "modes": {
-      "cautious": 23
-     },
-     "reasons": {
-      "keep": 23
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 0.0
-    },
-    {
-     "episode": 1,
-     "scenario": "slippery",
-     "mission": "Hurry to the door, a person is waiting.",
-     "agent": "wf_bench_offline",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 3.56,
-     "vx_abs_err": 0.07383218270793065,
-     "wall_s": 1.5,
-     "modes": {
-      "cautious": 23
-     },
-     "reasons": {
-      "keep": 23
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 0.0
-    },
-    {
-     "episode": 2,
-     "scenario": "pushes",
-     "mission": "Carry a fragile box across the room carefully.",
-     "agent": "wf_bench_offline",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 2.96,
-     "vx_abs_err": 0.10351334625236276,
-     "wall_s": 1.0,
-     "modes": {
-      "cautious": 20,
-      "stop": 3
-     },
-     "reasons": {
-      "keep": 18,
-      "safety_filter": 3,
-      "speed_up_one_level": 2
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 0.0
-    },
-    {
-     "episode": 3,
-     "scenario": "payload",
-     "mission": "Walk to the charging dock at the end of the hall. No rush.",
-     "agent": "wf_bench_offline",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 3.11,
-     "vx_abs_err": 0.07711662052589474,
-     "wall_s": 0.7,
-     "modes": {
-      "cautious": 23
-     },
-     "reasons": {
-      "keep": 23
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 0.0
-    },
-    {
-     "episode": 4,
-     "scenario": "delay",
-     "mission": "Hurry to the door, a person is waiting.",
-     "agent": "wf_bench_offline",
-     "fell": true,
-     "fall_time": 1.84,
-     "distance_m": 0.81,
-     "vx_abs_err": NaN,
-     "wall_s": 0.1,
-     "modes": {
-      "cautious": 1,
-      "stop": 2
-     },
-     "reasons": {
-      "keep": 1,
-      "safety_filter": 2
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 0.0
-    },
-    {
-     "episode": 5,
-     "scenario": "storm",
-     "mission": "Carry a fragile box across the room carefully.",
-     "agent": "wf_bench_offline",
-     "fell": true,
-     "fall_time": 10.92,
-     "distance_m": 2.57,
-     "vx_abs_err": 0.12946771195202825,
-     "wall_s": 0.8,
-     "modes": {
-      "cautious": 20,
-      "stop": 1
-     },
-     "reasons": {
-      "keep": 20,
-      "safety_filter": 1
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 0.0
-    },
-    {
-     "episode": 6,
-     "scenario": "nominal",
-     "mission": "Walk to the charging dock at the end of the hall. No rush.",
-     "agent": "wf_bench_offline",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 3.26,
-     "vx_abs_err": 0.07539047051638875,
-     "wall_s": 0.5,
-     "modes": {
-      "cautious": 23
-     },
-     "reasons": {
-      "keep": 23
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 0.0
-    },
-    {
-     "episode": 7,
-     "scenario": "slippery",
-     "mission": "Hurry to the door, a person is waiting.",
-     "agent": "wf_bench_offline",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 3.56,
-     "vx_abs_err": 0.07383218270793065,
-     "wall_s": 0.5,
-     "modes": {
-      "cautious": 23
-     },
-     "reasons": {
-      "keep": 23
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 0.0
-    },
-    {
-     "episode": 8,
-     "scenario": "pushes",
-     "mission": "Carry a fragile box across the room carefully.",
-     "agent": "wf_bench_offline",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 2.81,
-     "vx_abs_err": 0.13163658631755287,
-     "wall_s": 0.5,
-     "modes": {
-      "cautious": 19,
-      "stop": 4
-     },
-     "reasons": {
-      "keep": 17,
-      "safety_filter": 4,
-      "speed_up_one_level": 2
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 0.0
-    },
-    {
-     "episode": 9,
-     "scenario": "payload",
-     "mission": "Walk to the charging dock at the end of the hall. No rush.",
-     "agent": "wf_bench_offline",
-     "fell": false,
-     "fall_time": null,
-     "distance_m": 3.11,
-     "vx_abs_err": 0.07711662052589474,
-     "wall_s": 0.5,
-     "modes": {
-      "cautious": 23
-     },
-     "reasons": {
-      "keep": 23
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 0.0
-    },
-    {
-     "episode": 10,
-     "scenario": "delay",
-     "mission": "Hurry to the door, a person is waiting.",
-     "agent": "wf_bench_offline",
-     "fell": true,
-     "fall_time": 1.84,
-     "distance_m": 0.81,
-     "vx_abs_err": NaN,
-     "wall_s": 0.0,
-     "modes": {
-      "cautious": 1,
-      "stop": 2
-     },
-     "reasons": {
-      "keep": 1,
-      "safety_filter": 2
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 0.0
-    },
-    {
-     "episode": 11,
-     "scenario": "storm",
-     "mission": "Carry a fragile box across the room carefully.",
-     "agent": "wf_bench_offline",
-     "fell": true,
-     "fall_time": 8.36,
-     "distance_m": 0.7,
-     "vx_abs_err": 0.24102703364500697,
-     "wall_s": 0.3,
-     "modes": {
-      "cautious": 7,
-      "stop": 9
-     },
-     "reasons": {
-      "keep": 6,
-      "safety_filter": 9,
-      "speed_up_one_level": 1
-     },
-     "brain_errors": 0,
-     "jev_latency_ms": 0.0
-    }
-   ]
+   "jev_latency_ms": 0.0
+  },
+  {
+   "episode": 2,
+   "scenario": "pushes",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_offline_v3",
+   "fell": true,
+   "fall_time": 7.0,
+   "distance_m": 3.48,
+   "vx_abs_err": 0.33073687708747723,
+   "wall_s": 0.1,
+   "modes": {
+    "normal": 8,
+    "cautious": 4,
+    "stop": 2
+   },
+   "reasons": {
+    "speed_up_one_level": 2,
+    "keep": 9,
+    "slow_down": 1,
+    "safety_filter": 2
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 0.0
+  },
+  {
+   "episode": 3,
+   "scenario": "payload",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_offline_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 5.58,
+   "vx_abs_err": 0.14068232437176834,
+   "wall_s": 0.3,
+   "modes": {
+    "normal": 23
+   },
+   "reasons": {
+    "speed_up_one_level": 1,
+    "keep": 22
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 0.0
+  },
+  {
+   "episode": 4,
+   "scenario": "delay",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_offline_v3",
+   "fell": true,
+   "fall_time": 1.8,
+   "distance_m": 0.86,
+   "vx_abs_err": null,
+   "wall_s": 0.0,
+   "modes": {
+    "normal": 1,
+    "stop": 2
+   },
+   "reasons": {
+    "speed_up_one_level": 1,
+    "safety_filter": 2
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 0.0
+  },
+  {
+   "episode": 5,
+   "scenario": "storm",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_offline_v3",
+   "fell": true,
+   "fall_time": 3.3200000000000003,
+   "distance_m": 1.39,
+   "vx_abs_err": 0.2815198887440719,
+   "wall_s": 0.1,
+   "modes": {
+    "normal": 5,
+    "cautious": 1
+   },
+   "reasons": {
+    "speed_up_one_level": 1,
+    "keep": 4,
+    "slow_down": 1
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 0.0
+  },
+  {
+   "episode": 6,
+   "scenario": "nominal",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_offline_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.26,
+   "vx_abs_err": 0.07539047051638875,
+   "wall_s": 0.3,
+   "modes": {
+    "cautious": 23
+   },
+   "reasons": {
+    "hold_low_confidence": 20,
+    "keep": 3
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 0.0
+  },
+  {
+   "episode": 7,
+   "scenario": "slippery",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_offline_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.56,
+   "vx_abs_err": 0.07383218270793065,
+   "wall_s": 0.3,
+   "modes": {
+    "cautious": 23
+   },
+   "reasons": {
+    "hold_low_confidence": 19,
+    "keep": 4
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 0.0
+  },
+  {
+   "episode": 8,
+   "scenario": "pushes",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_offline_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 2.69,
+   "vx_abs_err": 0.12818395258186518,
+   "wall_s": 0.3,
+   "modes": {
+    "cautious": 18,
+    "stop": 5
+   },
+   "reasons": {
+    "hold_low_confidence": 12,
+    "keep": 6,
+    "safety_filter": 2,
+    "risk_veto": 3
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 0.0
+  },
+  {
+   "episode": 9,
+   "scenario": "payload",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_offline_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.11,
+   "vx_abs_err": 0.07711662052589474,
+   "wall_s": 0.3,
+   "modes": {
+    "cautious": 23
+   },
+   "reasons": {
+    "hold_low_confidence": 19,
+    "keep": 4
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 0.0
+  },
+  {
+   "episode": 10,
+   "scenario": "delay",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_offline_v3",
+   "fell": true,
+   "fall_time": 1.6,
+   "distance_m": 0.52,
+   "vx_abs_err": null,
+   "wall_s": 0.0,
+   "modes": {
+    "stop": 3
+   },
+   "reasons": {
+    "risk_veto": 1,
+    "safety_filter": 2
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 0.0
+  },
+  {
+   "episode": 11,
+   "scenario": "storm",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_offline_v3",
+   "fell": true,
+   "fall_time": 9.86,
+   "distance_m": 0.93,
+   "vx_abs_err": 0.24273329474270142,
+   "wall_s": 0.2,
+   "modes": {
+    "cautious": 8,
+    "stop": 11
+   },
+   "reasons": {
+    "hold_low_confidence": 5,
+    "risk_veto": 6,
+    "speed_up_one_level": 2,
+    "keep": 1,
+    "safety_filter": 5
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 0.0
+  },
+  {
+   "episode": 12,
+   "scenario": "nominal",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_offline_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.26,
+   "vx_abs_err": 0.07539047051638875,
+   "wall_s": 0.3,
+   "modes": {
+    "cautious": 23
+   },
+   "reasons": {
+    "keep": 23
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 0.0
+  },
+  {
+   "episode": 13,
+   "scenario": "slippery",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_offline_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.56,
+   "vx_abs_err": 0.07383218270793065,
+   "wall_s": 0.3,
+   "modes": {
+    "cautious": 23
+   },
+   "reasons": {
+    "keep": 23
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 0.0
+  },
+  {
+   "episode": 14,
+   "scenario": "pushes",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_offline_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.15,
+   "vx_abs_err": 0.10138856962568837,
+   "wall_s": 0.3,
+   "modes": {
+    "cautious": 21,
+    "stop": 2
+   },
+   "reasons": {
+    "keep": 20,
+    "safety_filter": 1,
+    "risk_veto": 1,
+    "speed_up_one_level": 1
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 0.0
+  },
+  {
+   "episode": 15,
+   "scenario": "payload",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_offline_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.11,
+   "vx_abs_err": 0.07711662052589474,
+   "wall_s": 0.3,
+   "modes": {
+    "cautious": 23
+   },
+   "reasons": {
+    "keep": 23
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 0.0
+  },
+  {
+   "episode": 16,
+   "scenario": "delay",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_offline_v3",
+   "fell": true,
+   "fall_time": 1.6,
+   "distance_m": 0.52,
+   "vx_abs_err": null,
+   "wall_s": 0.0,
+   "modes": {
+    "stop": 3
+   },
+   "reasons": {
+    "risk_veto": 1,
+    "safety_filter": 2
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 0.0
+  },
+  {
+   "episode": 17,
+   "scenario": "storm",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_offline_v3",
+   "fell": true,
+   "fall_time": 6.140000000000001,
+   "distance_m": 1.79,
+   "vx_abs_err": 0.17549492781679665,
+   "wall_s": 0.1,
+   "modes": {
+    "cautious": 10,
+    "stop": 2
+   },
+   "reasons": {
+    "keep": 10,
+    "risk_veto": 1,
+    "safety_filter": 1
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 0.0
   }
- },
- "per_scenario": {
-  "nominal": {
-   "fixed cautious": {
-    "falls": 0,
-    "n": 2,
-    "mean_distance_m": 3.26
+ ],
+ "jev_agent": [
+  {
+   "episode": 0,
+   "scenario": "nominal",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_jev_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.26,
+   "vx_abs_err": 0.07539047051638875,
+   "wall_s": 20.6,
+   "modes": {
+    "cautious": 23
    },
-   "fixed normal": {
-    "falls": 0,
-    "n": 2,
-    "mean_distance_m": 5.48
+   "reasons": {
+    "brain_error_fallback": 2,
+    "keep": 6,
+    "hold_low_confidence": 15
    },
-   "fixed stride": {
-    "falls": 0,
-    "n": 2,
-    "mean_distance_m": 9.48
-   },
-   "Jev agent": {
-    "falls": 0,
-    "n": 2,
-    "mean_distance_m": 3.26
-   },
-   "offline agent": {
-    "falls": 0,
-    "n": 2,
-    "mean_distance_m": 3.26
-   }
+   "brain_errors": 2,
+   "jev_latency_ms": 730.9
   },
-  "slippery": {
-   "fixed cautious": {
-    "falls": 0,
-    "n": 2,
-    "mean_distance_m": 3.56
+  {
+   "episode": 1,
+   "scenario": "slippery",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_jev_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.56,
+   "vx_abs_err": 0.07383218270793065,
+   "wall_s": 12.2,
+   "modes": {
+    "cautious": 23
    },
-   "fixed normal": {
-    "falls": 2,
-    "n": 2,
-    "mean_distance_m": 1.28
+   "reasons": {
+    "keep": 13,
+    "hold_low_confidence": 10
    },
-   "fixed stride": {
-    "falls": 2,
-    "n": 2,
-    "mean_distance_m": 1.36
-   },
-   "Jev agent": {
-    "falls": 0,
-    "n": 2,
-    "mean_distance_m": 3.56
-   },
-   "offline agent": {
-    "falls": 0,
-    "n": 2,
-    "mean_distance_m": 3.56
-   }
+   "brain_errors": 0,
+   "jev_latency_ms": 498.7
   },
-  "pushes": {
-   "fixed cautious": {
-    "falls": 0,
-    "n": 2,
-    "mean_distance_m": 3.09
+  {
+   "episode": 2,
+   "scenario": "pushes",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_jev_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.23,
+   "vx_abs_err": 0.12494956136153229,
+   "wall_s": 9.9,
+   "modes": {
+    "cautious": 23
    },
-   "fixed normal": {
-    "falls": 0,
-    "n": 2,
-    "mean_distance_m": 5.75
+   "reasons": {
+    "hold_low_confidence": 11,
+    "keep": 12
    },
-   "fixed stride": {
-    "falls": 0,
-    "n": 2,
-    "mean_distance_m": 9.045
-   },
-   "Jev agent": {
-    "falls": 0,
-    "n": 2,
-    "mean_distance_m": 3.04
-   },
-   "offline agent": {
-    "falls": 0,
-    "n": 2,
-    "mean_distance_m": 2.885
-   }
+   "brain_errors": 0,
+   "jev_latency_ms": 400.8
   },
-  "payload": {
-   "fixed cautious": {
-    "falls": 0,
-    "n": 2,
-    "mean_distance_m": 3.11
+  {
+   "episode": 3,
+   "scenario": "payload",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_jev_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.11,
+   "vx_abs_err": 0.07711662052589474,
+   "wall_s": 10.1,
+   "modes": {
+    "cautious": 23
    },
-   "fixed normal": {
-    "falls": 0,
-    "n": 2,
-    "mean_distance_m": 5.65
+   "reasons": {
+    "hold_low_confidence": 13,
+    "keep": 10
    },
-   "fixed stride": {
-    "falls": 0,
-    "n": 2,
-    "mean_distance_m": 9.01
-   },
-   "Jev agent": {
-    "falls": 0,
-    "n": 2,
-    "mean_distance_m": 3.11
-   },
-   "offline agent": {
-    "falls": 0,
-    "n": 2,
-    "mean_distance_m": 3.11
-   }
+   "brain_errors": 0,
+   "jev_latency_ms": 408.1
   },
-  "delay": {
-   "fixed cautious": {
-    "falls": 2,
-    "n": 2,
-    "mean_distance_m": 0.75
+  {
+   "episode": 4,
+   "scenario": "delay",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_jev_v3",
+   "fell": true,
+   "fall_time": 1.76,
+   "distance_m": 0.75,
+   "vx_abs_err": null,
+   "wall_s": 1.4,
+   "modes": {
+    "cautious": 3
    },
-   "fixed normal": {
-    "falls": 2,
-    "n": 2,
-    "mean_distance_m": 0.56
+   "reasons": {
+    "keep": 3
    },
-   "fixed stride": {
-    "falls": 2,
-    "n": 2,
-    "mean_distance_m": 1.44
-   },
-   "Jev agent": {
-    "falls": 2,
-    "n": 2,
-    "mean_distance_m": 0.52
-   },
-   "offline agent": {
-    "falls": 2,
-    "n": 2,
-    "mean_distance_m": 0.81
-   }
+   "brain_errors": 0,
+   "jev_latency_ms": 424.9
   },
-  "storm": {
-   "fixed cautious": {
-    "falls": 1,
-    "n": 2,
-    "mean_distance_m": 2.555
+  {
+   "episode": 5,
+   "scenario": "storm",
+   "mission": "Walk to the charging dock at the end of the hall. No rush.",
+   "agent": "wf2_jev_v3",
+   "fell": true,
+   "fall_time": 10.94,
+   "distance_m": 2.56,
+   "vx_abs_err": 0.14292923504260618,
+   "wall_s": 9.2,
+   "modes": {
+    "cautious": 21
    },
-   "fixed normal": {
-    "falls": 2,
-    "n": 2,
-    "mean_distance_m": 2.25
+   "reasons": {
+    "hold_low_confidence": 7,
+    "keep": 14
    },
-   "fixed stride": {
-    "falls": 1,
-    "n": 2,
-    "mean_distance_m": 6.335
+   "brain_errors": 0,
+   "jev_latency_ms": 405.4
+  },
+  {
+   "episode": 6,
+   "scenario": "nominal",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_jev_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 6.17,
+   "vx_abs_err": 0.17961452415676168,
+   "wall_s": 10.4,
+   "modes": {
+    "normal": 6,
+    "stride": 9,
+    "cautious": 8
    },
-   "Jev agent": {
-    "falls": 1,
-    "n": 2,
-    "mean_distance_m": 2.2
+   "reasons": {
+    "speed_up_one_level": 5,
+    "hold_until_ground_proven": 3,
+    "keep": 12,
+    "slow_down": 3
    },
-   "offline agent": {
-    "falls": 2,
-    "n": 2,
-    "mean_distance_m": 1.635
-   }
+   "brain_errors": 0,
+   "jev_latency_ms": 421.7
+  },
+  {
+   "episode": 7,
+   "scenario": "slippery",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_jev_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 4.58,
+   "vx_abs_err": 0.125141113025464,
+   "wall_s": 10.0,
+   "modes": {
+    "normal": 8,
+    "cautious": 13,
+    "stride": 2
+   },
+   "reasons": {
+    "speed_up_one_level": 4,
+    "hold_until_ground_proven": 5,
+    "slow_down": 2,
+    "keep": 12
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 401.3
+  },
+  {
+   "episode": 8,
+   "scenario": "pushes",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_jev_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 4.75,
+   "vx_abs_err": 0.208708789245712,
+   "wall_s": 10.2,
+   "modes": {
+    "normal": 8,
+    "stride": 5,
+    "cautious": 10
+   },
+   "reasons": {
+    "speed_up_one_level": 7,
+    "hold_until_ground_proven": 3,
+    "keep": 10,
+    "slow_down": 3
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 410.7
+  },
+  {
+   "episode": 9,
+   "scenario": "payload",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_jev_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 7.68,
+   "vx_abs_err": 0.11354708288145736,
+   "wall_s": 9.6,
+   "modes": {
+    "normal": 4,
+    "stride": 15,
+    "cautious": 4
+   },
+   "reasons": {
+    "speed_up_one_level": 3,
+    "hold_until_ground_proven": 2,
+    "keep": 17,
+    "slow_down": 1
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 387.4
+  },
+  {
+   "episode": 10,
+   "scenario": "delay",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_jev_v3",
+   "fell": true,
+   "fall_time": 1.76,
+   "distance_m": 0.75,
+   "vx_abs_err": null,
+   "wall_s": 1.2,
+   "modes": {
+    "cautious": 3
+   },
+   "reasons": {
+    "keep": 3
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 365.2
+  },
+  {
+   "episode": 11,
+   "scenario": "storm",
+   "mission": "Hurry to the door, a person is waiting.",
+   "agent": "wf2_jev_v3",
+   "fell": true,
+   "fall_time": 4.88,
+   "distance_m": 2.07,
+   "vx_abs_err": 0.4220536298279182,
+   "wall_s": 3.7,
+   "modes": {
+    "normal": 2,
+    "stride": 4,
+    "stop": 2,
+    "cautious": 1
+   },
+   "reasons": {
+    "speed_up_one_level": 3,
+    "hold_until_ground_proven": 1,
+    "keep": 4,
+    "slow_down": 1
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 372.3
+  },
+  {
+   "episode": 12,
+   "scenario": "nominal",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_jev_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.26,
+   "vx_abs_err": 0.07539047051638875,
+   "wall_s": 10.0,
+   "modes": {
+    "cautious": 23
+   },
+   "reasons": {
+    "keep": 23
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 402.6
+  },
+  {
+   "episode": 13,
+   "scenario": "slippery",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_jev_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.56,
+   "vx_abs_err": 0.07383218270793065,
+   "wall_s": 10.1,
+   "modes": {
+    "cautious": 23
+   },
+   "reasons": {
+    "keep": 23
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 402.9
+  },
+  {
+   "episode": 14,
+   "scenario": "pushes",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_jev_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 2.63,
+   "vx_abs_err": 0.1201796626734402,
+   "wall_s": 10.7,
+   "modes": {
+    "cautious": 18,
+    "stop": 5
+   },
+   "reasons": {
+    "keep": 19,
+    "risk_veto": 1,
+    "speed_up_one_level": 2,
+    "slow_down": 1
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 434.8
+  },
+  {
+   "episode": 15,
+   "scenario": "payload",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_jev_v3",
+   "fell": false,
+   "fall_time": null,
+   "distance_m": 3.11,
+   "vx_abs_err": 0.07711662052589474,
+   "wall_s": 9.3,
+   "modes": {
+    "cautious": 23
+   },
+   "reasons": {
+    "keep": 23
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 373.0
+  },
+  {
+   "episode": 16,
+   "scenario": "delay",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_jev_v3",
+   "fell": true,
+   "fall_time": 1.6,
+   "distance_m": 0.52,
+   "vx_abs_err": null,
+   "wall_s": 1.3,
+   "modes": {
+    "stop": 3
+   },
+   "reasons": {
+    "slow_down": 1,
+    "risk_veto": 1,
+    "safety_filter": 1
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 412.3
+  },
+  {
+   "episode": 17,
+   "scenario": "storm",
+   "mission": "Carry a fragile box across the room carefully.",
+   "agent": "wf2_jev_v3",
+   "fell": true,
+   "fall_time": 6.140000000000001,
+   "distance_m": 1.79,
+   "vx_abs_err": 0.17549492781679665,
+   "wall_s": 4.9,
+   "modes": {
+    "cautious": 10,
+    "stop": 2
+   },
+   "reasons": {
+    "keep": 10,
+    "risk_veto": 2
+   },
+   "brain_errors": 0,
+   "jev_latency_ms": 375.4
   }
- }
+ ]
 }
