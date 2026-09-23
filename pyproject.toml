@@ -17,6 +17,9 @@ train = [
     "jax<0.8",
     "playground>=0.2.0",
 ]
+agent = [
+    "typesafe-sdk>=0.7.1",
+]
 
 [tool.uv]
 package = false

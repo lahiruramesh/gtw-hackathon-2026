@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>G1 Jev Live</title>
+<style>
+  :root {
+    --bg: #f6f6f3; --panel: #ffffff; --ink: #1c1d1f; --muted: #6b6e75; --line: #e3e3de;
+    --accent: #3a5bd9; --good: #1f8a5b; --warn: #c07a12; --bad: #c2372f; --bar: #e9ebf3;
+    --mode-stop: #c2372f; --mode-cautious: #c07a12; --mode-normal: #3a5bd9; --mode-stride: #1f8a5b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121315; --panel: #1b1c1f; --ink: #e9e9e6; --muted: #9a9ca3; --line: #2c2e33;
+      --accent: #7b95ff; --good: #4cc38a; --warn: #e3a64a; --bad: #ef6b62; --bar: #2a2d35;
+      --mode-stop: #ef6b62; --mode-cautious: #e3a64a; --mode-normal: #7b95ff; --mode-stride: #4cc38a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 14px/1.45 ui-sans-serif, -apple-system, "Segoe UI", Inter, sans-serif; }
+  header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 14px 20px 6px; }
+  h1 { font-size: 17px; margin: 0; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); font-size: 13px; }
+  .pill { font-size: 12px; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+  .pill.on { color: var(--accent); border-color: var(--accent); }
+  .pill.bad { color: #fff; background: var(--bad); border-color: var(--bad); font-weight: 600; }
+  main { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 14px; padding: 8px 20px 20px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; padding: 8px 16px 16px; } header { padding: 12px 16px 4px; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; min-width: 0; }
+  .card h2 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; }
+  .video { position: relative; aspect-ratio: 4 / 3; background: #000; border-radius: 8px; overflow: hidden; }
+  .video img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .overlay { position: absolute; left: 10px; top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .overlay span { background: rgba(0,0,0,.6); color: #fff; font-size: 12px; padding: 3px 8px; border-radius: 6px; }
+  .mission { margin-top: 10px; font-size: 14px; }
+  .mission b { font-weight: 600; }
+  .modes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .mode { border: 1px solid var(--line); border-radius: 8px; padding: 8px; text-align: center; opacity: .55; transition: all .2s; }
+  .mode .n { font-weight: 600; text-transform: capitalize; }
+  .mode .c { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .mode.active { opacity: 1; border-width: 2px; border-color: var(--mc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--mc) 15%, transparent); }
+  .mode.active .n { color: var(--mc); }
+  .row { display: grid; grid-template-columns: 110px 1fr 46px; align-items: center; gap: 8px; margin: 5px 0; font-variant-numeric: tabular-nums; }
+  .row .l { color: var(--muted); text-transform: capitalize; }
+  .track { height: 10px; background: var(--bar); border-radius: 5px; overflow: hidden; }
+  .fill { height: 100%; border-radius: 5px; transition: width .3s; }
+  .v { text-align: right; font-size: 12px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 520px) { .grid2 { grid-template-columns: 1fr; } }
+  dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: 13px; }
+  dt { color: var(--muted); } dd { margin: 0; }
+  .reason { margin-top: 10px; font-size: 13px; padding: 8px 10px; background: var(--bar); border-radius: 8px; }
+  .muted { color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 500; }
+  .scroll { overflow-x: auto; }
+  .tag { font-weight: 600; text-transform: capitalize; }
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  select, input, button { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px; }
+  input { flex: 1; min-width: 180px; }
+  button { cursor: pointer; background: var(--accent); color: #fff; border-color: var(--accent); }
+  .terrain-text { font-size: 15px; font-weight: 600; }
+  .stack { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>G1 × Jev live agent</h1>
+  <span class="sub" id="sub">connecting…</span>
+  <span class="pill" id="brain">brain</span>
+  <span class="pill" id="pending">Jev idle</span>
+</header>
+<main>
+  <div class="stack">
+    <div class="card">
+      <div class="video">
+        <img src="/stream" alt="Live MuJoCo render of the G1 humanoid">
+        <div class="overlay"><span id="ov-ep"></span><span id="ov-t"></span><span id="ov-scen"></span></div>
+      </div>
+      <div class="mission"><span class="muted">Mission:</span> <b id="mission">–</b></div>
+      <div class="controls">
+        <select id="scen" aria-label="Scenario"></select>
+        <input id="mis" list="missions" placeholder="Mission for next episode (blank = cycle)">
+        <datalist id="missions"></datalist>
+        <button id="apply">Apply next episode</button>
+      </div>
+    </div>
+    <div class="card" id="cam-card" hidden>
+      <h2>Head depth camera (simulated D435i) vs. simulator truth</h2>
+      <img src="/camera" alt="Head camera RGB, depth image and reconstructed ground profile" style="width:100%;border-radius:8px;background:#000;display:block">
+      <dl id="vis" style="margin-top:8px"></dl>
+    </div>
+    <div class="card">
+      <h2>Episodes</h2>
+      <div class="scroll"><table><thead><tr><th>#</th><th>Scenario</th><th>Result</th><th>Time</th><th>Dist</th><th>Modes used</th></tr></thead><tbody id="eps"></tbody></table></div>
+    </div>
+  </div>
+  <div class="stack">
+    <div class="card">
+      <h2>Gait now → PPO policy</h2>
+      <div class="modes" id="modes"></div>
+      <div class="reason" id="reason">Waiting for first decision…</div>
+    </div>
+    <div class="card" id="terrain-card" hidden>
+      <h2>Terrain ahead (height scan)</h2>
+      <div class="terrain-text" id="terrain">–</div>
+      <dl id="terrain-dl" style="margin-top:8px"></dl>
+      <div id="stairs-q" style="margin-top:8px"></div>
+      <h2 style="margin-top:14px">Learned stairs skill</h2>
+      <div class="scroll"><table><thead><tr><th>Step size</th><th>Cautious</th><th>Normal</th><th>Stride</th><th>Verdict</th></tr></thead><tbody id="skill"></tbody></table></div>
+      <div class="muted" style="font-size:12px;margin-top:4px">crossed / failed per gait. The agent explores untried gaits and gives up on step sizes where every gait keeps failing.</div>
+    </div>
+    <div class="card">
+      <h2>Jev's answer</h2>
+      <div id="probs"></div>
+      <div class="row"><span class="l">confidence</span><div class="track"><div class="fill" id="conf" style="background:var(--accent)"></div></div><span class="v" id="confv">–</span></div>
+      <div class="row"><span class="l">stability</span><div class="track"><div class="fill" id="stab"></div></div><span class="v" id="stabv">–</span></div>
+      <div id="nouls" style="margin-top:8px"></div>
+      <div class="muted" style="font-size:12px;margin-top:6px" id="lat"></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h2>What Jev sees</h2><dl id="desc"></dl></div>
+      <div class="card"><h2>Sensors (code)</h2><dl id="live"></dl></div>
+    </div>
+    <div class="card">
+      <h2>Decision log</h2>
+      <div class="scroll"><table><thead><tr><th>t</th><th>Change</th><th>Reason</th><th>Conf</th><th>Latency</th></tr></thead><tbody id="log"></tbody></table></div>
+    </div>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const MODES = ["stop", "cautious", "normal", "stride"];
+const mcol = m => `var(--mode-${m})`;
+const REASONS = {
+  keep: "Jev agrees with the current gait.",
+  slow_down: "Jev prefers a safer gait, so the agent slows down right away.",
+  speed_up_one_level: "Jev is confident. The agent speeds up one level.",
+  hold_low_confidence: "Jev leans faster but isn't confident enough, so the agent holds.",
+  safety_filter: "Code safety filter: tilt or stability past the limit, so the agent stops.",
+  brain_error_fallback: "Jev call failed. Falling back to a cautious gait.",
+  stairs_attempt_start: "Stairs close and Jev says the mission wants them. The skill memory picks the gait to climb with.",
+  stairs_attempt_hold: "Climbing: holding the chosen stairs gait until off the stairs.",
+  stop_before_stairs: "Jev says the mission doesn't want the stairs, so the agent stops before the first step.",
+  learned_too_hard: "Jev says climb, but experience says this robot can't climb steps this tall. Stopping in front.",
+  risk_veto: "The learned fall-risk model vetoes every moving gait, so the agent stops.",
+};
+let inited = false;
+
+function bar(label, v, color, txt) {
+  return `<div class="row"><span class="l">${label}</span><div class="track"><div class="fill" style="width:${(v*100).toFixed(0)}%;background:${color}"></div></div><span class="v">${txt ?? (v*100).toFixed(0)+"%"}</span></div>`;
+}
+function dl(obj) { return Object.entries(obj).map(([k, v]) => `<dt>${k.replaceAll("_", " ")}</dt><dd>${v}</dd>`).join(""); }
+
+function init(s) {
+  $("scen").innerHTML = `<option value="">cycle all</option>` + s.scenarios.map(x => `<option>${x}</option>`).join("");
+  $("missions").innerHTML = s.missions.map(x => `<option value="${x}">`).join("");
+  $("modes").innerHTML = MODES.map(m => {
+    const [vx, st] = s.modes[m];
+    return `<div class="mode" id="m-${m}" style="--mc:${mcol(m)}"><div class="n">${m}</div><div class="c">${vx.toFixed(2)} m/s · ${st.toFixed(2)} m</div></div>`;
+  }).join("");
+  inited = true;
+}
+
+async function tick() {
+  try {
+    const s = await (await fetch("/state", {cache: "no-store"})).json();
+    if (!inited) init(s);
+    const st = s.status;
+    if (!st.mode) { $("sub").textContent = "loading policy…"; return; }
+    $("sub").textContent = `episode ${st.episode} · ${st.scenario}`;
+    const offline = st.brain === "jev" && st.last && (st.last.jev.error || st.last.jev.fallback);
+    $("brain").textContent = offline ? "OFFLINE MODE (Jev unreachable)" : st.brain === "jev" ? "Jev (live API)" : "offline stub";
+    $("brain").className = "pill" + (offline ? " bad" : st.brain === "jev" ? " on" : "");
+    $("brain").title = offline ? (st.last.jev.fallback || st.last.jev.error) : "";
+    $("pending").textContent = st.jev_pending ? "Jev thinking…" : "Jev idle";
+    $("pending").className = "pill" + (st.jev_pending ? " on" : "");
+    $("ov-ep").textContent = `ep ${st.episode}`;
+    $("ov-t").textContent = `t = ${st.t.toFixed(1)} s`;
+    $("ov-scen").textContent = st.scenario;
+    $("mission").textContent = st.mission;
+    MODES.forEach(m => $("m-" + m).classList.toggle("active", m === st.mode));
+
+    const d = st.last;
+    if (!d) {
+      $("reason").textContent = st.jev_pending ? "New episode. Waiting for Jev's first answer…" : "New episode.";
+      ["probs", "nouls", "desc", "lat"].forEach(id => $(id).innerHTML = "");
+      $("conf").style.width = $("stab").style.width = "0%"; $("confv").textContent = $("stabv").textContent = "–";
+    }
+    if (d) {
+      const j = d.jev;
+      $("reason").textContent = st.reflex ? "Reflex (fresh height scan, 10 Hz): " + (REASONS[st.reflex] || st.reflex)
+        : st.override ? "Code safety filter (checked every tick): torso tilt past 25°, so the agent stops without waiting for Jev." : (REASONS[d.reason] || d.reason) + (d.prev_mode !== d.mode ? `  (${d.prev_mode} → ${d.mode})` : "");
+      $("probs").innerHTML = MODES.map(m => bar(m, j.gait_probs[m] ?? 0, mcol(m))).join("");
+      $("conf").style.width = (j.gait_conf * 100) + "%"; $("confv").textContent = j.gait_conf.toFixed(2);
+      const sv = j.stability / 3;
+      $("stab").style.width = (sv * 100) + "%";
+      $("stab").style.background = sv > .66 ? "var(--good)" : sv > .33 ? "var(--warn)" : "var(--bad)";
+      $("stabv").textContent = j.stability.toFixed(1) + "/3";
+      $("nouls").innerHTML = Object.entries(j.nouls).map(([k, v]) => bar(k.replace("_", " "), v, "var(--muted)")).join("");
+      $("lat").textContent = j.error ? `error: ${j.error}` : `${j.fallback ? "OFFLINE: " + j.fallback + " · " : ""}${j.model} · ${(j.latency_s * 1000).toFixed(0)} ms · decided at t=${d.t}s · context ${d.context}`;
+      $("desc").innerHTML = dl(d.describe);
+    }
+    if (st.live) {
+      const L = st.live;
+      $("live").innerHTML = dl({
+        tilt: L.tilt_deg.toFixed(1) + "°", "max tilt": L.max_tilt_deg.toFixed(1) + "°",
+        gyro: L.max_gyro.toFixed(2) + " rad/s", slip: L.max_slip.toFixed(2) + " m/s",
+        "speed err": L.vx_err.toFixed(2) + " m/s", height: L.height.toFixed(2) + " m",
+        command: `${st.cmd.vx.toFixed(2)} m/s · ${st.cmd.step.toFixed(2)} m · ${st.cmd.cadence_hz} Hz`,
+      });
+    }
+    const vz = st.vision;
+    $("cam-card").hidden = !vz || !Object.keys(vz).length;
+    if (vz && vz.coverage != null) {
+      $("vis").innerHTML = dl({
+        "stair detector reads": vz.source === "camera" ? "camera elevation map" : "perfect raycasts (camera shown for comparison)",
+        "ground ahead seen": `${Math.round(vz.coverage * 100)}%`,
+        "height error": vz.mae_cm == null ? "–" : `${vz.mae_cm.toFixed(1)} cm mean, ${vz.p95_cm.toFixed(1)} cm p95`,
+        "points / frame": `${vz.points} (robot's own body: ${vz.self_pixels} px removed)`,
+      });
+    }
+    const tf = st.terrain_features;
+    $("terrain-card").hidden = !tf;
+    if (tf) {
+      $("terrain").textContent = st.terrain;
+      $("terrain-dl").innerHTML = dl({
+        "first edge": tf.edge_dist_m == null ? "none in 2.5 m" : `${tf.edge_dist_m.toFixed(2)} m, going ${tf.edge_dir}`,
+        "step height": tf.rise_ahead_m ? `${(tf.rise_ahead_m * 100).toFixed(1)} cm` : "–",
+        "on stairs": tf.on_stairs ? `yes (${(tf.ground_m * 100).toFixed(0)} cm up)` : "no",
+        "attempt": st.attempt ? `${st.attempt.size.replace("_", " ")} with ${st.attempt.gait}${st.attempt.left ? " (made it across)" : ""}` : "–",
+      });
+      const sq = d && d.jev.choices && d.jev.choices.stairs_action;
+      $("stairs-q").innerHTML = sq ? ["no_stairs", "climb", "stop_before"].map(k => bar(k.replace("_", " "), sq.probabilities[k] ?? 0, k === "climb" ? "var(--good)" : k === "stop_before" ? "var(--bad)" : "var(--muted)")).join("") : "";
+      const sk = st.skill || {};
+      $("skill").innerHTML = Object.entries(sk).map(([size, v]) => `<tr><td>${size.replace("_", " ")}</td>${["cautious", "normal", "stride"].map(g => `<td>${v.gaits[g][0]} / ${v.gaits[g][1]}</td>`).join("")}<td style="color:${v.too_hard ? "var(--bad)" : "var(--good)"}">${v.too_hard ? "too tall, stop" : "climbable / learning"}</td></tr>`).join("") || `<tr><td colspan="5" class="muted">no stairs attempted yet</td></tr>`;
+    }
+    $("log").innerHTML = st.recent.map(r => `<tr><td>${r.t.toFixed(1)}</td><td>${r.prev_mode === r.mode ? `<span class="tag" style="color:${mcol(r.mode)}">${r.mode}</span>` : `${r.prev_mode} → <span class="tag" style="color:${mcol(r.mode)}">${r.mode}</span>`}</td><td>${r.reason.replaceAll("_", " ")}</td><td>${r.conf.toFixed(2)}</td><td>${(r.latency_s * 1000).toFixed(0)} ms</td></tr>`).join("");
+    $("eps").innerHTML = s.episodes.map(e => `<tr><td>${e.episode}</td><td>${e.scenario}</td><td style="color:${e.fell ? "var(--bad)" : "var(--good)"}">${e.result || (e.fell ? "fell" : "ok")}</td><td>${e.time_s}s</td><td>${e.distance_m} m</td><td>${e.modes.join(", ")}</td></tr>`).join("");
+  } catch (e) { $("sub").textContent = "reconnecting…"; }
+}
+$("apply").onclick = () => fetch(`/control?scenario=${encodeURIComponent($("scen").value)}&mission=${encodeURIComponent($("mis").value)}`);
+setInterval(tick, 250); tick();
+</script>
+</body>
+</html>
