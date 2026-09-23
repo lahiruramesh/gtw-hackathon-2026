@@ -12,3 +12,5 @@ date,time,who,stage,hours,gpu_hours,what_changed,outcome,blocker
 2026-09-23,,lahiru+claude,eval,,0,"Evaluator matched training timing (obs uses previous phase and action from two steps back)",fixed,"off-by-one-step obs mismatch made 20 ms latency look fatal"
 2026-09-23,,lahiru+claude,eval,,0,"Touchdown detector requires >= 0.1 s air time",fixed,"contact flicker produced fake steps"
 2026-09-23,,lahiru+claude,eval,,0,"MJX vs MuJoCo C lock-step comparison; heading-hold outer loop; MJX tracking grid",works,"real sim-to-sim gap; slow step rates not learned"
+2026-09-23,,lahiru+claude,train,,1.6,"E3 no-DR run: 202M steps in 97 min; reward +37.8",works,
+2026-09-23,,lahiru+claude,eval,,0,"E3 comparison: DR costs precision (1.6 vs 5.9 cm) but buys push recovery",works,

@@ -1,0 +1,70 @@
+{
+  "grid_fall_rate": 0.0,
+  "grid_step_abs_err_cm": 4.3889540713522415,
+  "grid_vx_abs_err": 0.104468762726265,
+  "stress": [
+    {
+      "case": "nominal",
+      "fall_rate": 0.0,
+      "step_abs_err_cm": 5.261311464401518,
+      "vx_abs_err": 0.13486338753067206
+    },
+    {
+      "case": "low_friction_0.5",
+      "fall_rate": 0.0,
+      "step_abs_err_cm": 7.124605933225974,
+      "vx_abs_err": 0.18487879360885529
+    },
+    {
+      "case": "low_friction_0.3",
+      "fall_rate": 1.0,
+      "step_abs_err_cm": 16.611913721439336,
+      "vx_abs_err": 0.23436344127537112
+    },
+    {
+      "case": "payload_+3kg",
+      "fall_rate": 0.0,
+      "step_abs_err_cm": 4.955398789170775,
+      "vx_abs_err": 0.12100519763716651
+    },
+    {
+      "case": "payload_+6kg",
+      "fall_rate": 0.0,
+      "step_abs_err_cm": 3.7646077272689373,
+      "vx_abs_err": 0.10447357540152342
+    },
+    {
+      "case": "push_0.5mps",
+      "fall_rate": 0.3333333333333333,
+      "step_abs_err_cm": 8.73786395191496,
+      "vx_abs_err": 0.1924920959161113
+    },
+    {
+      "case": "push_1.0mps",
+      "fall_rate": 1.0,
+      "step_abs_err_cm": 13.843924288844272,
+      "vx_abs_err": 0.36862366369669575
+    },
+    {
+      "case": "latency_20ms",
+      "fall_rate": 1.0,
+      "step_abs_err_cm": 40.440875767414376,
+      "vx_abs_err": 0.7604795763123767
+    },
+    {
+      "case": "latency_40ms",
+      "fall_rate": 1.0,
+      "step_abs_err_cm": NaN,
+      "vx_abs_err": NaN
+    }
+  ],
+  "demo": {
+    "fell": false,
+    "fall_time": null,
+    "n_steps": 34,
+    "step_cmd_mean_m": 0.2341176470588235,
+    "step_achieved_mean_m": 0.25612138295373155,
+    "step_abs_err_m": 0.036524909965117716,
+    "vx_abs_err": 0.1045296974363527
+  }
+}

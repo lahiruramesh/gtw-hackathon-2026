@@ -86,13 +86,40 @@ achievable value was commanded instead.
 The demo (C engine) shows both regimes. At 18 cm (1.67 Hz) tracking is within about ±1 cm; switched to
 30 cm at 0.6 m/s (1.0 Hz) the gait breaks up and does not fully recover at 22 cm.
 
+## 4c. E3: what does domain randomisation buy?
+
+Same task, same budget (202M steps, 97 min on a T4), but trained **without** randomisation, pushes or sensor noise.
+
+| metric | with randomisation (v1) | no randomisation |
+|---|---|---|
+| step error, training engine | 5.9 cm (slow step rates break down) | **1.6 cm** (every command) |
+| step error, unseen engine | 10.7 cm | **4.4 cm** |
+| falls: 0.5 m/s pushes | **0 %** | 33 % |
+| falls: 1.0 m/s pushes | **67 %** | 100 % |
+| falls: friction ×0.5, +3/+6 kg payload | 0 % | 0 % |
+| falls: friction ×0.3, 20/40 ms delay | 100 % | 100 % |
+
+![E3](../results/e3_comparison.png)
+
+* **Randomisation costs precision.** The no-randomisation policy tracks step length about 4× better in the training
+  engine and about 2.5× better in the unseen engine. It also learned the slow step rates that v1 did not, so v1's
+  slow-step failure comes from the harder, randomised training problem, not from the widened step-rate range.
+* **Randomisation buys push recovery,** the one disturbance it explicitly trained on.
+* **Neither policy handles** very low friction or actuation delay: neither was in the training distribution.
+  Delay in particular will exist on the real robot, so v2 must randomise it.
+* Caveat: one training seed per variant; stress cases use 3 evaluation seeds.
+
+**Takeaway for an industrial pipeline:** randomisation is not free. Randomise what the deployment will actually
+see (delay, pushes, floor friction ranges measured on site), and budget more training for it, or use a
+curriculum that masters the task first and hardens it afterwards.
+
 ## 5. Why it works / why it doesn't
 
 **Works:** at normal-to-fast step rates, one added reward term plus an observation was enough. The standard
 recipe learned independent speed and step-length control in 95 GPU-minutes, with no demonstrations.
 
 **Doesn't (yet):**
-1. **Slow, long steps.** The training distribution was widened beyond what the recipe was tuned for.
+1. **Slow, long steps.** E3 shows the no-randomisation policy learns them, so the randomised problem is simply harder in the same budget.
    Fixes for v2: a curriculum from 1.25–1.5 Hz outward, or sample step rates non-uniformly, or train longer.
 2. **Engine transfer.** The policy exploits engine-specific contact behaviour. Fixes: randomise contact
    parameters more widely, add actuation delay during training, or train in one engine and fine-tune/validate
