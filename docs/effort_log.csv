@@ -4,3 +4,6 @@ date,time,who,stage,hours,gpu_hours,what_changed,outcome,blocker
 2026-09-23,,lahiru+claude,env,,0,"StepLength env on MuJoCo Playground G1 (+step cmd obs, touchdown reward)",works,"menagerie download; jax 0.10 incompatible with brax 0.14 -> pinned jax 0.7.2"
 2026-09-23,,lahiru+claude,train,,0,"CPU smoke training 20k steps in 81 s",works,"CPU far too slow for real training"
 2026-09-23,,lahiru+claude,train,,,"Kaggle T4 probe run 5M steps",failed,"account not phone-verified: Kaggle silently ran without GPU + internet"
+2026-09-23,,lahiru,setup,,0,"Phone-verified Kaggle account",works,"GPU + internet disabled until verified"
+2026-09-23,,lahiru+claude,train,,0.2,"Kaggle T4 probe: 6.2M steps in 732 s (~12.5k steps/s incl. JIT + evals); reward -6.1 -> -3.0",works,"Warp solver prints ~30k overflow warnings (benign) -> filtered"
+2026-09-23,,lahiru+claude,train,,,"Kaggle T4 full run g1-steplength-v1: 200M steps",running,

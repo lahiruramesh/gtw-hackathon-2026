@@ -32,7 +32,13 @@ for name, src in FILES.items():
     (pkg / name).write_text(src)
 print(f"install {{time.time()-t0:.0f}}s", flush=True)
 env = dict(os.environ, PYTHONPATH="/kaggle/working/src", XLA_PYTHON_CLIENT_MEM_FRACTION="0.9")
-rc = subprocess.call([sys.executable, "-u", "-m", "g1pipe.train", "--out", "/kaggle/working/run", *{args!r}], env=env)
+p = subprocess.Popen([sys.executable, "-u", "-m", "g1pipe.train", "--out", "/kaggle/working/run", *{args!r}],
+                     env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+NOISE = ("iterations limit reached", "To disable the print warning", "Warning", "warnings.warn")
+for line in p.stdout:  # MuJoCo Warp prints a solver-overflow note every step; keep the log readable
+    if not any(n in line for n in NOISE):
+        print(line, end="", flush=True)
+rc = p.wait()
 shutil.rmtree("/kaggle/working/src", ignore_errors=True)
 sys.exit(rc)
 '''
