@@ -24,6 +24,10 @@ from brax.training.agents.ppo import networks as ppo_networks
 from g1pipe.steplength_env import GAIT_FREQ_RANGE, StepLength, default_config
 
 
+MIN_AIR_S = 0.1   # s a foot must be airborne before its landing counts as a step
+HEADING_KP = 1.5  # rad/s of yaw-rate command per rad of heading error (outer loop)
+
+
 @dataclass
 class Perturb:
     friction: float = 1.0        # multiplier on foot-floor friction
@@ -42,11 +46,14 @@ def command_to_gait(vx: float, step_len: float) -> tuple[float, float]:
 
 
 class PolicyRunner:
-    def __init__(self, params_path: str | Path):
+    def __init__(self, params_path: str | Path, env=None):
         blob = pickle.load(open(params_path, "rb"))
-        cfg = default_config()
-        cfg.impl = "jax"
-        self.env = StepLength(config=cfg)
+        if env is None:
+            cfg = default_config()
+            cfg.impl = "jax"
+            env = StepLength(config=cfg)
+        self.env = env
+        cfg = env._config
         self.m = self.env.mj_model
         self.d = mujoco.MjData(self.m)
         self.ctrl_dt, self.sim_dt = cfg.ctrl_dt, cfg.sim_dt
@@ -82,8 +89,13 @@ class PolicyRunner:
         return {"state": jp.asarray(state), "privileged_state": jp.asarray(self._priv)}
 
     def run(self, vx=0.5, step_len=0.25, duration=12.0, perturb: Perturb | None = None,
-            renderer=None, fps=30, seed=0, settle_s=2.0, schedule=None):
-        """schedule(t) -> (vx, step_len) lets you change the command mid-run."""
+            renderer=None, fps=30, seed=0, settle_s=2.0, schedule=None, heading_hold=True):
+        """schedule(t) -> (vx, step_len) lets you change the command mid-run.
+
+        heading_hold: the policy tracks a yaw *rate*, so small errors integrate into heading
+        drift (20-35 deg over 9 s even in the training engine). A classical P-loop on heading
+        feeds a small yaw-rate command, the way a joystick policy is deployed in practice.
+        """
         p = perturb or Perturb()
         rng = np.random.default_rng(seed)
         pf, bm = self._nominal
@@ -97,10 +109,16 @@ class PolicyRunner:
         self.d.ctrl[:] = self.init_q[7:]
         mujoco.mj_forward(self.m, self.d)
 
+        # Match the training env's timing exactly: after each physics step it builds the next
+        # observation *before* advancing the phase and *before* storing the action just applied,
+        # so obs_k carries phase_{k-1} and the action from two steps back (a_{k-2}).
         phase = np.array([0.0, np.pi])
-        last_act = np.zeros(self.m.nu, np.float32)
-        queue = [last_act.copy()] * (p.action_delay_steps + 1)
+        obs_phase = phase.copy()
+        obs_act = np.zeros(self.m.nu, np.float32)
+        prev_act = np.zeros(self.m.nu, np.float32)
+        queue = [prev_act.copy()] * (p.action_delay_steps + 1)
         prev_contact = np.array([True, True])
+        air_time = np.zeros(2)
         next_push = p.push_every_s if p.push_every_s > 0 else np.inf
         frames, steps, log = [], [], {"t": [], "vx": [], "cmd_vx": [], "cmd_step": []}
         fell_at = None
@@ -110,11 +128,17 @@ class PolicyRunner:
             t = k * self.ctrl_dt
             cvx, cstep = schedule(t) if schedule else (vx, step_len)
             f, step_cmd = command_to_gait(cvx, cstep)
-            obs = self._obs(np.array([cvx, 0.0, 0.0]), last_act, phase, step_cmd, f)
+            R = self.d.xmat[self.torso].reshape(3, 3)
+            yaw = np.arctan2(R[1, 0], R[0, 0])
+            if k == 0:
+                yaw0 = yaw
+            wz = float(np.clip(HEADING_KP * np.angle(np.exp(1j * (yaw0 - yaw))), -0.5, 0.5)) if heading_hold else 0.0
+            obs = self._obs(np.array([cvx, 0.0, wz]), obs_act, obs_phase, step_cmd, f)
             self._key, sub = jax.random.split(self._key)
             act, _ = self._policy(obs, sub)
-            last_act = np.asarray(act, np.float32)
-            queue.append(last_act.copy())
+            act = np.asarray(act, np.float32)
+            obs_act, prev_act = prev_act, act
+            queue.append(act.copy())
             applied = queue.pop(0)
             self.d.ctrl[:] = self.default + applied * self.action_scale
             for _ in range(self.n_sub):
@@ -123,16 +147,21 @@ class PolicyRunner:
                 ang = rng.uniform(0, 2 * np.pi)
                 self.d.qvel[:2] += p.push_vel * np.array([np.cos(ang), np.sin(ang)])
                 next_push += p.push_every_s
+            obs_phase = phase
             phase = np.fmod(phase + 2 * np.pi * self.ctrl_dt * f + np.pi, 2 * np.pi) - np.pi
 
             contact = np.array([self.d.sensordata[a] > 0 for a in self.floor_sensors])
+            # A touchdown counts only after a real swing (>= MIN_AIR_S airborne); scuffs and
+            # contact flicker otherwise register as spurious "steps" of a few cm.
+            touchdown = contact & ~prev_contact & (air_time >= MIN_AIR_S)
             if t >= settle_s and abs(cvx) > 0.15:
                 fwd = self.d.xmat[self.torso].reshape(3, 3)[:2, 0]
                 fwd /= np.linalg.norm(fwd) + 1e-9
                 feet = self.d.site_xpos[self.feet_sites][:, :2]
                 for i in (0, 1):
-                    if contact[i] and not prev_contact[i]:
+                    if touchdown[i]:
                         steps.append((t, i, float(np.dot(feet[i] - feet[1 - i], fwd)), step_cmd))
+            air_time = np.where(contact, 0.0, air_time + self.ctrl_dt)
             prev_contact = contact
             log["t"].append(t); log["vx"].append(float(self._sensor("local_linvel_pelvis")[0]))
             log["cmd_vx"].append(cvx); log["cmd_step"].append(step_cmd)

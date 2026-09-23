@@ -1,0 +1,70 @@
+{
+  "grid_fall_rate": 0.0,
+  "grid_step_abs_err_cm": 10.68259156562694,
+  "grid_vx_abs_err": 0.11037244353920976,
+  "stress": [
+    {
+      "case": "nominal",
+      "fall_rate": 0.0,
+      "step_abs_err_cm": 20.277039507687178,
+      "vx_abs_err": 0.1850133436155054
+    },
+    {
+      "case": "low_friction_0.5",
+      "fall_rate": 0.0,
+      "step_abs_err_cm": 13.228110958815057,
+      "vx_abs_err": 0.16302594550758992
+    },
+    {
+      "case": "low_friction_0.3",
+      "fall_rate": 1.0,
+      "step_abs_err_cm": 25.869162808120215,
+      "vx_abs_err": 0.25874406857102394
+    },
+    {
+      "case": "payload_+3kg",
+      "fall_rate": 0.0,
+      "step_abs_err_cm": 19.16179691556006,
+      "vx_abs_err": 0.1964537172472077
+    },
+    {
+      "case": "payload_+6kg",
+      "fall_rate": 0.0,
+      "step_abs_err_cm": 8.99726261515056,
+      "vx_abs_err": 0.1302403234520277
+    },
+    {
+      "case": "push_0.5mps",
+      "fall_rate": 0.0,
+      "step_abs_err_cm": 21.640716772334954,
+      "vx_abs_err": 0.22193114001914416
+    },
+    {
+      "case": "push_1.0mps",
+      "fall_rate": 0.6666666666666666,
+      "step_abs_err_cm": 24.45585865802667,
+      "vx_abs_err": 0.4334739233353997
+    },
+    {
+      "case": "latency_20ms",
+      "fall_rate": 1.0,
+      "step_abs_err_cm": 27.727417605646988,
+      "vx_abs_err": 0.2806421991782987
+    },
+    {
+      "case": "latency_40ms",
+      "fall_rate": 1.0,
+      "step_abs_err_cm": 34.62106726818353,
+      "vx_abs_err": 0.4100904380363392
+    }
+  ],
+  "demo": {
+    "fell": false,
+    "fall_time": null,
+    "n_steps": 36,
+    "step_cmd_mean_m": 0.23777777777777778,
+    "step_achieved_mean_m": 0.16913875706522405,
+    "step_abs_err_m": 0.11881824606333666,
+    "vx_abs_err": 0.1455403376745242
+  }
+}

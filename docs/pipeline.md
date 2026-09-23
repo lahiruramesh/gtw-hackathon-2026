@@ -39,17 +39,70 @@ Findings:
 
 ![E5](../results/e5/e5_heatmap.png)
 
-## 3. Training (E2)
+## 3. Training (v1)
 
-*Fill in once the Kaggle run is back: GPU, steps, wall time, reward curve.*
+| | |
+|---|---|
+| Hardware | Kaggle free tier, 1× NVIDIA T4 |
+| Algorithm | Brax PPO, Playground's tuned G1 recipe, 8192 parallel envs, randomisation on |
+| Budget | 202M env steps in **95 min** (~36k steps/s) |
+| Reward | −6.0 → +15.8; mean episode length 46 → 815 of 1000 steps |
 
-## 4. Cross-engine evaluation and stress tests (E2/E3)
+## 4. Results (v1)
 
-*Fill in from `results/eval_<tag>/summary.json`.*
+### 4a. In the training engine (MJX): did it learn the task?
+`scripts/eval_mjx.py`: fixed command, no noise, 9 s per run.
+
+| speed | 15 cm requested | 25 cm | 35 cm |
+|---|---|---|---|
+| 0.5 m/s | 11.9 cm (err 3.1) | 18.6 (err 6.8, erratic) | 20.1 (cap 27.8, erratic) |
+| 0.7 m/s | 18.0 (cmd capped 19.4, err 2.3) | **23.3 (err 1.9)** | 10.5 (gait breaks down) |
+| 0.9 m/s | 23.8 (cmd capped 25.0, err 1.6) | **23.8 (err 1.6)** | **31.8 (err 3.2)** |
+
+No falls; speed error 0.03 m/s. **At step rates of 1.2 Hz and above the task is learned: 1.6–3.2 cm error.**
+At slow step rates (≤ 1.0 Hz: long steps at low speed) the gait turns irregular. We widened Playground's
+1.25–1.5 Hz training range down to 0.9 Hz, and 200M steps did not cover the slow end.
+"cmd capped" means the requested step length would need a step rate outside 0.9–1.8 Hz, so the nearest
+achievable value was commanded instead.
+
+### 4b. In a different engine (MuJoCo C, CPU): does it transfer?
+`scripts/eval_suite.py`, same model file and solver settings, different physics implementation.
+
+* **Walks, no falls** anywhere on the 4×5 command grid, but step-length error grows to **~10 cm** and
+  speed error to 0.11 m/s.
+* **Heading drift:** without steering, the robot turns 50–130° over 10 s (20–35° in MJX too). The policy
+  tracks a yaw *rate*, so errors integrate. The evaluator therefore adds a classical heading-hold loop
+  (P-controller → small yaw-rate command), which is how such policies are deployed.
+* **Diagnosis:** a lock-step comparison from an identical start state gives identical observations at
+  step 0 (so the evaluator is correct), with joint velocities diverging by about 3 rad/s after one
+  control step. Raising solver iterations 3 → 50 does not close the gap. The policy is sensitive to how
+  the two engines resolve foot contact, which is the sim-to-sim gap in miniature.
+* **Stress tests (C engine, 0.6 m/s, 25 cm):** survives friction ×0.5, +3 kg and +6 kg payload,
+  0.5 m/s pushes. Fails at friction ×0.3, 1.0 m/s pushes (2 of 3), and 40 ms actuation delay.
+  The 20 ms delay result flips between runs, so treat it as marginal.
+
+![demo](../results/eval_v1/demo_step_change.png)
+
+The demo (C engine) shows both regimes. At 18 cm (1.67 Hz) tracking is within about ±1 cm; switched to
+30 cm at 0.6 m/s (1.0 Hz) the gait breaks up and does not fully recover at 22 cm.
 
 ## 5. Why it works / why it doesn't
 
-*Fill in.*
+**Works:** at normal-to-fast step rates, one added reward term plus an observation was enough. The standard
+recipe learned independent speed and step-length control in 95 GPU-minutes, with no demonstrations.
+
+**Doesn't (yet):**
+1. **Slow, long steps.** The training distribution was widened beyond what the recipe was tuned for.
+   Fixes for v2: a curriculum from 1.25–1.5 Hz outward, or sample step rates non-uniformly, or train longer.
+2. **Engine transfer.** The policy exploits engine-specific contact behaviour. Fixes: randomise contact
+   parameters more widely, add actuation delay during training, or train in one engine and fine-tune/validate
+   in the other. This is the same gap that will appear sim-to-real, only smaller.
+3. **Heading.** Needs a classical outer loop, which makes the system a hybrid (learned gait + classical steering).
+
+**Compared with E5 (vendor policy, no training):** the vendor policy reaches 7–40 cm by re-timing its gait
+clock, but speed and step length are coupled. The v1 policy decouples them and tracks within 2–3 cm in its
+comfortable range, at the cost of 95 GPU-minutes plus roughly a day of engineering, most of it setup and
+evaluation rather than learning (see `effort_log.csv`).
 
 ## 6. Release gate before hardware (proposed)
 
