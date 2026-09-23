@@ -23,7 +23,7 @@ export PYTHONPATH=.
 | Vendor policy walks + video | `uv run python scripts/run_policy.py --vx 0.5 --video results/videos/baseline.mp4` | Mac |
 | **E5** does step length need retraining? | `uv run python scripts/e5_sweep.py` | Mac, ~15 s |
 | Pipeline smoke test (tiny training) | `uv run python -m g1pipe.train --smoke --out runs/smoke` | Mac, ~90 s |
-| Train on GPU | `uv run python scripts/kaggle_job.py push --name g1-steplength-v1 --timesteps 150000000` | Kaggle T4 |
+| Train on GPU | `uv run python scripts/kaggle_job.py push --name g1-steplength-v1 --timesteps 200000000` (add `--extra="--no-dr"` for E3)` | Kaggle T4 |
 | Check / fetch | `uv run python scripts/kaggle_job.py status --name g1-steplength-v1` then `pull` | Mac |
 | **E2/E3** evaluate + stress + demo video | `uv run python scripts/eval_suite.py runs/g1-steplength-v1/run/params.pkl --tag v1` | Mac |
 

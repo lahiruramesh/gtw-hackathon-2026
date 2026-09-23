@@ -91,6 +91,7 @@ if __name__ == "__main__":
     ap.add_argument("--name", required=True, help="kernel slug, lowercase-with-dashes")
     ap.add_argument("--timesteps", type=int, default=150_000_000)
     ap.add_argument("--accelerator", default="NvidiaTeslaT4")
-    ap.add_argument("extra", nargs="*", help="extra args for g1pipe.train, after --")
+    ap.add_argument("--extra", default="", help='extra args for g1pipe.train, e.g. --extra="--no-dr"')
     a = ap.parse_args()
+    a.extra = a.extra.split()
     {"push": push, "status": status, "pull": pull}[a.cmd](a)

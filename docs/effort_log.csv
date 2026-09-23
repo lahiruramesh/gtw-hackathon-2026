@@ -7,3 +7,4 @@ date,time,who,stage,hours,gpu_hours,what_changed,outcome,blocker
 2026-09-23,,lahiru,setup,,0,"Phone-verified Kaggle account",works,"GPU + internet disabled until verified"
 2026-09-23,,lahiru+claude,train,,0.2,"Kaggle T4 probe: 6.2M steps in 732 s (~12.5k steps/s incl. JIT + evals); reward -6.1 -> -3.0",works,"Warp solver prints ~30k overflow warnings (benign) -> filtered"
 2026-09-23,,lahiru+claude,train,,,"Kaggle T4 full run g1-steplength-v1: 200M steps",running,
+2026-09-23,,lahiru+claude,train,,,"Kaggle T4 E3 run g1-steplength-nodr: 200M steps, no randomisation/pushes/noise",running,
