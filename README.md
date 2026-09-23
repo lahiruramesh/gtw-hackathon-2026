@@ -25,6 +25,9 @@ export PYTHONPATH=.
 | Pipeline smoke test (tiny training) | `uv run python -m g1pipe.train --smoke --out runs/smoke` | Mac, ~90 s |
 | Train on GPU | `uv run python scripts/kaggle_job.py push --name g1-steplength-v1 --timesteps 200000000` (add `--extra="--no-dr"` for E3) | Kaggle T4 |
 | Check / fetch | `uv run python scripts/kaggle_job.py status --name g1-steplength-v1` then `pull` | Mac |
+| Train stairs policy | `uv run python scripts/kaggle_job.py push --name g1-steplength-stairs --timesteps 200000000 --extra="--task stairs"` | Kaggle T4 |
+| Evaluate stairs policy | `uv run python -m g1pipe.stairs_eval runs/g1-steplength-stairs/run/params.pkl --video results/videos/stairs.mp4` | Mac |
+| **Watch it walk** (live 3D, keyboard control) | `scripts/view.sh --run v1` (or `--run nodr`) | Mac |
 | **E2/E3** evaluate + stress + demo video | `uv run python scripts/eval_suite.py runs/g1-steplength-v1/run/params.pkl --tag v1` | Mac |
 
 Kaggle needs `~/.kaggle/kaggle.json` (Kaggle → Settings → API → Create token) and a phone-verified account (for GPU + internet).
@@ -40,6 +43,9 @@ Kaggle needs `~/.kaggle/kaggle.json` (Kaggle → Settings → API → Create tok
 | `scripts/e5_sweep.py` | E5: step-length range of the vendor policy without retraining |
 | `scripts/eval_suite.py` | E2 tracking grid, E3 stress tests, on-the-fly step change demo |
 | `scripts/kaggle_job.py` | Bundle + push training to a private Kaggle GPU kernel, poll, pull results |
+| `g1pipe/stairs_terrain.py`, `g1pipe/stairs_env.py` | Stairs task: 24 m heightfield of pyramid staircases (3–15 cm steps) + 55-point height scan in the observation; `train.py --task stairs` |
+| `g1pipe/stairs_eval.py` | Crosses every staircase in plain MuJoCo; reached-top / crossed / fell per step height |
+| `jev_agent/` | Self-learning high-level agent: TypeSafe Jev picks the gait from sensors + mission, code gates it, learner adapts. See [jev_agent/README.md](jev_agent/README.md) |
 | `docs/effort_log.csv` | Hours per stage — evidence for "how much effort is required?" |
 
 ## Task design (why it looks like this)
