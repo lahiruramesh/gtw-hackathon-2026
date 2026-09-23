@@ -5,6 +5,7 @@ smoke test.
 
     python -m g1pipe.train --timesteps 150_000_000 --out runs/steplength_v1      # GPU
     python -m g1pipe.train --smoke --out runs/smoke                               # CPU check
+    python -m g1pipe.train --task stairs --timesteps 200_000_000 --out runs/stairs_v1   # stairs + height scan
 
 Writes to --out:  params.pkl (final), ckpt_*.pkl (periodic), progress.csv, config.json
 """
@@ -31,6 +32,8 @@ from g1pipe.steplength_env import StepLength, default_config
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="runs/steplength")
+    ap.add_argument("--task", choices=["flat", "stairs"], default="flat",
+                    help="stairs: g1pipe.stairs_env (stair terrain + height scan observation)")
     ap.add_argument("--timesteps", type=int, default=150_000_000)
     ap.add_argument("--num-envs", type=int, default=None)
     ap.add_argument("--impl", default=None, help="'warp' (NVIDIA GPU) or 'jax'; default picks by backend")
@@ -45,7 +48,11 @@ def main():
     backend = jax.default_backend()
     print("JAX backend:", backend, "devices:", jax.devices())
 
-    env_cfg = default_config()
+    if a.task == "stairs":
+        from g1pipe.stairs_env import StairsStepLength as Env, default_config as env_default_config
+    else:
+        Env, env_default_config = StepLength, default_config
+    env_cfg = env_default_config()
     env_cfg.impl = a.impl or ("warp" if backend == "gpu" else "jax")
     if a.step_scale is not None:
         env_cfg.reward_config.scales.step_length = a.step_scale
@@ -63,8 +70,8 @@ def main():
         rl.num_resets_per_eval = 0
         env_cfg.naconmax, env_cfg.njmax = 64, env_cfg.njmax
 
-    env = StepLength(config=env_cfg)
-    eval_env = StepLength(config=env_cfg)
+    env = Env(config=env_cfg)
+    eval_env = Env(config=env_cfg)
 
     params_nf = dict(rl.network_factory)
     train_kwargs = {k: v for k, v in rl.items() if k != "network_factory"}
@@ -72,7 +79,7 @@ def main():
 
     (out / "config.json").write_text(json.dumps({
         "env": env_cfg.to_dict(), "ppo": {**train_kwargs, "network_factory": params_nf},
-        "no_dr": a.no_dr, "seed": a.seed, "backend": backend,
+        "task": a.task, "no_dr": a.no_dr, "seed": a.seed, "backend": backend,
     }, indent=2, default=str))
 
     t0 = time.time()
@@ -105,7 +112,7 @@ def main():
 
     with open(out / "params.pkl", "wb") as f:
         pickle.dump({"params": jax.device_get(params), "network_factory": params_nf,
-                     "obs_size": env.observation_size, "action_size": env.action_size}, f)
+                     "obs_size": env.observation_size, "action_size": env.action_size, "task": a.task}, f)
     print(f"done in {time.time() - t0:.0f}s -> {out}/params.pkl")
 
 

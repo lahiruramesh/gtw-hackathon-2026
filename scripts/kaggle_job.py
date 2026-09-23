@@ -17,7 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 JOBS = ROOT / "kaggle_jobs"
-BUNDLE = ["__init__.py", "steplength_env.py", "train.py"]
+BUNDLE = ["__init__.py", "steplength_env.py", "stairs_terrain.py", "stairs_env.py", "train.py"]
 PINS = ["playground==0.2.0", "brax==0.14.2", "jax[cuda12]==0.7.2", "flax==0.12.0",
         "mujoco==3.14.0", "mujoco-mjx==3.14.0", "warp-lang==1.17.0"]
 

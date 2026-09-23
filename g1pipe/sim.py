@@ -87,7 +87,11 @@ class G1Sim:
         fr, mass = self._nominal
         self.m.geom_friction[:] = fr
         self.m.body_mass[:] = mass
+        # MuJoCo uses the larger friction of the two touching geoms, so scale the feet as well as the
+        # floor; scaling only the floor had no effect while the feet stayed at 1.0.
+        feet = np.isin(self.m.geom_bodyid, self.feet)
         self.m.geom_friction[self.floor, 0] = fr[self.floor, 0] * p.friction
+        self.m.geom_friction[feet, 0] = fr[feet, 0] * p.friction
         self.m.body_mass[self.pelvis] += p.payload_kg
 
     def _foot_contacts(self) -> list[bool]:
@@ -110,8 +114,9 @@ class G1Sim:
     # -------------------------------------------------------------------- run
     def run(self, cmd=(0.5, 0.0, 0.0), period: float = 0.8, duration: float = 10.0,
             perturb: Perturb | None = None, seed: int = 0, renderer=None, fps: int = 30,
-            settle_s: float = 2.0, cmd_fn=None, period_fn=None) -> tuple[Episode, list]:
+            settle_s: float = 2.0, cmd_fn=None, period_fn=None, target_fn=None) -> tuple[Episode, list]:
         """Roll out the policy. `cmd_fn(t)` / `period_fn(t)` override constants for scheduled commands.
+        `target_fn(target, phase, t)` may adjust the PD joint targets each physics step (e.g. swing-leg shaping).
 
         Step lengths recorded after `settle_s` only, so start-up transients are excluded.
         """
@@ -137,7 +142,8 @@ class G1Sim:
         n = int(duration / self.dt)
         for k in range(n):
             t = k * self.dt
-            self.d.ctrl[:] = (target - self.d.qpos[7:]) * kp - self.d.qvel[6:] * kd
+            tgt = target_fn(target, phase_t % 1.0, t) if target_fn else target
+            self.d.ctrl[:] = (tgt - self.d.qpos[7:]) * kp - self.d.qvel[6:] * kd
             mujoco.mj_step(self.m, self.d)
 
             if t >= next_push:
