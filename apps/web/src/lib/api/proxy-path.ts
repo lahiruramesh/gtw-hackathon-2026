@@ -44,3 +44,47 @@ export function filterResponseHeaders(upstream: Headers): Headers {
   });
   return result;
 }
+
+/** Largest request body the proxy forwards (JSON commands and forms; the API never takes uploads). */
+export const MAX_REQUEST_BODY_BYTES = 1024 * 1024;
+
+const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
+/**
+ * A second line of defence against cross-site request forgery for state-changing calls, beyond
+ * SameSite cookies (which let sibling subdomains through): the request must come from our own origin.
+ */
+export function isForeignRequest(method: string, requestHeaders: Headers, appOrigin: string): boolean {
+  if (SAFE_METHODS.has(method)) return false;
+  const site = requestHeaders.get("sec-fetch-site");
+  if (site === "cross-site" || site === "same-site") return true;
+  const origin = requestHeaders.get("origin");
+  return origin !== null && origin !== appOrigin;
+}
+
+/** Reads at most `limit` bytes of a request body; null when it is larger. */
+export async function readLimitedBody(
+  body: ReadableStream<Uint8Array> | null,
+  limit: number,
+): Promise<Uint8Array<ArrayBuffer> | null> {
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  if (body) {
+    const reader = body.getReader();
+    for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
+      size += chunk.value.byteLength;
+      if (size > limit) {
+        await reader.cancel();
+        return null;
+      }
+      chunks.push(chunk.value);
+    }
+  }
+  const result = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return result;
+}

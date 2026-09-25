@@ -23,12 +23,11 @@ from skf_api.core.permissions import Permission
 from skf_api.modules.artifacts.models import Artifact
 from skf_api.modules.artifacts.service import CHECKPOINT_KINDS, artifacts_by_id
 from skf_api.modules.audit import service as audit
-from skf_api.modules.compute.backends import KINDS_NEEDING_SECRET
 from skf_api.modules.compute.models import ComputeTarget
 from skf_api.modules.compute.service import Usage, get_target, usage_by_target
 from skf_api.modules.gates.models import GateDecision, GateVerdict, ReviewStatus
 from skf_api.modules.runs import policy, schemas, transitions
-from skf_api.modules.runs.estimate import EstimateInput, estimate_run, is_smoke
+from skf_api.modules.runs.estimate import EstimateInput, estimate_run
 from skf_api.modules.runs.models import Evaluation, Run, RunsOn, RunStatus, Stage, StageKind, StageStatus
 from skf_api.modules.runs.notify import publish_run, publish_stages
 from skf_api.modules.runs.views import main_stages, run_detail, run_summaries
@@ -186,24 +185,14 @@ async def estimate(
     return (await plan_launch(ctx, session, principal, body)).estimate
 
 
-def _check_launch_allowed(ctx: AppContext, principal: Principal, plan: LaunchPlan) -> None:
+def _check_launch_allowed(principal: Principal, plan: LaunchPlan) -> None:
     custom = not plan.from_preset or plan.parent_run_id is not None
     if custom and not principal.can(Permission.RUN_CREATE_CUSTOM):
         raise Forbidden(
             "Custom params and warm starts need permission run:create_custom; launch a preset as is"
         )
-    target = plan.target
-    if not target.enabled:
-        raise Invalid(f"Compute target '{target.name}' is disabled")
-    if target.kind in KINDS_NEEDING_SECRET and not target.has_secret:
-        raise Invalid(f"Compute target '{target.name}' has no credentials")
-    if (
-        target.kind is BackendKind.LOCAL_CPU
-        and plan.manifest.train_stages
-        and not is_smoke(plan.params)
-        and ctx.settings.environment != "development"
-    ):
-        raise Invalid("Only smoke runs may train on the local CPU target")
+    if plan.estimate.blockers:
+        raise Invalid(plan.estimate.blockers[0], details={"blockers": plan.estimate.blockers})
 
 
 async def _local_target(session: AsyncSession) -> ComputeTarget | None:
@@ -226,7 +215,7 @@ async def create_run(
     ctx: AppContext, session: AsyncSession, principal: Principal, body: schemas.RunCreate, ip: str | None
 ) -> schemas.RunDetail:
     plan = await plan_launch(ctx, session, principal, body)
-    _check_launch_allowed(ctx, principal, plan)
+    _check_launch_allowed(principal, plan)
     needs_local = any(
         s.runs_on is RunsOn.LOCAL and s.kind is not StageKind.GATE for s in plan.manifest.pipeline
     )

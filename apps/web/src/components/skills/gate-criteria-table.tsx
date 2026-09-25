@@ -2,29 +2,37 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import type { GateCriterion } from "@/lib/api/types";
 import { formatValue } from "@/lib/format";
 
+/** Criterion label with its metric path underneath, so the table fits a narrow column. */
+export function CriterionLabel({ criterion }: { criterion: Pick<GateCriterion, "label" | "metric"> }) {
+  return (
+    <div className="min-w-0 space-y-0.5 whitespace-normal">
+      <div>{criterion.label}</div>
+      <div className="font-mono text-xs break-all text-muted-foreground">{criterion.metric}</div>
+    </div>
+  );
+}
+
 export function GateCriteriaTable({ criteria }: { criteria: GateCriterion[] }) {
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Criterion</TableHead>
-            <TableHead>Metric</TableHead>
-            <TableHead className="text-right">Threshold</TableHead>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Criterion</TableHead>
+          <TableHead className="text-right">Threshold</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {criteria.map((criterion) => (
+          <TableRow key={criterion.metric}>
+            <TableCell>
+              <CriterionLabel criterion={criterion} />
+            </TableCell>
+            <TableCell className="text-right align-top font-mono text-xs whitespace-nowrap">
+              {criterion.op} {formatValue(criterion.value)}
+            </TableCell>
           </TableRow>
-        </TableHeader>
-        <TableBody>
-          {criteria.map((criterion) => (
-            <TableRow key={criterion.metric}>
-              <TableCell>{criterion.label}</TableCell>
-              <TableCell className="font-mono text-xs text-muted-foreground">{criterion.metric}</TableCell>
-              <TableCell className="text-right font-mono text-xs whitespace-nowrap">
-                {criterion.op} {formatValue(criterion.value)}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+        ))}
+      </TableBody>
+    </Table>
   );
 }

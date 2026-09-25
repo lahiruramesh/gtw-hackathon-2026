@@ -1,15 +1,17 @@
 import { describe, expect, it } from "vitest";
 
 import { DEFAULT_WEIGHTS, METHODS, REQUIREMENTS } from "@/content/methods";
-import type { LogLine } from "@/lib/api/types";
+import type { ComputeTarget, LogLine } from "@/lib/api/types";
 import { formatBytes, formatCompact, formatDuration, humanizeKey } from "@/lib/format";
 import { splitHighlight } from "@/lib/highlight";
 import { buildLineage } from "@/lib/lineage";
 import { LogStore, MAX_LOG_LINES } from "@/lib/log-store";
 import { appendMetricPoint, defaultMetricKeys, orderSelection } from "@/lib/metrics";
 import { rankMethods, weightedScore } from "@/lib/methods-ranking";
-import { permissionsFor, roleLabel } from "@/lib/permissions";
+import { permissionChanges, permissionsFor, roleLabel } from "@/lib/permissions";
+import { defaultTargetId } from "@/lib/run-draft";
 import { safeNextPath } from "@/lib/safe-redirect";
+import { gateStageVerdict } from "@/lib/status";
 
 function line(id: number): LogLine {
   return { id, stage_id: "s", ts: "2026-09-25T10:00:00Z", level: "info", text: `line ${id}` };
@@ -78,6 +80,14 @@ describe("methods ranking", () => {
     expect(ranking).toHaveLength(METHODS.length);
     expect(ranking[0]!.score).toBeGreaterThanOrEqual(ranking.at(-1)!.score);
   });
+
+  it("agrees with the written recommendation for locomotion and workflows under the default weights", () => {
+    expect(rankMethods(METHODS, "locomotion", DEFAULT_WEIGHTS)[0]!.method.id).toBe("sim2real");
+    expect(rankMethods(METHODS, "workflow", DEFAULT_WEIGHTS)[0]!.method.id).toBe("manual");
+    const learned = rankMethods(METHODS, "manipulation", DEFAULT_WEIGHTS).map((item) => item.method.id);
+    expect(learned.indexOf("teleop")).toBeLessThan(learned.indexOf("rl"));
+    expect(learned.indexOf("imitation")).toBeLessThan(learned.indexOf("rl"));
+  });
 });
 
 describe("permissions", () => {
@@ -97,6 +107,12 @@ describe("helpers", () => {
     expect(safeNextPath("/\\evil.com")).toBe("/");
     expect(safeNextPath("https://evil.com")).toBe("/");
     expect(safeNextPath(null)).toBe("/");
+    // URL parsing drops tabs and newlines: "/\t/evil.example" would become "//evil.example".
+    for (const char of ["\t", "\n", "\r", "\u0000", "\u007f"]) {
+      expect(safeNextPath(`/${char}/evil.example`)).toBe("/");
+    }
+    expect(safeNextPath(decodeURIComponent("/%09/evil.example"))).toBe("/");
+    expect(safeNextPath("/runs/new?skill=g1-stairs#top")).toBe("/runs/new?skill=g1-stairs#top");
   });
 
   it("highlights case-insensitively and escapes regex characters", () => {
@@ -118,5 +134,35 @@ describe("helpers", () => {
     expect(formatDuration(42)).toBe("42 s");
     expect(formatBytes(1536)).toBe("1.5 KB");
     expect(humanizeKey("eval/episode_step_len_err")).toBe("Step len err");
+  });
+});
+
+describe("gateStageVerdict", () => {
+  it("shows the verdict of a gate stage that ran, never its execution status", () => {
+    expect(gateStageVerdict({ kind: "gate", status: "succeeded" }, "fail")).toBe("fail");
+    expect(gateStageVerdict({ kind: "gate", status: "succeeded" }, "pass")).toBe("pass");
+    expect(gateStageVerdict({ kind: "gate", status: "pending" }, null)).toBeNull();
+    expect(gateStageVerdict({ kind: "train", status: "succeeded" }, "fail")).toBeNull();
+  });
+});
+
+describe("defaultTargetId", () => {
+  const target = (id: string, kind: ComputeTarget["kind"], enabled = true) => ({ id, kind, enabled }) as ComputeTarget;
+
+  it("starts smoke tests on the CPU and training on a GPU target", () => {
+    const targets = [target("cpu", "local_cpu"), target("off", "aws_ec2", false), target("t4", "kaggle")];
+    expect(defaultTargetId(targets, true)).toBe("cpu");
+    expect(defaultTargetId(targets, false)).toBe("t4");
+    expect(defaultTargetId([target("cpu", "local_cpu")], false)).toBe("cpu");
+    expect(defaultTargetId([target("off", "kaggle", false)], false)).toBeNull();
+  });
+});
+
+describe("permissionChanges", () => {
+  it("lists what a role change grants and removes", () => {
+    const promote = permissionChanges("operator", "ml_engineer");
+    expect(promote.gained).toContain("run:create_custom");
+    expect(promote.lost).toEqual([]);
+    expect(permissionChanges("ml_engineer", "operator").lost).toEqual(promote.gained);
   });
 });

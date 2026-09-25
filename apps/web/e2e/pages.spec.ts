@@ -27,6 +27,26 @@ for (const { path, heading } of PAGES) {
   });
 }
 
+test("?next= after sign-in never leaves the site", async ({ page, baseURL }) => {
+  for (const next of ["/%09/evil.example", "//evil.example", "/%0a/evil.example", "https://evil.example"]) {
+    const response = await page.goto(`/login?next=${next}`);
+    expect(response?.status(), next).toBeLessThan(500);
+    await expect(page).toHaveURL(`${baseURL}/`);
+  }
+});
+
+test("the browser cannot mint API tokens", async ({ request }) => {
+  expect((await request.get("/api/auth/token")).status()).toBe(404);
+  expect((await request.get("/api/auth/jwks")).status()).toBe(200); // the API still verifies with it
+});
+
+test("the proxy refuses state-changing requests from other sites", async ({ request }) => {
+  const response = await request.post("/api/backend/skills/sync", {
+    headers: { origin: "https://evil.example", "sec-fetch-site": "cross-site", "content-type": "text/plain" },
+  });
+  expect(response.status()).toBe(403);
+});
+
 test("the proxy rejects paths that try to leave /api/v1", async ({ request }) => {
   const response = await request.get("/api/backend/runs%2F..%2Fadmin");
   expect(response.status()).toBe(400);

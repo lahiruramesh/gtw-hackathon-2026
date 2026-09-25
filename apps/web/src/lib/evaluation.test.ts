@@ -27,18 +27,28 @@ describe("describeEvaluation", () => {
     expect(view.rest).toEqual({});
   });
 
-  it("renders a stairs summary with its by-height list", () => {
+  it("gives a stairs summary its by-height view, ordered by rise with the certified height marked", () => {
     const view = describeEvaluation({
       n: 96,
-      crossed: 88,
-      crossed_rate: 0.9167,
-      certified_cm: 8.1,
+      crossed: 85,
+      certified_cm: 6.43,
+      // JSONB returns keys in its own order: the view must not depend on it.
       by_height: [
-        { height_cm: 3, n: 12, crossed: 12, fell: 0 },
-        { height_cm: 15, n: 12, crossed: 8, fell: 4 },
+        { fell: 4, runs: 12, stable: false, crossed: 8, rise_cm: 12, max_tilt_deg: 31, min_pelvis_m: 0.5 },
+        { fell: 0, runs: 12, stable: true, crossed: 12, rise_cm: 6.43, max_tilt_deg: 14, min_pelvis_m: 0.66 },
+        { fell: 0, runs: 12, stable: true, crossed: 12, rise_cm: 3, max_tilt_deg: 9, min_pelvis_m: 0.7 },
       ],
     });
     expect(view.heatmap).toBeNull();
+    expect(view.tables).toEqual([]);
+    expect(view.heights?.map((height) => height.riseCm)).toEqual([3, 6.43, 12]);
+    expect(view.heights?.map((height) => height.certified)).toEqual([false, true, false]);
+    expect(view.heights?.[2]).toMatchObject({ runs: 12, crossed: 8, fell: 4, stable: false, maxTiltDeg: 31 });
+  });
+
+  it("falls back to a generic table for other by-height shapes", () => {
+    const view = describeEvaluation({ by_height: [{ height_cm: 3, n: 12, crossed: 12, fell: 0 }] });
+    expect(view.heights).toBeNull();
     expect(view.tables[0]?.columns).toEqual(["height_cm", "n", "crossed", "fell"]);
   });
 

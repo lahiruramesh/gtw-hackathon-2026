@@ -54,10 +54,14 @@ export function RunHeader({ viewerId }: { viewerId: string }) {
                 : "No compute target"}
             </dd>
           </div>
-          <div>
-            <dt className="sr-only">Commit</dt>
-            <dd className="font-mono">{shortSha(run.git_sha)}</dd>
-          </div>
+          {run.git_sha && (
+            <div>
+              <dt className="sr-only">Commit</dt>
+              <dd className="font-mono" title={run.git_sha}>
+                {shortSha(run.git_sha)}
+              </dd>
+            </div>
+          )}
           <div>
             <dt className="sr-only">Created</dt>
             <dd>

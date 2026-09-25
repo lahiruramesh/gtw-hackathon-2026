@@ -129,7 +129,7 @@ export function ReviewStep({
         <Button variant="outline" onClick={onBack} disabled={launching}>
           Back
         </Button>
-        <Button onClick={onLaunch} disabled={launching || nameInvalid}>
+        <Button onClick={onLaunch} disabled={launching || nameInvalid || (estimate.data?.blockers.length ?? 0) > 0}>
           {launching ? <Loader2Icon className="animate-spin" /> : <RocketIcon />}
           {estimate.data?.needs_approval ? "Submit for approval" : "Launch run"}
         </Button>

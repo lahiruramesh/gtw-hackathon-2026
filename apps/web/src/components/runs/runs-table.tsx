@@ -8,6 +8,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import type { RunSummary } from "@/lib/api/types";
 import { formatCost, formatNumber } from "@/lib/format";
 import { formatHeadline } from "@/lib/headline";
+import { cn } from "cn";
+
+// Priority columns: on a phone the table keeps run, status and gate; the rest appear as width allows.
+const SMALL_UP = "hidden sm:table-cell";
+const MEDIUM_UP = "hidden md:table-cell";
+const LARGE_ONLY = "hidden lg:table-cell";
 
 interface RunsTableProps {
   runs: RunSummary[];
@@ -24,27 +30,27 @@ export function RunsTable({ runs, headlineColumns, compact = false }: RunsTableP
           <TableRow>
             <TableHead>Run</TableHead>
             <TableHead>Status</TableHead>
-            {!compact && <TableHead>Target</TableHead>}
-            {!compact && <TableHead>Created by</TableHead>}
-            <TableHead>Created</TableHead>
-            <TableHead className="text-right">GPU-h</TableHead>
-            {!compact && <TableHead className="text-right">Cost</TableHead>}
+            {!compact && <TableHead className={LARGE_ONLY}>Target</TableHead>}
+            {!compact && <TableHead className={LARGE_ONLY}>Created by</TableHead>}
+            <TableHead className={MEDIUM_UP}>Created</TableHead>
+            <TableHead className={cn("text-right", SMALL_UP)}>GPU-h</TableHead>
+            {!compact && <TableHead className={cn("text-right", LARGE_ONLY)}>Cost</TableHead>}
             <TableHead>Gate</TableHead>
             {headlineColumns ? (
               headlineColumns.map((label) => (
-                <TableHead key={label} className="text-right">
+                <TableHead key={label} className={cn("text-right", MEDIUM_UP)}>
                   {label}
                 </TableHead>
               ))
             ) : (
-              <TableHead>Headline</TableHead>
+              <TableHead className={MEDIUM_UP}>Headline</TableHead>
             )}
           </TableRow>
         </TableHeader>
         <TableBody>
           {runs.map((run) => (
             <TableRow key={run.id}>
-              <TableCell className="max-w-[260px]">
+              <TableCell className="max-w-[45vw] sm:max-w-[260px]">
                 <Link href={`/runs/${run.id}`} className="block truncate font-medium hover:underline">
                   {run.name}
                 </Link>
@@ -61,13 +67,19 @@ export function RunsTable({ runs, headlineColumns, compact = false }: RunsTableP
               <TableCell>
                 <RunStatusCell run={run} />
               </TableCell>
-              {!compact && <TableCell className="text-muted-foreground">{run.compute_target?.name ?? "—"}</TableCell>}
-              {!compact && <TableCell className="text-muted-foreground">{run.created_by.name}</TableCell>}
-              <TableCell className="text-muted-foreground">
+              {!compact && (
+                <TableCell className={cn("text-muted-foreground", LARGE_ONLY)}>
+                  {run.compute_target?.name ?? "—"}
+                </TableCell>
+              )}
+              {!compact && (
+                <TableCell className={cn("text-muted-foreground", LARGE_ONLY)}>{run.created_by.name}</TableCell>
+              )}
+              <TableCell className={cn("text-muted-foreground", MEDIUM_UP)}>
                 <DateTime value={run.created_at} />
               </TableCell>
-              <TableCell className="text-right">{formatNumber(run.gpu_hours, 1)}</TableCell>
-              {!compact && <TableCell className="text-right">{formatCost(run.cost)}</TableCell>}
+              <TableCell className={cn("text-right", SMALL_UP)}>{formatNumber(run.gpu_hours, 1)}</TableCell>
+              {!compact && <TableCell className={cn("text-right", LARGE_ONLY)}>{formatCost(run.cost)}</TableCell>}
               <TableCell>
                 {run.gate_verdict ? (
                   <StatusBadge domain="gate" status={run.gate_verdict} />
@@ -79,13 +91,13 @@ export function RunsTable({ runs, headlineColumns, compact = false }: RunsTableP
                 headlineColumns.map((label) => {
                   const item = run.headline.find((headline) => headline.label === label);
                   return (
-                    <TableCell key={label} className="text-right">
+                    <TableCell key={label} className={cn("text-right", MEDIUM_UP)}>
                       {item ? formatHeadline(item) : "—"}
                     </TableCell>
                   );
                 })
               ) : (
-                <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                <TableCell className={cn("text-xs whitespace-nowrap text-muted-foreground", MEDIUM_UP)}>
                   {run.headline.length === 0
                     ? "—"
                     : run.headline.map((item) => `${item.label} ${formatHeadline(item)}`).join(" · ")}

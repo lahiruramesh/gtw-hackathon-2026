@@ -22,6 +22,7 @@ apps/api/                 FastAPI + worker (Python 3.12, uv)           -> owner:
        skills/ runs/ compute/ artifacts/ gates/ audit/ ingest/ dashboard/ compare/
     skills_registry/      loader.py (reads skills/*/skill.yaml), manifest.py (pydantic), render.py (argv), summarize.py
     orchestrator/         state_machine.py tasks.py (arq WorkerSettings) reconciler.py executor.py collector.py
+                          locking.py (row locks, stage lock) workdir.py (per-stage scratch)
                           worker: `uv run arq skf_api.orchestrator.tasks.WorkerSettings`
     history/              catalog.py importer.py effort_log.py (`skf-api import-history`)
     backends/             base.py (GIVEN, do not change the contract without updating this spec)
@@ -97,7 +98,7 @@ Web (`apps/web/.env.local`): `DATABASE_URL` (plain `postgresql://…:55432/skf`)
 
 **API (FastAPI)** — `core/auth.py`:
 - Every `/api/v1/*` route requires `Authorization: Bearer <jwt>`. Verify with PyJWT `PyJWKClient(AUTH_JWKS_URL)`
-  (cached), algorithms `["EdDSA"]`, `issuer`, `audience`, `exp` required. Claims → `Principal(id=sub, email, name, role)`.
+  (the key set is cached for 5 min; no per-key cache, so a key removed from the JWKS stops verifying within that time), algorithms `["EdDSA"]`, `issuer`, `audience`, `exp` required. Claims → `Principal(id=sub, email, name, role)`.
   Unknown role → 403. Banned users can't obtain tokens (Better Auth), tokens live 15 min.
 - `core/permissions.py` loads `shared/permissions.json` (path from `PIPELINE_REPO_DIR` or relative to package) and
   exposes `require(permission)` dependency. Permission strings are exactly those in the JSON.
@@ -127,7 +128,9 @@ same-origin proxy `app/api/backend/[...path]/route.ts`, which attaches the JWT a
 | user management (web, Better Auth admin API) | `user:manage` (admin role) |
 
 Launch approval: a run goes to `pending_approval` instead of `queued` when the creator's role is `operator` and
-`estimate.gpu_hours > target.max_unapproved_gpu_hours`. Everyone else is queued directly.
+`estimate.gpu_hours > target.max_unapproved_gpu_hours`. Everyone else is queued directly. The same rule applies to a
+retry of a stage on the run's (GPU) target, judged by the retrier's role: the run goes back to `pending_approval`
+(previous launch decision cleared, estimate refreshed) instead of `queued`.
 
 ## 5. Database schema (`app` schema, Alembic)
 
@@ -180,16 +183,30 @@ Orchestrator (arq worker, `orchestrator/tasks.py`):
   others move to `queued` and `execute_stage` is enqueued. When all stages succeeded and gate evaluated → final status.
 - `execute_stage(stage_id)`: respect `target.max_concurrent` (stay `queued`, retry in 30 s). Build `JobSpec`
   (§7), download inputs from S3, call `backend.submit()`, persist `external_ref`, set `provisioning`/`running`.
+  The call holds the Redis stage lock (60 s TTL, renewed while held, so a dead worker frees it within a minute). If
+  the stage was finished elsewhere during the submit, the new job is cancelled and the target released; if the run
+  was cancelled meanwhile, the job is recorded and `cancel_run` enqueued. A failed submit releases the target (it may
+  have booted the box).
   For `local_cpu` the backend streams stdout itself into the log sink (see backends) and returns quickly; the
   process is supervised by the backend inside the worker process.
 - `reconcile()` (arq cron, every 20 s): for every stage in `provisioning|running`: `backend.status()`; if no ingest URL
   configured, `fetch_logs()` and append; update `gpu_seconds`, `cost = gpu_seconds/3600*target.cost_per_gpu_hour`,
   progress. On success → `collecting`: `collect()` into `WORK_DIR/<run>/<stage>/out`, upload every file as an
   artifact (checkpoints as `checkpoint` with `step`), parse `progress.csv` into metrics if the reporter didn't,
-  run the skill summarizer for `evaluate` stages → `evaluations` row, mark `succeeded`, `backend.release()` if no
-  other active stage on that target, enqueue `advance_run`. Stages with no heartbeat for 10 min on a phone-home
-  job → poll status; local stages whose supervising worker died → `failed` ("worker restarted").
-- `cancel_run(run_id)`: `backend.cancel()` for active stages (idempotent), stages → `cancelled`, run → `cancelled`.
+  run the skill summarizer for `evaluate` stages → `evaluations` row, mark `succeeded`, enqueue `advance_run`, delete
+  the stage's `WORK_DIR` scratch (also for failed/cancelled stages), then `backend.release()` if no other active stage
+  on that target. Stages with no heartbeat for 10 min on a phone-home job → poll status; local stages whose
+  supervising worker died → `failed` ("worker restarted"). `cancel_run` does not take the stage lock, so after the
+  (slow) backend calls every transition re-locks the stage row (`populate_existing`) and only proceeds if the stage
+  is still in the expected status and the run is not being cancelled. Collected files are regular files only:
+  symlinks in a job's outputs are dropped, never followed. Each tick also enqueues `advance_run` for `queued`/`running`
+  runs with no active main stage (their `advance_run` was lost), and `cancel_run` for runs whose cancel is unfinished.
+- `cancel_run(run_id)`: `backend.cancel()` for active stages (idempotent), then stages → `cancelled`, run → `cancelled`.
+  A stage is marked cancelled only when nothing can still run for it: its cancel succeeded or failed non-retryably, or
+  it never reached a backend. A stage whose submit is in flight is left to `execute_stage`; after a retryable cancel
+  error the stage stays active (message "Stopping the job failed…") and the reconciler retries with backoff
+  (30 s doubling to 10 min, 10 attempts, then the stage is cancelled with the error recorded). The API cancels a run
+  directly only while no stage has started; otherwise it enqueues `cancel_run`.
 - Every transition: update row, publish a `stage`/`run` event (§9.3), write audit for user-initiated ones.
 - Retry: `POST /runs/{id}/retry` creates a new attempt of the failed stage (`attempt+1`) and resets later stages to `pending`.
   Run views and the state machine use the latest attempt per stage key.
@@ -302,9 +319,12 @@ ComputeTarget {id, name, kind, description|null, enabled, config: object, has_se
                steps_per_second, overhead_minutes, cost_per_gpu_hour, weekly_quota_gpu_hours|null,
                max_unapproved_gpu_hours, max_concurrent,
                health: {status: "ok"|"degraded"|"down"|"unknown", message, checked_at|null},
-               usage: {gpu_hours_7d, cost_7d, active_stages, quota_left_hours|null},
+               usage: {gpu_hours_7d, cost_7d, active_stages, quota_left_hours|null, quota_source: "ledger"|"provider"|null},
+               # quota_left_hours = min(weekly_quota_gpu_hours - gpu_hours_7d [ledger],
+               #   health.details.gpu_remaining_hours reported at the last check [provider, e.g. Kaggle])
                created_at, updated_at}
-Estimate      {train_minutes, total_minutes, gpu_hours, cost, needs_approval: bool, reasons: string[], warnings: string[]}
+Estimate      {train_minutes, total_minutes, gpu_hours, cost, needs_approval: bool, reasons: string[], warnings: string[],
+               blockers: string[]}               # blockers: why POST /runs would refuse (disabled, no credentials, local training)
 Stage         {id, key, kind, title, position, runs_on, status, compute_target_id|null, attempt, progress|null,
                message|null, started_at|null, finished_at|null, last_heartbeat_at|null, gpu_seconds, cost,
                noise_dropped, error|null, external_url|null, checkpoint: Artifact|null}
@@ -342,10 +362,10 @@ AuditEvent    {id, ts, actor: {id, name, role}, action, entity_type, entity_id|n
 | POST | `/compute-targets/{id}/check` | compute:write | runs `backend.validate()` → `ComputeTarget` |
 | POST | `/runs/estimate` | run:create_preset | `{skill_id, preset_id?, params, compute_target_id}` → `Estimate` |
 | GET | `/runs` | run:read | `?skill_id&status&created_by=me&q&limit&cursor` → `Page<RunSummary>` |
-| POST | `/runs` | run:create_preset (+custom rules §4) | `{skill_id, preset_id?, params, compute_target_id, name?, notes?, parent_run_id?, parent_checkpoint_id?}` → 201 `RunDetail`. Name default `<skill>-<preset or custom>-<n>`. 409 on duplicate name. Target must be enabled, have a secret if its kind needs one, and not be `local_cpu` for non-smoke train unless `ENVIRONMENT=development`. |
+| POST | `/runs` | run:create_preset (+custom rules §4) | `{skill_id, preset_id?, params, compute_target_id, name?, notes?, parent_run_id?, parent_checkpoint_id?}` → 201 `RunDetail`. Name default `<skill>-<preset or custom>-<n>`. 409 on duplicate name. Target must be enabled, have a secret if its kind needs one, and not be `local_cpu` for non-smoke train unless `ENVIRONMENT=development` (exactly the estimate's `blockers`; 422 with the first one). |
 | GET | `/runs/{id}` | run:read | `RunDetail` |
 | POST | `/runs/{id}/cancel` | own or run:cancel_any | → `RunDetail` |
-| POST | `/runs/{id}/retry` | own or run:cancel_any | only when `failed` → `RunDetail` |
+| POST | `/runs/{id}/retry` | own or run:cancel_any | only when `failed` → `RunDetail` (`queued`, or `pending_approval` per §4) |
 | POST | `/runs/{id}/launch-decision` | run:approve_launch | `{decision: "approve"|"reject", comment?}` → `RunDetail` (not own run) |
 | POST | `/runs/{id}/review` | release:review | `{decision, comment?}` → `RunDetail` |
 | POST | `/runs/{id}/evaluate` | run:evaluate | `{checkpoint_id, stage_key?}` → adds an `evaluate` stage bound to that checkpoint (key `<stage_key>-ckpt-<step>`, e.g. `evaluate-ckpt-254279680`; `…-ckpt-final` for `params.pkl`), runs it; → `RunDetail` |
@@ -357,7 +377,7 @@ AuditEvent    {id, ts, actor: {id, name, role}, action, entity_type, entity_id|n
 | GET | `/runs/{id}/evaluations` | run:read | `Evaluation[]` |
 | GET | `/runs/{id}/events` | run:read | **SSE**, see 9.3 |
 | GET | `/approvals` | release:review or run:approve_launch | `{launches: RunSummary[], releases: RunSummary[]}` filtered by the caller's permissions |
-| GET | `/compare` | run:read | `?run_ids=a,b,c,d` (2–4) → `{runs: RunDetail[], headline_rows: {label, unit, values: (number|null)[]}[], gate_rows: {label, values: (bool|null)[]}[], metric_keys: string[]}` |
+| GET | `/compare` | run:read | `?run_ids=a,b,c,d` (2–4) → `{runs: RunDetail[], headline_rows: {label, unit, values: (number|null)[]}[], gate_rows: {label, values: (bool|null)[]}[], metric_keys: string[]}` (gate value `null`: no gate, or the metric was never measured) |
 | GET | `/dashboard` | run:read | `{active_runs, awaiting_launch_approval, awaiting_review, gpu_hours_7d, cost_7d, gate_pass_rate_30d|null, targets: {id, name, kind, gpu_label, active_stages, quota_left_hours|null, health}[], recent_runs: RunSummary[], skills: {id, name, runs, gpu_hours_total, best_run: RunRef|null, latest_verdict|null}[]}` |
 | GET | `/audit-events` | audit:read | `?actor_id&action&entity_type&cursor` → `Page<AuditEvent>` |
 | POST | `/audit-events` | user:manage | `{action, entity_type, entity_id?, detail}` → 201 (web records user-management actions) |
@@ -404,7 +424,8 @@ Common: `Config` and `Secret` pydantic models per backend (used by `config_schem
   `PUBLIC_INGEST_URL` is empty), so their logs are live. `fetch_logs()` (tail `job.log` by byte offset) stays as the fallback;
   `status()` checks the pid (and its command line, so a reused pid is not mistaken for the job) and exit file. The process
   is started detached (`start_new_session=True`) with its pid in the ref; `cancel()` marks the stage cancelled and kills the
-  process group (SIGTERM, then SIGKILL after a grace period). `collect()` copies `out/` plus `job.log`.
+  process group (SIGTERM, then SIGKILL after a grace period). `collect()` copies `out/` plus `job.log`. `release()` deletes
+  the job dirs of finished jobs (exit file, or cancelled and no longer alive).
 - **kaggle** (`KaggleConfig {username, accelerator: "NvidiaTeslaT4", kernel_prefix: "skf", enable_internet: true}`,
   `KaggleSecret {key}`): builds a single-file private script kernel like `scripts/kaggle_job.py` (import `PINS` and
   `BUNDLE` from that file via importlib so there is one source of truth; `NOISE` is read from its kernel template and passed
@@ -420,7 +441,8 @@ Common: `Config` and `Secret` pydantic models per backend (used by `config_schem
   fetch_logs: nothing until complete, then `job.log` once. gpu_seconds = wall time while running. Only `train` stages.
   cancel(): the public Kaggle API cannot stop a session, so the kernel's reporter runs with `--stop-when-revoked` (stops the
   job once ingest keeps rejecting heartbeats because the stage is terminal) and the push timeout is a hard limit.
-  validate(): `kaggle kernels list --mine --page-size 1`, plus `kaggle quota --csv` for GPU hours left (degraded < 1 h).
+  validate(): `kaggle kernels list --mine --page-size 1`, plus `kaggle quota --csv` for GPU hours left (degraded < 1 h;
+  `details.gpu_remaining_hours` feeds the target's `quota_left_hours`).
 - **aws_ec2** (`AwsEc2Config {region, instance_name, instance_type, ami_id, subnet_id, security_group_id, key_name,
   ssh_user: "ubuntu", remote_repo_dir: "~/gtw", bootstrap_command: "MJX_ONLY=1 bash ~/gtw/scripts/aws_bootstrap.sh",
   volume_gb: 250, create_if_missing: false, stop_when_idle: true, aws_profile: str|None}`, `AwsEc2Secret {ssh_private_key,
@@ -434,8 +456,9 @@ Common: `Config` and `Secret` pydantic models per backend (used by `config_schem
   then `uv run --no-sync python ...` (no sync: keep the bootstrapped CUDA wheels) with `out_dir=~/skf/<stage_id>/out`.
   status: `cancelled` marker / exit file / `tmux has-session` (a finished stage gets a `reported` marker; the exit code is kept
   in the ref, so a later stop does not lose it); fetch_logs: `tail -c +<offset>` (≤1 MB); collect: rsync `out/` and `job.log`
-  down (starting the box if it was stopped); cancel: `cancelled` marker + `tmux kill-session`; release: stop the instance if
-  `stop_when_idle`, no `skf-*` tmux session and no finished-but-unreported stage. gpu_seconds = instance running time
+  down with `--no-links` (starting the box if it was stopped); cancel: `cancelled` marker + `tmux kill-session`; release:
+  delete the dirs of `reported` stages (collected by then), then stop the instance if `stop_when_idle`, no `skf-*` tmux
+  session and no finished-but-unreported stage. gpu_seconds = instance running time
   attributable to the stage. All boto3 calls via `asyncio.to_thread`. SSH key written to a 0600 temp file, deleted after use;
   `StrictHostKeyChecking=accept-new` with a per-target known_hosts, keyed by `HostKeyAlias=<instance id>` (the IP changes).
   validate(): describe the instance (state, type) — never starts it.
@@ -446,7 +469,7 @@ drops noise lines (defaults: the `NOISE` tuple in `scripts/kaggle_job.py` — ke
 to `--log` and stdout, counts dropped lines; if `SKF_INGEST_URL`/`SKF_INGEST_TOKEN`/`SKF_STAGE_ID` are set, POSTs batches
 (every 2 s or 500 lines; `noise_dropped` = lines dropped since the previous batch) to the ingest API with retries (exponential
 backoff, full jitter; 4xx other than 408/429 are not retried), tails the progress CSV into `/metrics` (numeric columns only,
-`step` and `wall_s` taken out), and heartbeats every 30 s (`{message}`); ingest failures never affect the child. SIGTERM,
+`step` and `wall_s` taken out), and heartbeats every 30 s (`{message}`: the latest step, e.g. `"step 2,000"`, or empty); ingest failures never affect the child. SIGTERM,
 SIGINT and SIGHUP are forwarded to cmd (SIGKILL after 20 s). `--timeout` stops cmd and exits 124; `--stop-when-revoked` stops
 it (exit 143) after 3 heartbeats in a row get 401/403/404/410. Exit code = child's (128+N if killed by signal N); also
 written to `--exit-file`.
@@ -465,7 +488,7 @@ run/stage/gate state; tabular numbers; empty states with a clear next action; sk
 
 | Route | Content |
 |---|---|
-| `/login` | Email + password, error states, no sign-up link ("Ask an admin for an account") |
+| `/login` | Email + password, error states, no sign-up link ("No account? Ask an admin to create one.") |
 | `/` | Metric cards (active runs, GPU-h 7d, cost 7d, awaiting approval/review), compute target cards with quota, recent runs table, per-skill summary |
 | `/skills` | Skill cards (category, method, status, best run, headline metrics) |
 | `/skills/[id]` | Tabs: Overview (description markdown, pipeline diagram as stepper, gate criteria), Presets, Runs (table), Lineage (tree of runs by `parent_run_id`) ; "New run" button |

@@ -23,6 +23,7 @@ class Estimate(BaseModel):
     needs_approval: bool
     reasons: list[str]
     warnings: list[str]
+    blockers: list[str]  # why POST /runs would refuse this launch; empty when it can start
 
 
 class EstimateRequest(BaseModel):

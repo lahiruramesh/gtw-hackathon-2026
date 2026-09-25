@@ -1,4 +1,4 @@
-import type { GateVerdict, HealthStatus, ReviewStatus, RunStatus, StageStatus } from "@/lib/api/types";
+import type { GateVerdict, HealthStatus, ReviewStatus, RunStatus, Stage, StageStatus } from "@/lib/api/types";
 
 export type StatusTone = "success" | "warning" | "danger" | "info" | "neutral";
 
@@ -72,4 +72,15 @@ export const TERMINAL_STAGE_STATUSES: readonly StageStatus[] = ["succeeded", "fa
 
 export function isRunActive(status: RunStatus): boolean {
   return ACTIVE_RUN_STATUSES.includes(status);
+}
+
+/**
+ * The verdict a gate stage should show. Its execution status only says the check ran ("succeeded"
+ * even when the run failed the gate), so once it has run the stage shows the gate's verdict instead.
+ */
+export function gateStageVerdict(
+  stage: Pick<Stage, "kind" | "status">,
+  verdict: GateVerdict | null,
+): GateVerdict | null {
+  return stage.kind === "gate" && stage.status === "succeeded" ? verdict : null;
 }

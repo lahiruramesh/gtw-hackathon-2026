@@ -6,8 +6,9 @@ import { StatusBadge } from "@/components/common/status-badge";
 import { useRunLive } from "@/components/runs/run-live-provider";
 import { Progress } from "@/components/ui/progress";
 import { useNow } from "@/hooks/use-now";
-import type { Stage, StageStatus } from "@/lib/api/types";
+import type { GateVerdict, Stage, StageStatus } from "@/lib/api/types";
 import { formatCost, formatDuration, formatPercent, secondsBetween } from "@/lib/format";
+import { gateStageVerdict } from "@/lib/status";
 import { cn } from "cn";
 
 const STATUS_ICONS: Partial<Record<StageStatus, LucideIcon>> = {
@@ -29,8 +30,10 @@ const ICON_TONES: Partial<Record<StageStatus, string>> = {
   collecting: "bg-status-info/15 text-status-info",
 };
 
-function StageStep({ stage, now }: { stage: Stage; now: number | null }) {
-  const Icon = STATUS_ICONS[stage.status] ?? CircleIcon;
+function StageStep({ stage, gateVerdict, now }: { stage: Stage; gateVerdict: GateVerdict | null; now: number | null }) {
+  const verdict = gateStageVerdict(stage, gateVerdict);
+  const shownStatus: StageStatus = verdict === "fail" ? "failed" : stage.status;
+  const Icon = STATUS_ICONS[shownStatus] ?? CircleIcon;
   const spinning = Icon === LoaderIcon;
   const running = stage.started_at !== null && stage.finished_at === null;
   const seconds =
@@ -40,7 +43,7 @@ function StageStep({ stage, now }: { stage: Stage; now: number | null }) {
       <span
         className={cn(
           "mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground",
-          ICON_TONES[stage.status],
+          ICON_TONES[shownStatus],
         )}
         aria-hidden
       >
@@ -54,7 +57,13 @@ function StageStep({ stage, now }: { stage: Stage; now: number | null }) {
           {stage.attempt > 1 && <span className="text-xs text-muted-foreground">attempt {stage.attempt}</span>}
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <StatusBadge domain="stage" status={stage.status} />
+          {verdict ? (
+            <span title="The gate check ran; this is its verdict">
+              <StatusBadge domain="gate" status={verdict} />
+            </span>
+          ) : (
+            <StatusBadge domain="stage" status={stage.status} />
+          )}
           <span className="tabular text-muted-foreground">{formatDuration(seconds)}</span>
           {stage.gpu_seconds > 0 && (
             <span className="tabular text-muted-foreground">
@@ -96,7 +105,7 @@ export function PipelineStepper() {
   return (
     <ol className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3" aria-label="Pipeline stages">
       {run.stages.map((stage) => (
-        <StageStep key={stage.id} stage={stage} now={now} />
+        <StageStep key={stage.id} stage={stage} gateVerdict={run.gate_verdict} now={now} />
       ))}
     </ol>
   );

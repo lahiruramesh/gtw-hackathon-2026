@@ -14,7 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAction } from "@/hooks/use-action";
 import type { ComputeTarget, RunRef, SkillDetail } from "@/lib/api/types";
 import { changedValues, fieldDefaults, fieldsFromJsonSchema } from "@/lib/form-fields";
-import { createRunRequest, findPreset, type RunDraft } from "@/lib/run-draft";
+import { createRunRequest, defaultTargetId, findPreset, isSmokeDraft, type RunDraft } from "@/lib/run-draft";
 
 interface NewRunWizardProps {
   skill: SkillDetail;
@@ -47,18 +47,24 @@ export function NewRunWizard({
   const warmStart = canCustomize && initialParent !== null && checkpointField !== undefined;
 
   const [step, setStep] = useState<2 | 3 | 4>(2);
-  const [draft, setDraft] = useState<RunDraft>(() => ({
-    mode: warmStart ? "custom" : "preset",
-    presetId: findPreset(skill, initialPresetId)?.id ?? skill.presets[0]?.id ?? null,
-    customParams: {
-      ...fieldDefaults(fields),
-      ...(warmStart && checkpointField ? { [checkpointField.name]: initialParent.checkpointId } : {}),
-    },
-    parent: warmStart ? initialParent : null,
-    targetId: targets.find((target) => target.enabled)?.id ?? null,
-    name: "",
-    notes: "",
-  }));
+  const [draft, setDraft] = useState<RunDraft>(() => {
+    const params: Pick<RunDraft, "mode" | "presetId" | "customParams"> = {
+      mode: warmStart ? "custom" : "preset",
+      presetId: findPreset(skill, initialPresetId)?.id ?? skill.presets[0]?.id ?? null,
+      customParams: {
+        ...fieldDefaults(fields),
+        ...(warmStart && checkpointField ? { [checkpointField.name]: initialParent.checkpointId } : {}),
+      },
+    };
+    return {
+      ...params,
+      parent: warmStart ? initialParent : null,
+      targetId: defaultTargetId(targets, isSmokeDraft(skill, params)),
+      targetPicked: false,
+      name: "",
+      notes: "",
+    };
+  });
   const target = targets.find((item) => item.id === draft.targetId);
 
   async function launch() {
@@ -82,9 +88,12 @@ export function NewRunWizard({
           <CardDescription>
             {copy.description}{" "}
             <span className="whitespace-nowrap">
-              Skill: <span className="font-medium text-foreground">{skill.name}</span>{" "}
+              Skill: <span className="font-medium text-foreground">{skill.name}</span>
+              <span aria-hidden> · </span>
               <Button asChild variant="link" size="sm" className="h-auto p-0">
-                <Link href="/runs/new">Change</Link>
+                <Link href="/runs/new" aria-label="Change skill">
+                  Change
+                </Link>
               </Button>
             </span>
           </CardDescription>
@@ -98,7 +107,12 @@ export function NewRunWizard({
               warmStartRuns={warmStartRuns}
               onBack={() => router.push("/runs/new")}
               onNext={(patch) => {
-                setDraft((current) => ({ ...current, ...patch }));
+                setDraft((current) => {
+                  const next = { ...current, ...patch };
+                  return next.targetPicked
+                    ? next
+                    : { ...next, targetId: defaultTargetId(targets, isSmokeDraft(skill, next)) };
+                });
                 setStep(3);
               }}
             />
@@ -109,7 +123,7 @@ export function NewRunWizard({
               draft={draft}
               targets={targets}
               onBack={() => setStep(2)}
-              onSelect={(targetId) => setDraft((current) => ({ ...current, targetId }))}
+              onSelect={(targetId) => setDraft((current) => ({ ...current, targetId, targetPicked: true }))}
               onNext={() => setStep(4)}
             />
           )}

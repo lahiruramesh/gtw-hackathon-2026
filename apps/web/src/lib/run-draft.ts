@@ -1,4 +1,4 @@
-import type { CreateRunRequest, EstimateRequest, Preset, SkillDetail } from "@/lib/api/types";
+import type { ComputeTarget, CreateRunRequest, EstimateRequest, Preset, SkillDetail } from "@/lib/api/types";
 import type { FieldValues } from "@/lib/form-fields";
 
 export const RUN_NAME_PATTERN = /^[a-z0-9][a-z0-9-]{2,62}$/;
@@ -11,12 +11,30 @@ export interface RunDraft {
   customParams: FieldValues;
   parent: { runId: string; checkpointId: string } | null;
   targetId: string | null;
+  /** The user picked the target; until then it follows the parameters (see defaultTargetId). */
+  targetPicked: boolean;
   name: string;
   notes: string;
 }
 
 export function findPreset(skill: SkillDetail, presetId: string | null): Preset | undefined {
   return skill.presets.find((preset) => preset.id === presetId);
+}
+
+/** Whether the draft's parameters describe a smoke test (the tiny CPU run every skill offers). */
+export function isSmokeDraft(skill: SkillDetail, draft: Pick<RunDraft, "mode" | "presetId" | "customParams">): boolean {
+  const params = draft.mode === "preset" ? findPreset(skill, draft.presetId)?.params : draft.customParams;
+  return params?.smoke === true;
+}
+
+/**
+ * The target a launch starts on: the local CPU for a smoke test, a GPU target otherwise (a full
+ * training run on the CPU would take days).
+ */
+export function defaultTargetId(targets: readonly ComputeTarget[], smoke: boolean): string | null {
+  const enabled = targets.filter((target) => target.enabled);
+  const fits = enabled.find((target) => (target.kind === "local_cpu") === smoke);
+  return (fits ?? enabled[0])?.id ?? null;
 }
 
 /** The body for POST /runs/estimate; null until the draft names a target and a parameter source. */

@@ -68,3 +68,13 @@ export function roleLabel(role: string | null | undefined): string {
 export function permissionsFor(role: string | null | undefined): ReadonlySet<Permission> {
   return new Set(roleDefinition(role)?.permissions ?? []);
 }
+
+/** What a role change grants and takes away, for confirming it before it is applied. */
+export function permissionChanges(from: string, to: string): { gained: Permission[]; lost: Permission[] } {
+  const before = permissionsFor(from);
+  const after = permissionsFor(to);
+  return {
+    gained: PERMISSIONS.filter((permission) => after.has(permission) && !before.has(permission)),
+    lost: PERMISSIONS.filter((permission) => before.has(permission) && !after.has(permission)),
+  };
+}

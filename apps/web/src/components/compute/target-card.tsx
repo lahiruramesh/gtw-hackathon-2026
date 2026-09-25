@@ -3,7 +3,7 @@ import { StatusBadge } from "@/components/common/status-badge";
 import { HealthCheckButton } from "@/components/compute/health-check-button";
 import { SecretDialog } from "@/components/compute/secret-dialog";
 import { TargetFormDialog } from "@/components/compute/target-form-dialog";
-import { COMPUTE_KIND_LABELS } from "@/components/compute/target-kind";
+import { COMPUTE_KIND_LABELS, needsCredentials } from "@/components/compute/target-kind";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -19,9 +19,44 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
+function QuotaBar({ target }: { target: ComputeTarget }) {
+  const total = target.weekly_quota_gpu_hours;
+  const { quota_left_hours: left, quota_source: source } = target.usage;
+  if (left === null) return null;
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between text-xs">
+        <span className="text-muted-foreground">Weekly quota</span>
+        <span className="tabular">
+          {formatNumber(left, 1)}
+          {total !== null && ` of ${formatNumber(total, 0)}`} GPU-h left
+        </span>
+      </div>
+      {total !== null && (
+        <Progress
+          value={total > 0 ? Math.min(100, ((total - left) / total) * 100) : 100}
+          aria-label="Weekly quota used"
+        />
+      )}
+      {source === "provider" && (
+        <p className="text-xs text-muted-foreground">
+          As {COMPUTE_KIND_LABELS[target.kind]} reported it at the last health check
+          {target.health.checked_at && (
+            <>
+              {" "}
+              (<DateTime value={target.health.checked_at} relative />)
+            </>
+          )}
+          , including usage outside the studio.
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function TargetCard({ target, canManage }: { target: ComputeTarget; canManage: boolean }) {
-  const quota = target.weekly_quota_gpu_hours;
   const used = target.usage.gpu_hours_7d;
+  const credentials = needsCredentials(target.kind);
   return (
     <Card className="gap-4">
       <CardHeader>
@@ -51,22 +86,12 @@ export function TargetCard({ target, canManage }: { target: ComputeTarget; canMa
           <Stat label="Active stages" value={`${target.usage.active_stages} / ${target.max_concurrent}`} />
           <Stat label="Cost per GPU-h" value={formatCost(target.cost_per_gpu_hour)} />
         </dl>
-        {quota !== null && (
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Weekly quota</span>
-              <span className="tabular">
-                {formatNumber(target.usage.quota_left_hours, 1)} of {formatNumber(quota, 0)} GPU-h left
-              </span>
-            </div>
-            <Progress value={quota > 0 ? Math.min(100, (used / quota) * 100) : 100} aria-label="Weekly quota used" />
-          </div>
-        )}
+        <QuotaBar target={target} />
         <dl className="grid grid-cols-1 gap-x-4 gap-y-0.5 text-xs text-muted-foreground sm:grid-cols-2">
           <div>Throughput: {formatNumber(target.steps_per_second)} steps/s</div>
           <div>Overhead: {formatNumber(target.overhead_minutes)} min per run</div>
           <div>Approval above: {formatNumber(target.max_unapproved_gpu_hours, 1)} GPU-h</div>
-          <div>Credentials: {target.has_secret ? "set" : "not set"}</div>
+          {credentials && <div>Credentials: {target.has_secret ? "set" : "not set"}</div>}
           {Object.entries(target.config).map(([key, value]) => (
             <div key={key} className="truncate">
               {key}: <span className="font-mono">{formatValue(value)}</span>
@@ -77,7 +102,7 @@ export function TargetCard({ target, canManage }: { target: ComputeTarget; canMa
       {canManage && (
         <CardFooter className="mt-auto flex-wrap gap-1 border-t pt-4">
           <TargetFormDialog target={target} />
-          <SecretDialog target={target} />
+          {credentials && <SecretDialog target={target} />}
           <HealthCheckButton targetId={target.id} />
         </CardFooter>
       )}

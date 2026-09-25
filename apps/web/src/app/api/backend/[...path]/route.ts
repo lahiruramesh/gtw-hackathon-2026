@@ -1,6 +1,13 @@
 import type { NextRequest } from "next/server";
 
-import { FORWARDED_REQUEST_HEADERS, filterResponseHeaders, resolveUpstreamPath } from "@/lib/api/proxy-path";
+import {
+  FORWARDED_REQUEST_HEADERS,
+  MAX_REQUEST_BODY_BYTES,
+  filterResponseHeaders,
+  isForeignRequest,
+  readLimitedBody,
+  resolveUpstreamPath,
+} from "@/lib/api/proxy-path";
 import { getAuth } from "@/lib/auth";
 import { serverEnv } from "@/lib/env";
 
@@ -18,6 +25,10 @@ async function proxy(request: NextRequest, context: Context): Promise<Response> 
   const { path } = await context.params;
   const upstreamPath = resolveUpstreamPath(path, new URL(request.url).pathname);
   if (!upstreamPath) return errorResponse(400, "invalid_path", "Invalid API path");
+  const env = serverEnv();
+  if (isForeignRequest(request.method, request.headers, new URL(env.BETTER_AUTH_URL).origin)) {
+    return errorResponse(403, "forbidden", "Cross-site requests are not allowed");
+  }
 
   let token: string;
   try {
@@ -26,7 +37,11 @@ async function proxy(request: NextRequest, context: Context): Promise<Response> 
     return errorResponse(401, "unauthenticated", "Sign in again to continue");
   }
 
-  const upstreamUrl = new URL(`/api/v1/${upstreamPath}`, serverEnv().API_INTERNAL_URL);
+  const hasBody = request.method !== "GET" && request.method !== "HEAD";
+  const body = hasBody ? await readLimitedBody(request.body, MAX_REQUEST_BODY_BYTES) : undefined;
+  if (body === null) return errorResponse(413, "payload_too_large", "The request body is too large");
+
+  const upstreamUrl = new URL(`/api/v1/${upstreamPath}`, env.API_INTERNAL_URL);
   upstreamUrl.search = request.nextUrl.search;
 
   const headers = new Headers({ Authorization: `Bearer ${token}` });
@@ -34,14 +49,13 @@ async function proxy(request: NextRequest, context: Context): Promise<Response> 
     const value = request.headers.get(name);
     if (value) headers.set(name, value);
   }
-  const hasBody = request.method !== "GET" && request.method !== "HEAD";
 
   let upstream: Response;
   try {
     upstream = await fetch(upstreamUrl, {
       method: request.method,
       headers,
-      body: hasBody ? await request.arrayBuffer() : undefined,
+      body,
       signal: request.signal,
       cache: "no-store",
       redirect: "manual",

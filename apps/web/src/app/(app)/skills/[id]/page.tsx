@@ -102,6 +102,15 @@ export default async function SkillPage({ params, searchParams }: PageProps<"/sk
 function Overview({ skill }: { skill: SkillDetail }) {
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <Card className="lg:col-span-2">
+        <CardHeader>
+          <CardTitle className="text-sm">Pipeline</CardTitle>
+          <CardDescription>Every run executes these stages in order.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PipelineDefinition stages={skill.pipeline} />
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle className="text-sm">Description</CardTitle>
@@ -114,30 +123,19 @@ function Overview({ skill }: { skill: SkillDetail }) {
           )}
         </CardContent>
       </Card>
-      <div className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Pipeline</CardTitle>
-            <CardDescription>Every run executes these stages in order.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <PipelineDefinition stages={skill.pipeline} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Release gate</CardTitle>
-            <CardDescription>All criteria must pass before a safety reviewer can approve a release.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {skill.gate.length === 0 ? (
-              <p className="text-sm text-muted-foreground">This skill has no gate criteria.</p>
-            ) : (
-              <GateCriteriaTable criteria={skill.gate} />
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">Release gate</CardTitle>
+          <CardDescription>All criteria must pass before a safety reviewer can approve a release.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {skill.gate.length === 0 ? (
+            <p className="text-sm text-muted-foreground">This skill has no gate criteria.</p>
+          ) : (
+            <GateCriteriaTable criteria={skill.gate} />
+          )}
+        </CardContent>
+      </Card>
       <Card className="lg:col-span-2">
         <CardHeader>
           <CardTitle className="text-sm">Parameters</CardTitle>

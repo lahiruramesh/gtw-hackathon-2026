@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { listManagedUsers, type ManagedUser } from "@/lib/admin-users";
 import { toResult } from "@/lib/api/errors";
 import { apiFetch } from "@/lib/api/server";
 import type { AuditEvent, AuditEventPage } from "@/lib/api/types";
@@ -23,15 +24,21 @@ export const metadata: Metadata = { title: "Audit log" };
 const ENTITY_LINKS: Record<string, (id: string) => string> = {
   run: (id) => `/runs/${id}`,
   skill: (id) => `/skills/${id}`,
+  user: (id) => `/admin/users#user-${id}`,
 };
 
 function param(value: string | string[] | undefined): string | undefined {
   return typeof value === "string" && value !== "" ? value : undefined;
 }
 
-function Entity({ event }: { event: AuditEvent }) {
+function Entity({ event, users }: { event: AuditEvent; users: ReadonlyMap<string, ManagedUser> }) {
   const link = event.entity_id ? ENTITY_LINKS[event.entity_type]?.(event.entity_id) : undefined;
-  const label = event.entity_id ? `${event.entity_type} ${event.entity_id.slice(0, 8)}` : event.entity_type;
+  const user = event.entity_type === "user" && event.entity_id ? users.get(event.entity_id) : undefined;
+  const label = user
+    ? `user ${user.email}`
+    : event.entity_id
+      ? `${event.entity_type} ${event.entity_id.slice(0, 8)}`
+      : event.entity_type;
   return link ? (
     <Link href={link} className="font-mono text-xs hover:underline">
       {label}
@@ -55,7 +62,12 @@ export default async function AuditPage({ searchParams }: PageProps<"/admin/audi
     cursor: param(search.cursor),
     limit: 100,
   };
-  const result = await toResult(apiFetch<AuditEventPage>("/audit-events", { query }));
+  const [result, userList] = await Promise.all([
+    toResult(apiFetch<AuditEventPage>("/audit-events", { query })),
+    listManagedUsers(),
+  ]);
+  const users = new Map(userList.ok ? userList.data.map((user) => [user.id, user]) : []);
+  const actors = [...users.values()].map((user) => ({ id: user.id, label: `${user.name} (${user.email})` }));
   const nextParams = new URLSearchParams(
     Object.entries({
       ...query,
@@ -70,7 +82,7 @@ export default async function AuditPage({ searchParams }: PageProps<"/admin/audi
   return (
     <div className="space-y-5">
       <PageHeader title="Audit log" description="Every launch, decision, review, compute change and user change." />
-      <AuditFilters />
+      <AuditFilters actors={actors} />
       {!result.ok ? (
         <ApiErrorState error={result.error} subject="the audit log" />
       ) : result.data.items.length === 0 ? (
@@ -100,7 +112,7 @@ export default async function AuditPage({ searchParams }: PageProps<"/admin/audi
                     </TableCell>
                     <TableCell className="font-mono text-xs">{event.action}</TableCell>
                     <TableCell>
-                      <Entity event={event} />
+                      <Entity event={event} users={users} />
                     </TableCell>
                     <TableCell className="max-w-md">
                       {Object.keys(event.detail).length === 0 ? (

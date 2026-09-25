@@ -62,7 +62,8 @@
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  /* Darker than shadcn's 0.556 so small text on --muted (badges, table headers) reaches 4.5:1. */
+  --muted-foreground: oklch(0.53 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
@@ -83,10 +84,11 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
   --status-success: oklch(0.52 0.13 150);
-  --status-warning: oklch(0.6 0.13 70);
+  /* Status colours are also small text on a 10% tint of themselves: all four keep 4.5:1 there. */
+  --status-warning: oklch(0.52 0.13 70);
   --status-danger: oklch(0.55 0.2 27);
   --status-info: oklch(0.52 0.15 255);
-  --status-neutral: oklch(0.556 0 0);
+  --status-neutral: oklch(0.53 0 0);
 }
 
 .dark {

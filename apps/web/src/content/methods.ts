@@ -63,15 +63,15 @@ export const METHODS: readonly Method[] = [
         scores: {
           data: 5,
           time: 2,
-          safety: 4,
+          safety: 3,
           repeatability: 5,
           adaptability: 2,
           compute: 5,
           explainability: 5,
-          maturity: 3,
+          maturity: 2,
         },
         rationale:
-          "Model-based humanoid gaits are analysable but take months of expert tuning and stay brittle on uneven ground. Unitree itself ships a learned policy for the G1.",
+          "Model-based humanoid gaits are analysable but take months of expert tuning and stay brittle on uneven ground (safety 3: falls off the flat). Unitree itself ships a learned policy for the G1 (maturity 2).",
       },
       manipulation: {
         scores: {
@@ -455,8 +455,9 @@ export const EVIDENCE: readonly EvidenceItem[] = [
     facts: [
       "11 versions in about two days; 25.6 GPU-h logged across v2–v11 (v7 and v9 not logged), on Kaggle T4 and AWS L40S",
       "Held-out stairs, single start: v1 crossed 1/32 and fell on 27; v9 crossed 27/32 with 5 falls",
-      "Strict 96-run test (3 starts per staircase): v9 81/96 crossed, 9 falls; v10 82/96, 14 falls, certified 8.1 cm; v11 88/96, 8 falls, certified 8.1 cm",
-      "Against the proposed gate (≥ 90% crossed, ≤ 5 falls, certified ≥ 10 cm) v11 passes on crossing rate only, so no version is releasable yet",
+      "Strict 96-run test (3 starts per staircase) of the final policies, which the release gate judges: v10 78/96 crossed, 18 falls, certified 4.7 cm; v11 85/96 (89%), 11 falls, certified 6.4 cm. v9 was only strict-tested at 369.3M steps: 81/96, 9 falls, certified 4.7 cm",
+      "Earlier checkpoints did better than the final policies: v10 @ 253.6M steps 82/96, 14 falls, certified 8.1 cm; v11 @ 190.7M steps 88/96 (92%), 8 falls, certified 8.1 cm",
+      "Against the gate (≥ 90% crossed, ≤ 5 falls, certified ≥ 10 cm) v11's final policy meets no criterion and its 190.7M checkpoint only the crossing rate, so no version is releasable yet",
       "The biggest jumps came from fixing the simulation (one-point foot contacts, action limits capping knee torque), not from reward tuning",
     ],
     takeaway:
@@ -479,5 +480,8 @@ export const EVIDENCE: readonly EvidenceItem[] = [
   },
 ];
 
-export const RECOMMENDATION =
-  "Team view: use RL with sim-to-real hardening for locomotion, demonstration-based imitation learning for manipulation, and classical sequencing of gated, learned skills for full workflows. Treat VLA models as a future high-level planner once they can be bounded and tested like any other skill.";
+export const RECOMMENDATION = [
+  "Locomotion: RL with sim-to-real hardening. It ranks first with the default weights, and it is the only approach that took the G1 onto stairs in this project.",
+  "Manipulation: manual programming ranks first with the default weights, and it stays the right choice wherever parts and positions are fixed, as in today's robot cells. The ranking cannot see that constraint: where parts vary, the best-ranked learned methods are the demonstration-based ones (teleoperation and imitation learning, ahead of RL), so that is what to pilot.",
+  "Full workflows: classical sequencing (the manual programming row) of gated, learned skills, which also ranks first. Treat VLA models as a future high-level planner once they can be bounded and tested like any other skill.",
+] as const;

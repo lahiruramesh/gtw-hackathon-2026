@@ -32,17 +32,40 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ManagedUser } from "@/lib/admin-users";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
-import { ROLES } from "@/lib/permissions";
+import { permissionChanges, ROLES, roleLabel } from "@/lib/permissions";
 
-type DialogKind = "ban" | "password" | "revoke" | null;
+type DialogKind = "ban" | "password" | "revoke" | "role" | null;
+
+const DIALOG_COPY = {
+  ban: { title: "Ban user", confirm: "Ban user" },
+  password: { title: "Set a new password", confirm: "Set password" },
+  revoke: { title: "Sign out everywhere", confirm: "Sign out" },
+  role: { title: "Change role", confirm: "Change role" },
+} as const;
+
+function PermissionList({ label, permissions }: { label: string; permissions: string[] }) {
+  if (permissions.length === 0) return null;
+  return (
+    <div className="space-y-1">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <ul className="flex flex-wrap gap-1">
+        {permissions.map((permission) => (
+          <li key={permission} className="rounded border bg-muted px-1.5 font-mono text-xs">
+            {permission}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 export function UserRowActions({ user, isSelf }: { user: ManagedUser; isSelf: boolean }) {
   const { pending, execute } = useUserAction();
   const [dialog, setDialog] = useState<DialogKind>(null);
   const [text, setText] = useState("");
 
-  function openDialog(kind: DialogKind) {
-    setText(kind === "password" ? generatePassword() : "");
+  function openDialog(kind: DialogKind, value = "") {
+    setText(kind === "password" ? generatePassword() : value);
     setDialog(kind);
   }
 
@@ -62,10 +85,17 @@ export function UserRowActions({ user, isSelf }: { user: ManagedUser; isSelf: bo
         `Signed ${user.email} out everywhere`,
         "Couldn't revoke sessions",
       );
+    if (dialog === "role")
+      ok = await execute(
+        () => setUserRole(user.id, text),
+        `${user.email} is now ${roleLabel(text)}`,
+        "Couldn't change the role",
+      );
     if (ok) setDialog(null);
   }
 
   const passwordTooShort = dialog === "password" && text.length < MIN_PASSWORD_LENGTH;
+  const roleChange = dialog === "role" ? permissionChanges(user.role, text) : null;
 
   return (
     <>
@@ -85,13 +115,7 @@ export function UserRowActions({ user, isSelf }: { user: ManagedUser; isSelf: bo
             <DropdownMenuSubContent>
               <DropdownMenuRadioGroup
                 value={user.role}
-                onValueChange={(role) =>
-                  execute(
-                    () => setUserRole(user.id, role),
-                    `Role updated for ${user.email}`,
-                    "Couldn't change the role",
-                  )
-                }
+                onValueChange={(role) => role !== user.role && openDialog("role", role)}
               >
                 {ROLES.map((role) => (
                   <DropdownMenuRadioItem key={role.id} value={role.id}>
@@ -127,15 +151,15 @@ export function UserRowActions({ user, isSelf }: { user: ManagedUser; isSelf: bo
       <Dialog open={dialog !== null} onOpenChange={(open) => !open && setDialog(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {dialog === "ban" ? "Ban user" : dialog === "password" ? "Set a new password" : "Sign out everywhere"}
-            </DialogTitle>
+            <DialogTitle>{dialog && DIALOG_COPY[dialog].title}</DialogTitle>
             <DialogDescription>
               {dialog === "ban"
                 ? `${user.email} is signed out and can't sign in until unbanned.`
                 : dialog === "password"
                   ? `Share the new password with ${user.email} directly. It is not shown again.`
-                  : `Ends every active session of ${user.email}. They can sign in again.`}
+                  : dialog === "role"
+                    ? `${user.email}: ${roleLabel(user.role)} → ${roleLabel(text)}.`
+                    : `Ends every active session of ${user.email}. They can sign in again.`}
             </DialogDescription>
           </DialogHeader>
           {dialog === "ban" && (
@@ -158,6 +182,12 @@ export function UserRowActions({ user, isSelf }: { user: ManagedUser; isSelf: bo
               <p className="text-xs text-muted-foreground">At least {MIN_PASSWORD_LENGTH} characters.</p>
             </div>
           )}
+          {roleChange && (
+            <div className="space-y-3">
+              <PermissionList label="Gains" permissions={roleChange.gained} />
+              <PermissionList label="Loses" permissions={roleChange.lost} />
+            </div>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialog(null)}>
               Cancel
@@ -167,7 +197,7 @@ export function UserRowActions({ user, isSelf }: { user: ManagedUser; isSelf: bo
               disabled={pending || passwordTooShort}
               onClick={confirm}
             >
-              {dialog === "ban" ? "Ban user" : dialog === "password" ? "Set password" : "Sign out"}
+              {dialog && DIALOG_COPY[dialog].confirm}
             </Button>
           </DialogFooter>
         </DialogContent>

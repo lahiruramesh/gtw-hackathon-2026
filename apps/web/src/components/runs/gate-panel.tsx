@@ -4,7 +4,7 @@ import { DateTime } from "@/components/common/date-time";
 import { EmptyState } from "@/components/common/empty-state";
 import { StatusBadge } from "@/components/common/status-badge";
 import { ReleaseReview } from "@/components/runs/release-review";
-import { GateCriteriaTable } from "@/components/skills/gate-criteria-table";
+import { CriterionLabel, GateCriteriaTable } from "@/components/skills/gate-criteria-table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { GateCriterion, RunDetail } from "@/lib/api/types";
@@ -59,7 +59,6 @@ export function GatePanel({ run, criteria, viewerId }: GatePanelProps) {
                   <span className="sr-only">Result</span>
                 </TableHead>
                 <TableHead>Criterion</TableHead>
-                <TableHead>Metric</TableHead>
                 <TableHead className="text-right">Actual</TableHead>
                 <TableHead className="text-right">Threshold</TableHead>
               </TableRow>
@@ -67,23 +66,24 @@ export function GatePanel({ run, criteria, viewerId }: GatePanelProps) {
             <TableBody>
               {gate.criteria.map((criterion) => (
                 <TableRow key={criterion.metric}>
-                  <TableCell>
+                  <TableCell className="align-top">
                     {criterion.passed ? (
                       <CheckIcon className="size-4 text-status-success" aria-label="Passed" />
                     ) : (
                       <XIcon className="size-4 text-status-danger" aria-label="Failed" />
                     )}
                   </TableCell>
-                  <TableCell>{criterion.label}</TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">{criterion.metric}</TableCell>
-                  <TableCell className="text-right font-mono text-xs">
+                  <TableCell>
+                    <CriterionLabel criterion={criterion} />
+                  </TableCell>
+                  <TableCell className="text-right align-top font-mono text-xs whitespace-nowrap">
                     {criterion.actual === null ? (
-                      <span className="text-status-danger">missing</span>
+                      <span className="text-status-danger">not measured</span>
                     ) : (
                       formatMetric(criterion.actual)
                     )}
                   </TableCell>
-                  <TableCell className="text-right font-mono text-xs whitespace-nowrap">
+                  <TableCell className="text-right align-top font-mono text-xs whitespace-nowrap">
                     {criterion.op} {formatValue(criterion.value)}
                   </TableCell>
                 </TableRow>

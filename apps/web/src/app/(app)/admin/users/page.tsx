@@ -47,7 +47,7 @@ export default async function UsersPage() {
               </TableHeader>
               <TableBody>
                 {result.data.map((user) => (
-                  <TableRow key={user.id}>
+                  <TableRow key={user.id} id={`user-${user.id}`} className="target:bg-muted">
                     <TableCell>
                       <div className="font-medium">
                         {user.name}

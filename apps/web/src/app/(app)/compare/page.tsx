@@ -89,7 +89,12 @@ function Comparison({ data }: { data: CompareResponse }) {
                     {row.values.map((passed, index) => (
                       <TableCell key={data.runs[index]?.id ?? index} className="text-right">
                         {passed === null ? (
-                          <MinusIcon className="ml-auto size-4 text-muted-foreground" aria-label="Not evaluated" />
+                          <span
+                            className="inline-flex items-center gap-1 text-xs text-muted-foreground"
+                            title="This run has no value for the criterion's metric"
+                          >
+                            <MinusIcon className="size-4" aria-hidden /> not measured
+                          </span>
                         ) : passed ? (
                           <CheckIcon className="ml-auto size-4 text-status-success" aria-label="Passed" />
                         ) : (

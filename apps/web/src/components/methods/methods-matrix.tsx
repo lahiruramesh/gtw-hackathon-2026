@@ -1,7 +1,7 @@
 "use client";
 
-import { RotateCcwIcon } from "lucide-react";
-import { useState } from "react";
+import { ChevronRightIcon, RotateCcwIcon } from "lucide-react";
+import { Fragment, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,9 +18,16 @@ import { cn } from "cn";
 
 const SCORE_CLASSES = ["", "bg-muted/30", "bg-muted/60", "bg-chart-1/15", "bg-chart-1/30", "bg-chart-1/45"];
 
+function toggled(set: ReadonlySet<string>, id: string): Set<string> {
+  const next = new Set(set);
+  if (!next.delete(id)) next.add(id);
+  return next;
+}
+
 export function MethodsMatrix() {
   const [domain, setDomain] = useState<DomainId>("locomotion");
   const [weights, setWeights] = useState<Record<RequirementId, number>>(DEFAULT_WEIGHTS);
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
   const ranking = rankMethods(METHODS, domain, weights);
   const best = ranking[0]?.score ?? 5;
 
@@ -36,12 +43,13 @@ export function MethodsMatrix() {
         </TabsList>
       </Tabs>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      {/* Side by side only where the matrix still fits all eight requirement columns. */}
+      <div className="grid grid-cols-1 gap-4 2xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Card className="gap-3">
           <CardHeader>
             <CardTitle className="text-sm">Scores (1 to 5, higher is better for SKF)</CardTitle>
             <CardDescription>
-              Hover a requirement to see what a 5 means, and a method for the reasoning.
+              Hover a requirement to see what a 5 means; open a method for the reasoning.
             </CardDescription>
           </CardHeader>
           <CardContent className="overflow-x-auto">
@@ -64,26 +72,49 @@ export function MethodsMatrix() {
               <TableBody>
                 {METHODS.map((method) => {
                   const assessment = method.assessments[domain];
+                  const open = expanded.has(method.id);
+                  const rationaleId = `rationale-${method.id}`;
                   return (
-                    <TableRow key={method.id}>
-                      <TableCell className="align-top whitespace-normal">
-                        <Tooltip>
-                          <TooltipTrigger className="text-left font-medium">{method.name}</TooltipTrigger>
-                          <TooltipContent className="max-w-sm">{assessment.rationale}</TooltipContent>
-                        </Tooltip>
-                      </TableCell>
-                      {REQUIREMENTS.map((requirement) => {
-                        const score = assessment.scores[requirement.id];
-                        return (
-                          <TableCell
-                            key={requirement.id}
-                            className={cn("text-center font-medium", SCORE_CLASSES[score])}
+                    <Fragment key={method.id}>
+                      <TableRow className={cn(open && "border-b-0")}>
+                        <TableCell className="align-top whitespace-normal">
+                          <button
+                            type="button"
+                            className="flex items-start gap-1 text-left font-medium"
+                            aria-expanded={open}
+                            aria-controls={open ? rationaleId : undefined}
+                            onClick={() => setExpanded((current) => toggled(current, method.id))}
                           >
-                            {score}
+                            <ChevronRightIcon
+                              className={cn("mt-0.5 size-4 shrink-0 transition-transform", open && "rotate-90")}
+                              aria-hidden
+                            />
+                            {method.name}
+                          </button>
+                        </TableCell>
+                        {REQUIREMENTS.map((requirement) => {
+                          const score = assessment.scores[requirement.id];
+                          return (
+                            <TableCell
+                              key={requirement.id}
+                              className={cn("text-center font-medium", SCORE_CLASSES[score])}
+                            >
+                              {score}
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                      {open && (
+                        <TableRow id={rationaleId} className="hover:bg-transparent">
+                          <TableCell
+                            colSpan={REQUIREMENTS.length + 1}
+                            className="pt-0 pl-7 text-sm whitespace-normal text-muted-foreground"
+                          >
+                            {assessment.rationale}
                           </TableCell>
-                        );
-                      })}
-                    </TableRow>
+                        </TableRow>
+                      )}
+                    </Fragment>
                   );
                 })}
               </TableBody>

@@ -920,6 +920,8 @@ export interface components {
       reasons: string[];
       /** Warnings */
       warnings: string[];
+      /** Blockers */
+      blockers: string[];
     };
     /** EstimateRequest */
     EstimateRequest: {
@@ -1205,6 +1207,8 @@ export interface components {
         [key: string]: unknown;
       };
     };
+    /** @enum {string} */
+    QuotaSource: "ledger" | "provider";
     /**
      * ReviewStatus
      * @enum {string}
@@ -1585,6 +1589,7 @@ export interface components {
       active_stages: number;
       /** Quota Left Hours */
       quota_left_hours: number | null;
+      quota_source: components["schemas"]["QuotaSource"] | null;
     };
     /** UserRef */
     UserRef: {

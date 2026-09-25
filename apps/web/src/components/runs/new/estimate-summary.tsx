@@ -1,4 +1,4 @@
-import { TriangleAlertIcon } from "lucide-react";
+import { BanIcon, TriangleAlertIcon } from "lucide-react";
 
 import type { Estimate } from "@/lib/api/types";
 import { formatCost, formatMinutes, formatNumber } from "@/lib/format";
@@ -24,6 +24,15 @@ export function EstimateSummary({ estimate }: { estimate: Estimate }) {
           <dd className="tabular font-medium">{formatCost(estimate.cost)}</dd>
         </div>
       </dl>
+      {estimate.blockers.length > 0 && (
+        <ul className="space-y-1">
+          {estimate.blockers.map((blocker) => (
+            <li key={blocker} className="flex gap-1.5 text-xs text-status-danger">
+              <BanIcon className="mt-px size-3.5 shrink-0" aria-hidden /> {blocker}
+            </li>
+          ))}
+        </ul>
+      )}
       {estimate.warnings.length > 0 && (
         <ul className="space-y-1">
           {estimate.warnings.map((warning) => (

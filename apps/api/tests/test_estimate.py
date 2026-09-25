@@ -49,7 +49,7 @@ async def test_gpu_target_estimate(
     assert body["total_minutes"] == pytest.approx(87.0)
     assert body["gpu_hours"] == pytest.approx(62 / 60, abs=1e-3)
     assert body["cost"] == pytest.approx(62 / 60 * 2.25, abs=0.01)
-    assert body["needs_approval"] is False and body["warnings"] == []
+    assert body["needs_approval"] is False and body["warnings"] == [] and body["blockers"] == []
 
 
 async def test_operator_over_budget_needs_approval(
@@ -126,9 +126,11 @@ async def test_weekly_quota(
 
 async def test_local_cpu_rules(client: httpx.AsyncClient, auth: Auth, targets: dict[str, uuid.UUID]) -> None:
     smoke = await estimate(client, auth, targets[LOCAL_CPU], preset="smoke")
-    assert smoke["gpu_hours"] == 0 and smoke["warnings"] == []
+    assert smoke["gpu_hours"] == 0 and smoke["warnings"] == [] and smoke["blockers"] == []
     full = await estimate(client, auth, targets[LOCAL_CPU], role="ml_engineer", preset=None)
-    assert full["warnings"] == ["Only smoke runs may train on the local CPU target"]
+    assert (
+        full["blockers"] == ["Only smoke runs may train on the local CPU target"] and full["warnings"] == []
+    )
     response = await client.post(
         "/api/v1/runs",
         headers=auth("ml_engineer"),

@@ -33,6 +33,8 @@ test("an ML engineer launches the smoke preset on Local CPU and sees live logs",
   const shown = async () => Number((await footer.textContent())?.match(/^[\d,]+/)?.[0].replaceAll(",", ""));
   const first = await shown();
   await expect.poll(shown, { timeout: 120_000 }).toBeGreaterThan(first);
+  // Follow stays on while lines stream in (row measurement must not switch it off).
+  await expect(page.getByRole("switch", { name: "Follow" })).toBeChecked();
   await expect(page.getByText(/Train \(Brax PPO\)/).first()).toBeVisible();
 
   await page.getByRole("button", { name: "Cancel run" }).click();

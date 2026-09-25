@@ -7,11 +7,14 @@ import { clientFetch } from "@/lib/api/client";
 import { toErrorInfo, type ApiErrorInfo } from "@/lib/api/errors";
 import type { LogPage, RunDetail, RunEvent, RunSummary, Stage } from "@/lib/api/types";
 import { LogStore } from "@/lib/log-store";
+import { loginPath } from "@/lib/login-path";
 import { RunEventStream, type ConnectionState } from "@/lib/run-events";
 import { ACTIVE_STAGE_STATUSES, isRunActive, TERMINAL_STAGE_STATUSES } from "@/lib/status";
 
 const LOG_PAGE_SIZE = 2000;
 const REFRESH_THROTTLE_MS = 2000;
+const SNAPSHOT_RETRY_MS = 2000;
+const MAX_SNAPSHOT_RETRY_MS = 30_000;
 
 type Listener = (event: RunEvent) => void;
 
@@ -34,9 +37,16 @@ export function useRunLive(): RunLiveValue {
 }
 
 interface LiveOverlay {
+  /** The server-rendered snapshot the overlay was started from. */
+  server: RunDetail;
+  /** Latest full run: the server snapshot, or a newer one fetched after a live transition. */
   base: RunDetail;
   summary: RunSummary | null;
   stages: Record<string, Stage>;
+}
+
+function freshOverlay(server: RunDetail, base: RunDetail = server): LiveOverlay {
+  return { server, base, summary: null, stages: {} };
 }
 
 const LIVE_SUMMARY_FIELDS = [
@@ -64,6 +74,28 @@ function applyOverlay(overlay: LiveOverlay): RunDetail {
   return merged;
 }
 
+function wait(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, ms);
+    signal.addEventListener("abort", () => {
+      clearTimeout(timer);
+      reject(signal.reason);
+    });
+  });
+}
+
+/** The run, fetched again until the API answers (the browser may be offline for a while). */
+async function fetchRunUntilReachable(runId: string, signal: AbortSignal): Promise<RunDetail> {
+  for (let delay = SNAPSHOT_RETRY_MS; ; delay = Math.min(delay * 2, MAX_SNAPSHOT_RETRY_MS)) {
+    try {
+      return await clientFetch<RunDetail>(`/runs/${encodeURIComponent(runId)}`, { signal });
+    } catch (error) {
+      if (signal.aborted) throw error;
+    }
+    await wait(delay, signal);
+  }
+}
+
 async function loadLogHistory(runId: string, store: LogStore, signal: AbortSignal): Promise<void> {
   let afterId = store.lastId;
   for (;;) {
@@ -81,18 +113,19 @@ export function RunLiveProvider({ initialRun, children }: { initialRun: RunDetai
   const router = useRouter();
   const runId = initialRun.id;
   const [logs] = useState(() => new LogStore());
-  const [overlay, setOverlay] = useState<LiveOverlay>({ base: initialRun, summary: null, stages: {} });
+  const [overlay, setOverlay] = useState<LiveOverlay>(() => freshOverlay(initialRun));
   const [connection, setConnection] = useState<ConnectionState>("closed");
   const [logsLoading, setLogsLoading] = useState(true);
   const [logsError, setLogsError] = useState<ApiErrorInfo | null>(null);
   const listeners = useRef(new Set<Listener>());
   const lastRefresh = useRef(0);
   const refreshTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const refreshAbort = useRef<AbortController>(undefined);
 
   // A fresh server snapshot (after router.refresh) supersedes the live overlay.
   let current = overlay;
-  if (overlay.base !== initialRun) {
-    current = { base: initialRun, summary: null, stages: {} };
+  if (overlay.server !== initialRun) {
+    current = freshOverlay(initialRun);
     setOverlay(current);
   }
   const run = applyOverlay(current);
@@ -109,16 +142,33 @@ export function RunLiveProvider({ initialRun, children }: { initialRun: RunDetai
     };
   }, []);
 
+  // After a transition the run is fetched first, and only then are the server-rendered panels
+  // (artifacts, evaluation, gate) refreshed: a router.refresh() that fails (offline) falls back
+  // to a full page load, which would leave a blank page.
   const scheduleRefresh = useCallback(() => {
     clearTimeout(refreshTimer.current);
-    const wait = Math.max(0, lastRefresh.current + REFRESH_THROTTLE_MS - Date.now());
+    const delay = Math.max(0, lastRefresh.current + REFRESH_THROTTLE_MS - Date.now());
     refreshTimer.current = setTimeout(() => {
       lastRefresh.current = Date.now();
-      router.refresh();
-    }, wait);
-  }, [router]);
+      refreshAbort.current?.abort();
+      const controller = new AbortController();
+      refreshAbort.current = controller;
+      fetchRunUntilReachable(runId, controller.signal)
+        .then((fresh) => {
+          setOverlay((previous) => freshOverlay(previous.server, fresh));
+          router.refresh();
+        })
+        .catch(() => undefined); // aborted: a newer refresh or unmount took over
+    }, delay);
+  }, [router, runId]);
 
-  useEffect(() => () => clearTimeout(refreshTimer.current), []);
+  useEffect(
+    () => () => {
+      clearTimeout(refreshTimer.current);
+      refreshAbort.current?.abort();
+    },
+    [],
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -136,7 +186,12 @@ export function RunLiveProvider({ initialRun, children }: { initialRun: RunDetai
   const liveEnabled = streaming && !logsLoading;
   useEffect(() => {
     if (!liveEnabled) return;
-    const stream = new RunEventStream(runId, () => logs.lastId, setConnection);
+    const stream = new RunEventStream(
+      runId,
+      () => logs.lastId,
+      setConnection,
+      () => window.location.assign(loginPath(`${window.location.pathname}${window.location.search}`)),
+    );
     const unsubscribe = stream.subscribe((event) => {
       if (event.type === "log") logs.append([event.data]);
       if (event.type === "stage") {

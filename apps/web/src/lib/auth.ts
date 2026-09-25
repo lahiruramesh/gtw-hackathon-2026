@@ -31,6 +31,9 @@ function createAuth() {
       disableSignUp: true,
       minPasswordLength: MIN_PASSWORD_LENGTH,
     },
+    // API tokens are minted server-side (auth.api.getToken) and never handed to the browser, so the
+    // endpoint that would give one to any page script is off.
+    disabledPaths: ["/token"],
     session: {
       expiresIn: 7 * DAY_SECONDS,
       updateAge: DAY_SECONDS,
@@ -53,7 +56,7 @@ function createAuth() {
           expirationTime: "15m",
           definePayload: ({ user }) => ({ email: user.email, name: user.name, role: user.role }),
         },
-        // Tokens are minted server-side for the API only; never hand them to the browser.
+        // Nor in the get-session response header.
         disableSettingJwtHeader: true,
       }),
       nextCookies(),

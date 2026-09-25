@@ -86,6 +86,11 @@ async def test_create_validation(
     )
     disabled = await client.post("/api/v1/runs", headers=auth("admin"), json=body(targets[KAGGLE_T4]))
     assert disabled.status_code == 422 and "disabled" in disabled.json()["error"]["message"]
+    # The estimate names the same blocker, so the launch wizard can say so before anyone clicks Launch.
+    estimate = await client.post(
+        "/api/v1/runs/estimate", headers=auth("admin"), json=body(targets[KAGGLE_T4])
+    )
+    assert estimate.json()["blockers"] == [disabled.json()["error"]["message"]]
 
 
 async def test_warm_start_from_checkpoint(

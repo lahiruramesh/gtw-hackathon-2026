@@ -1,6 +1,8 @@
 /**
  * Turns an evaluation summary (arbitrary JSON written by a skill's summarizer) into displayable
- * parts: scalar tiles, a step-length tracking heatmap, tables and key/value blocks.
+ * parts: scalar tiles, a step-length tracking heatmap, the stairs by-height table, generic tables
+ * and key/value blocks. The API stores summaries as JSONB, which does not keep key order, so every
+ * purpose-built view fixes its own column order.
  */
 
 type Scalar = number | string | boolean | null;
@@ -34,9 +36,23 @@ export interface EvalHeatmap {
   fallRates: Record<string, number>;
 }
 
+/** One step height of a stairs strict test (skills/stairs/summarize.py `by_height`). */
+export interface StairHeight {
+  riseCm: number;
+  runs: number;
+  crossed: number;
+  fell: number;
+  stable: boolean | null;
+  maxTiltDeg: number | null;
+  minPelvisM: number | null;
+  /** The certified height: the highest rise at which every crossing stayed stable. */
+  certified: boolean;
+}
+
 export interface EvalView {
   scalars: EvalScalar[];
   heatmap: EvalHeatmap | null;
+  heights: StairHeight[] | null;
   tables: EvalTable[];
   details: EvalDetails[];
   rest: Record<string, unknown>;
@@ -99,6 +115,24 @@ function toHeatmap(rows: Row[]): EvalHeatmap | null {
   return { xKey, yKey, valueLabel: "Step-length error (cm)", xs: unique(xKey), ys: unique(yKey), values, fallRates };
 }
 
+const optionalNumber = (value: unknown) => (typeof value === "number" ? value : null);
+
+function toHeights(rows: Row[], certifiedCm: unknown): StairHeight[] | null {
+  if (!rows.every((row) => typeof row.rise_cm === "number" && typeof row.runs === "number")) return null;
+  return rows
+    .map((row) => ({
+      riseCm: row.rise_cm as number,
+      runs: row.runs as number,
+      crossed: optionalNumber(row.crossed) ?? 0,
+      fell: optionalNumber(row.fell) ?? 0,
+      stable: typeof row.stable === "boolean" ? row.stable : null,
+      maxTiltDeg: optionalNumber(row.max_tilt_deg),
+      minPelvisM: optionalNumber(row.min_pelvis_m),
+      certified: typeof certifiedCm === "number" && Math.abs((row.rise_cm as number) - certifiedCm) < 1e-6,
+    }))
+    .sort((a, b) => a.riseCm - b.riseCm);
+}
+
 function toTable(key: string, value: unknown): EvalTable | null {
   let entries: [string, Row][];
   if (Array.isArray(value) && value.length > 0 && value.every(isRecord)) {
@@ -121,7 +155,7 @@ function toTable(key: string, value: unknown): EvalTable | null {
 }
 
 export function describeEvaluation(summary: Record<string, unknown>): EvalView {
-  const view: EvalView = { scalars: [], heatmap: null, tables: [], details: [], rest: {} };
+  const view: EvalView = { scalars: [], heatmap: null, heights: null, tables: [], details: [], rest: {} };
   for (const [key, value] of Object.entries(summary)) {
     if (isScalar(value)) {
       view.scalars.push({ key, value });
@@ -130,6 +164,10 @@ export function describeEvaluation(summary: Record<string, unknown>): EvalView {
     if (key === "grid" && Array.isArray(value) && value.every(isRecord) && !view.heatmap) {
       view.heatmap = toHeatmap(value);
       if (view.heatmap) continue;
+    }
+    if (key === "by_height" && Array.isArray(value) && value.every(isRecord) && !view.heights) {
+      view.heights = toHeights(value, summary.certified_cm);
+      if (view.heights) continue;
     }
     const table = toTable(key, value);
     if (table) {

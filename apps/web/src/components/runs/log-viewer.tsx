@@ -15,9 +15,10 @@ import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { proxyPath } from "@/lib/api/client";
 import type { LogLevel, LogLine } from "@/lib/api/types";
-import { formatNumber } from "@/lib/format";
+import { formatNumber, formatTimeLocal } from "@/lib/format";
 import { includesIgnoreCase, splitHighlight } from "@/lib/highlight";
 import { MAX_LOG_LINES } from "@/lib/log-store";
+import { ACTIVE_STAGE_STATUSES, isRunActive } from "@/lib/status";
 import { cn } from "cn";
 
 const ALL_STAGES = "all";
@@ -30,16 +31,16 @@ const LEVEL_CLASSES: Record<LogLevel, string> = {
 const ROW_HEIGHT = 20;
 const FOLLOW_THRESHOLD_PX = 48;
 
-function timeOf(ts: string): string {
-  return ts.length >= 19 ? ts.slice(11, 19) : ts;
-}
-
 function LogRow({ line, stageKey, query }: { line: LogLine; stageKey: string; query: string }) {
   return (
     <div className="flex gap-3 px-3 font-mono text-xs leading-5 hover:bg-muted/50">
-      <span className="tabular shrink-0 text-muted-foreground select-none" title={line.ts}>
-        {timeOf(line.ts)}
-      </span>
+      <time
+        dateTime={line.ts}
+        className="tabular shrink-0 text-muted-foreground select-none"
+        title={new Date(line.ts).toLocaleString()}
+      >
+        {formatTimeLocal(line.ts)}
+      </time>
       <span className="w-20 shrink-0 truncate text-muted-foreground select-none" title={stageKey}>
         {stageKey}
       </span>
@@ -70,6 +71,7 @@ export function LogViewer() {
   const [follow, setFollow] = useState(true);
   const query = useDeferredValue(search.trim());
   const scrollRef = useRef<HTMLDivElement>(null);
+  const lastScrollTop = useRef(0);
 
   const stageKeys = useMemo(() => new Map(run.stages.map((stage) => [stage.id, stage.key])), [run.stages]);
   const noiseDropped = run.stages.reduce((sum, stage) => sum + stage.noise_dropped, 0);
@@ -99,16 +101,35 @@ export function LogViewer() {
     overscan: 30,
   });
 
+  // Rows are measured after they render, so the total height changes after each jump to the end:
+  // follow it again until it settles.
+  const totalSize = virtualizer.getTotalSize();
   useEffect(() => {
     if (follow && visible.length > 0) virtualizer.scrollToIndex(visible.length - 1, { align: "end" });
-  }, [follow, visible.length, virtualizer]);
+  }, [follow, visible.length, totalSize, virtualizer]);
 
+  // Only the user scrolling up turns follow off: the jumps above (and row measurement) fire scroll
+  // events that pass through "not at the bottom" while moving down. Reaching the bottom turns it on.
   function onScroll() {
     const element = scrollRef.current;
     if (!element) return;
     const atBottom = element.scrollHeight - element.scrollTop - element.clientHeight < FOLLOW_THRESHOLD_PX;
-    if (!atBottom && follow) setFollow(false);
+    const scrolledUp = element.scrollTop < lastScrollTop.current - 1;
+    lastScrollTop.current = element.scrollTop;
+    if (atBottom) {
+      if (!follow) setFollow(true);
+    } else if (scrolledUp && follow) {
+      setFollow(false);
+    }
   }
+
+  const finished =
+    !isRunActive(run.status) && !run.stages.some((stage) => ACTIVE_STAGE_STATUSES.includes(stage.status));
+  const emptyMessage = run.imported
+    ? "No logs were recorded in the studio for this imported run. Its original training logs stay with its outputs in the pipeline repo."
+    : finished
+      ? "No logs were recorded for this run."
+      : "No log lines yet. They appear here as soon as a stage starts.";
 
   return (
     <div className="space-y-3">
@@ -196,9 +217,7 @@ export function LogViewer() {
               </div>
             ) : visible.length === 0 ? (
               <p className="p-4 text-sm text-muted-foreground">
-                {lines.length === 0
-                  ? "No log lines yet. They appear here as soon as a stage starts."
-                  : "No lines match the filters."}
+                {lines.length === 0 ? emptyMessage : "No lines match the filters."}
               </p>
             ) : (
               <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>

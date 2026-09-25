@@ -190,7 +190,6 @@ class Shipper(threading.Thread):
         self.unshipped = 0
         self.last_step: int | None = None
         self.revoked_count = 0
-        self.started = time.time()
 
     def add_line(self, text: str) -> None:
         with self.lock:
@@ -267,10 +266,8 @@ class Shipper(threading.Thread):
             self.last_step = points[-1]["step"]
 
     def heartbeat(self) -> None:
-        elapsed = int(time.time() - self.started)
-        message = f"running for {elapsed}s"
-        if self.last_step is not None:
-            message += f", step {self.last_step:,}"
+        # The studio shows how long the stage has run; the message only adds what it cannot know.
+        message = f"step {self.last_step:,}" if self.last_step is not None else ""
         if self.client.post("heartbeat", {"message": message}):
             self.revoked_count = 0
         elif self.client.last_status in REVOKED_STATUSES:

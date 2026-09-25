@@ -90,8 +90,6 @@ export function SecretDialog({ target }: { target: ComputeTarget }) {
           <Skeleton className="h-32" />
         ) : schema.isError ? (
           <ApiErrorState error={toErrorInfo(schema.error)} subject="the credential form" />
-        ) : fields.length === 0 ? (
-          <p className="text-sm text-muted-foreground">This kind of target needs no credentials.</p>
         ) : (
           <SecretForm target={target} fields={fields} onDone={() => setOpen(false)} />
         )}

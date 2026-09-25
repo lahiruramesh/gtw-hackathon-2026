@@ -24,7 +24,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           <p className="text-sm text-muted-foreground">Sign in to train and release humanoid skills</p>
         </div>
         <LoginForm destination={destination} />
-        <p className="text-center text-xs text-muted-foreground">No account? Ask an admin for an account.</p>
+        <p className="text-center text-xs text-muted-foreground">No account? Ask an admin to create one.</p>
       </div>
     </main>
   );

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { filterResponseHeaders, resolveUpstreamPath } from "@/lib/api/proxy-path";
+import { filterResponseHeaders, isForeignRequest, readLimitedBody, resolveUpstreamPath } from "@/lib/api/proxy-path";
 
 describe("resolveUpstreamPath", () => {
   it("joins ordinary segments", () => {
@@ -46,5 +46,40 @@ describe("filterResponseHeaders", () => {
     });
     const filtered = filterResponseHeaders(upstream);
     expect([...filtered.keys()].sort()).toEqual(["content-type", "x-request-id"]);
+  });
+});
+
+describe("isForeignRequest", () => {
+  const app = "http://localhost:3100";
+  const headers = (values: Record<string, string>) => new Headers(values);
+
+  it("lets reads and same-origin writes through", () => {
+    expect(
+      isForeignRequest("GET", headers({ origin: "https://evil.example", "sec-fetch-site": "cross-site" }), app),
+    ).toBe(false);
+    expect(isForeignRequest("POST", headers({ origin: app, "sec-fetch-site": "same-origin" }), app)).toBe(false);
+    expect(isForeignRequest("POST", headers({}), app)).toBe(false); // non-browser clients send neither
+  });
+
+  it.each([
+    [{ origin: "https://evil.example" }],
+    [{ origin: "https://studio.sibling.example", "sec-fetch-site": "same-site" }],
+    [{ "sec-fetch-site": "cross-site" }],
+  ])("rejects writes from elsewhere: %j", (values) => {
+    expect(isForeignRequest("POST", headers(values), app)).toBe(true);
+  });
+});
+
+describe("readLimitedBody", () => {
+  const stream = (...chunks: string[]) => new Blob(chunks).stream();
+
+  it("returns the body up to the limit", async () => {
+    const body = await readLimitedBody(stream("ab", "cd"), 4);
+    expect(new TextDecoder().decode(body ?? undefined)).toBe("abcd");
+    expect(await readLimitedBody(null, 4)).toEqual(new Uint8Array());
+  });
+
+  it("refuses a larger body", async () => {
+    expect(await readLimitedBody(stream("ab", "cde"), 4)).toBeNull();
   });
 });

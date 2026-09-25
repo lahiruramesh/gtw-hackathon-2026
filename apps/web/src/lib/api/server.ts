@@ -1,12 +1,12 @@
 import "server-only";
 
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 
 import { ApiError, errorFromResponse, unreachableError } from "@/lib/api/errors";
 import { withQuery, type Query } from "@/lib/api/query";
 import { getAuth } from "@/lib/auth";
 import { serverEnv } from "@/lib/env";
+import { redirectToLogin } from "@/lib/session";
 
 const REQUEST_TIMEOUT_MS = 15_000;
 
@@ -17,15 +17,15 @@ export interface ApiRequestOptions {
 }
 
 /**
- * Short-lived API token for the signed-in user. Signs the user out of the page (redirect to
- * /login) when there is no valid session.
+ * Short-lived API token for the signed-in user. Sends the user to sign in (and back to this page)
+ * when there is no valid session.
  */
 export async function getApiToken(requestHeaders: Headers): Promise<string> {
   try {
     const { token } = await getAuth().api.getToken({ headers: requestHeaders });
     return token;
   } catch {
-    redirect("/login");
+    return redirectToLogin();
   }
 }
 

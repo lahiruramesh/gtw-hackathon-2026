@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 
 import { getAuth } from "@/lib/auth";
+import { loginPath, REQUEST_PATH_HEADER } from "@/lib/login-path";
 import { permissionsFor, roleLabel, type Permission } from "@/lib/permissions";
 
 /** The signed-in user as the UI sees them. Plain data so it can be passed to client components. */
@@ -33,8 +34,13 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
   };
 });
 
+/** Sends a signed-out user (or one whose session expired) to sign in, then back to this page. */
+export async function redirectToLogin(): Promise<never> {
+  redirect(loginPath((await headers()).get(REQUEST_PATH_HEADER)));
+}
+
 export async function requireViewer(): Promise<Viewer> {
   const viewer = await getViewer();
-  if (!viewer) redirect("/login");
+  if (!viewer) return redirectToLogin();
   return viewer;
 }

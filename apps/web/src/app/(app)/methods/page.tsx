@@ -86,7 +86,17 @@ export default async function MethodsPage() {
         <CardHeader>
           <CardTitle className="text-sm">Recommendation</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm">{RECOMMENDATION}</CardContent>
+        <CardContent className="space-y-2 text-sm">
+          <p className="text-muted-foreground">
+            Team view. The ranking above is a weighted mean under your weights; the recommendation also weighs what the
+            matrix cannot express, such as whether a task&apos;s parts and positions are fixed.
+          </p>
+          <ul className="list-disc space-y-1 pl-5">
+            {RECOMMENDATION.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </CardContent>
       </Card>
     </div>
   );

@@ -102,6 +102,13 @@ export function formatDateTimeLocal(iso: string, now: Date = new Date()): string
   });
 }
 
+/** Wall-clock time of day in the viewer's time zone, e.g. "19:33:48" (log lines). */
+export function formatTimeLocal(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return date.toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" });
+}
+
 export function formatRelative(iso: string, now: number = Date.now()): string {
   const seconds = (Date.parse(iso) - now) / 1000;
   const format = new Intl.RelativeTimeFormat(LOCALE, { numeric: "auto" });

@@ -4,6 +4,7 @@ import { DateTime } from "@/components/common/date-time";
 import { EmptyState } from "@/components/common/empty-state";
 import { JsonView } from "@/components/common/json-view";
 import { EvaluationHeatmap } from "@/components/runs/evaluation-heatmap";
+import { StairsHeightTable } from "@/components/runs/stairs-height-table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -48,6 +49,7 @@ function EvaluationCard({ evaluation }: { evaluation: Evaluation }) {
   const empty =
     view.scalars.length + view.tables.length + view.details.length === 0 &&
     !view.heatmap &&
+    !view.heights &&
     Object.keys(view.rest).length === 0;
   return (
     <Card>
@@ -78,6 +80,7 @@ function EvaluationCard({ evaluation }: { evaluation: Evaluation }) {
           </dl>
         )}
         {view.heatmap && <EvaluationHeatmap heatmap={view.heatmap} />}
+        {view.heights && <StairsHeightTable heights={view.heights} />}
         {view.tables.map((table) => (
           <EvalTableView key={table.key} table={table} />
         ))}

@@ -61,21 +61,26 @@ def estimate_run(inp: EstimateInput) -> Estimate:
             f"may launch on {target.name} without approval"
         )
 
-    warnings: list[str] = []
+    blockers: list[str] = []
     if not target.enabled:
-        warnings.append(f"{target.name} is disabled")
+        blockers.append(f"Compute target '{target.name}' is disabled")
     if target.kind in KINDS_NEEDING_SECRET and not target.has_secret:
-        warnings.append(f"{target.name} has no credentials set")
+        blockers.append(f"Compute target '{target.name}' has no credentials")
+    local_training = (
+        target.kind is BackendKind.LOCAL_CPU and not is_smoke(inp.params) and bool(inp.manifest.train_stages)
+    )
+    if local_training and not inp.allow_local_training:
+        blockers.append("Only smoke runs may train on the local CPU target")
+
+    warnings: list[str] = []
     quota_left = inp.usage.quota_left(target)
     if quota_left is not None and gpu_hours > quota_left:
         warnings.append(
             f"Needs {gpu_hours:.1f} GPU-h but only {quota_left:.1f} GPU-h of the weekly quota is left"
         )
-    if target.kind is BackendKind.LOCAL_CPU and not is_smoke(inp.params) and inp.manifest.train_stages:
+    if local_training and inp.allow_local_training:
         warnings.append(
             "Full training on the local CPU target takes days; use a GPU target or the smoke preset"
-            if inp.allow_local_training
-            else "Only smoke runs may train on the local CPU target"
         )
     if inp.usage.active_stages >= target.max_concurrent:
         warnings.append(f"{target.name} is busy; the run will wait for a free slot")
@@ -88,4 +93,5 @@ def estimate_run(inp: EstimateInput) -> Estimate:
         needs_approval=bool(reasons),
         reasons=reasons,
         warnings=warnings,
+        blockers=blockers,
     )

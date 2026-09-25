@@ -147,7 +147,9 @@ def test_ships_logs_metrics_and_heartbeats(ingest: FakeIngest, tmp_path: Path) -
         {"step": 1000, "wall_s": 1.5, "values": {"eval/episode_reward": 0.0}},
         {"step": 2000, "wall_s": 2.5, "values": {"eval/episode_reward": 1.0}},
     ]
-    assert ingest.bodies("heartbeat"), "at least the final heartbeat"
+    heartbeats = [body["message"] for body in ingest.bodies("heartbeat")]
+    assert heartbeats, "at least the final heartbeat"
+    assert heartbeats[-1] == "step 2,000"  # progress only: the UI shows the elapsed time itself
 
 
 def test_runs_without_ingest_and_passes_the_exit_code(tmp_path: Path) -> None:

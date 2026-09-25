@@ -44,6 +44,8 @@ export function TargetStep({ skill, draft, targets, onBack, onSelect, onNext }: 
   const enabled = targets.filter((target) => target.enabled);
   const disabled = targets.filter((target) => !target.enabled);
   const estimates = useQueries({ queries: enabled.map((target) => estimateQuery(skill, draft, target.id)) });
+  const selected = estimates[enabled.findIndex((target) => target.id === draft.targetId)];
+  const selectedBlocked = (selected?.data?.blockers.length ?? 0) > 0;
 
   if (enabled.length === 0) {
     return (
@@ -76,16 +78,18 @@ export function TargetStep({ skill, draft, targets, onBack, onSelect, onNext }: 
         {enabled.map((target, index) => {
           const estimate = estimates[index];
           const id = `target-${target.id}`;
+          const blocked = (estimate?.data?.blockers.length ?? 0) > 0;
           return (
             <Label
               key={target.id}
               htmlFor={id}
               className={cn(
                 "flex cursor-pointer items-start gap-3 rounded-lg border p-4 font-normal transition-colors",
-                draft.targetId === target.id && "border-primary bg-muted/40",
+                draft.targetId === target.id && !blocked && "border-primary bg-muted/40",
+                blocked && "cursor-not-allowed border-dashed",
               )}
             >
-              <RadioGroupItem value={target.id} id={id} className="mt-0.5" />
+              <RadioGroupItem value={target.id} id={id} disabled={blocked} className="mt-0.5" />
               <div className="min-w-0 flex-1 space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-medium">{target.name}</span>
@@ -138,7 +142,7 @@ export function TargetStep({ skill, draft, targets, onBack, onSelect, onNext }: 
         <Button variant="outline" onClick={onBack}>
           Back
         </Button>
-        <Button onClick={onNext} disabled={!draft.targetId}>
+        <Button onClick={onNext} disabled={!draft.targetId || selectedBlocked}>
           Continue
         </Button>
       </div>
