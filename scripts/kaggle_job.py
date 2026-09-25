@@ -3,6 +3,8 @@
     uv run scripts/kaggle_job.py push   --name steplength-probe --timesteps 5000000
     uv run scripts/kaggle_job.py status --name steplength-probe
     uv run scripts/kaggle_job.py pull   --name steplength-probe      # -> runs/<name>/
+    uv run scripts/kaggle_job.py push   --name g1-stairs-v2 --timesteps 200000000 \
+        --init-kernel g1-steplength-v1 --extra="--task stairs"         # warm start from v1's params.pkl
 
 Bundles g1pipe/*.py into one private Kaggle script kernel (Kaggle takes a single
 file), pins the package versions we tested locally, trains, and leaves
@@ -32,7 +34,16 @@ for name, src in FILES.items():
     (pkg / name).write_text(src)
 print(f"install {{time.time()-t0:.0f}}s", flush=True)
 env = dict(os.environ, PYTHONPATH="/kaggle/working/src", XLA_PYTHON_CLIENT_MEM_FRACTION="0.9")
-p = subprocess.Popen([sys.executable, "-u", "-m", "g1pipe.train", "--out", "/kaggle/working/run", *{args!r}],
+args = {args!r}
+INIT_KERNEL = {init_kernel!r}
+if INIT_KERNEL:  # warm start: the source kernel's output is mounted read-only under /kaggle/input
+    found = sorted(pathlib.Path("/kaggle/input").rglob("params.pkl"), key=lambda q: INIT_KERNEL not in str(q))
+    if not found:
+        subprocess.run("find /kaggle/input -maxdepth 4", shell=True)
+        sys.exit(f"no params.pkl from kernel {{INIT_KERNEL}} under /kaggle/input")
+    print("warm start from", found[0], flush=True)
+    args += ["--init-from", str(found[0])]
+p = subprocess.Popen([sys.executable, "-u", "-m", "g1pipe.train", "--out", "/kaggle/working/run", *args],
                      env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 NOISE = ("iterations limit reached", "To disable the print warning", "Warning", "warnings.warn")
 for line in p.stdout:  # MuJoCo Warp prints a solver-overflow note every step; keep the log readable
@@ -57,7 +68,7 @@ def push(a):
     job.mkdir(parents=True, exist_ok=True)
     files = {n: (ROOT / "g1pipe" / n).read_text() for n in BUNDLE}
     args = ["--timesteps", str(a.timesteps), *a.extra]
-    (job / "train_kernel.py").write_text(KERNEL.format(pins=PINS, files=files, args=args))
+    (job / "train_kernel.py").write_text(KERNEL.format(pins=PINS, files=files, args=args, init_kernel=a.init_kernel))
     (job / "kernel-metadata.json").write_text(json.dumps({
         "id": f"{username()}/{a.name}",
         "title": a.name,
@@ -67,7 +78,7 @@ def push(a):
         "is_private": True,
         "enable_gpu": True,
         "enable_internet": True,
-        "dataset_sources": [], "competition_sources": [], "kernel_sources": [],
+        "dataset_sources": [], "competition_sources": [], "kernel_sources": [f"{username()}/{a.init_kernel}"] if a.init_kernel else [],
     }, indent=2))
     r = kaggle("kernels", "push", "-p", str(job), "--accelerator", a.accelerator)
     print(r.stdout, r.stderr)
@@ -91,6 +102,8 @@ if __name__ == "__main__":
     ap.add_argument("--name", required=True, help="kernel slug, lowercase-with-dashes")
     ap.add_argument("--timesteps", type=int, default=150_000_000)
     ap.add_argument("--accelerator", default="NvidiaTeslaT4")
+    ap.add_argument("--init-kernel", default=None,
+                    help="slug of a finished kernel whose params.pkl to warm-start from (passed as --init-from)")
     ap.add_argument("--extra", default="", help='extra args for g1pipe.train, e.g. --extra="--no-dr"')
     a = ap.parse_args()
     a.extra = a.extra.split()
