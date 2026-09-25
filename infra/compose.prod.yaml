@@ -1,0 +1,146 @@
+# Production: one EC2 app host behind Caddy (automatic TLS). See infra/aws/README.md.
+#
+# Lives in /opt/skf-studio on the host, next to:
+#   Caddyfile              copied from infra/Caddyfile
+#   postgres/init.sql      copied from infra/postgres/ (only used with the `localdb` profile)
+#   deploy.env             interpolation values written by bin/release.sh (registry, tag, domain, profiles)
+#   env/api.env env/web.env  secrets and settings rendered from SSM Parameter Store by bin/render-env.sh
+#
+# Artifacts go to real S3 through the instance role (no MinIO, no static keys). Postgres is RDS by default;
+# COMPOSE_PROFILES=localdb runs it in a container instead (with the nightly pg_dump in bin/backup-db.sh).
+name: skf-studio
+
+x-logging: &logging
+  driver: json-file
+  options: {max-size: "50m", max-file: "5"}
+
+# Fixed in-network wiring; everything account- or secret-specific comes from env/*.env.
+x-backend-env: &backend-env
+  REDIS_URL: redis://redis:6379/0
+  AUTH_JWKS_URL: http://web:3000/api/auth/jwks
+  AUTH_ISSUER: skf-skill-studio
+  AUTH_AUDIENCE: skf-api
+  INTERNAL_INGEST_URL: http://api:8000/ingest/v1
+  PIPELINE_REPO_DIR: /app/pipeline
+  PIPELINE_PYTHON: /app/pipeline/.venv/bin/python
+  WORK_DIR: /var/lib/skf/work
+  ENVIRONMENT: production
+
+x-web-env: &web-env
+  API_INTERNAL_URL: http://api:8000
+  AUTH_ISSUER: skf-skill-studio
+  AUTH_AUDIENCE: skf-api
+
+x-db-dependency: &db-dependency
+  # Ignored when Postgres is RDS (the `localdb` profile is off and the service isn't part of the project).
+  postgres: {condition: service_healthy, required: false}
+
+services:
+  caddy:
+    image: caddy:2.10-alpine
+    ports: ["80:80", "443:443", "443:443/udp"]
+    environment:
+      SKF_DOMAIN: ${SKF_DOMAIN:?SKF_DOMAIN is not set in deploy.env}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL is not set in deploy.env}
+      S3_ASSET_ORIGIN: ${S3_ASSET_ORIGIN:?S3_ASSET_ORIGIN is not set in deploy.env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      web: {condition: service_healthy}
+      api: {condition: service_healthy}
+
+  web:
+    image: ${SKF_IMAGE_REGISTRY:?}/skf-studio/web:${SKF_IMAGE_TAG:?}
+    init: true
+    env_file: [env/web.env]
+    environment: *web-env
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      web-migrate: {condition: service_completed_successfully}
+
+  web-migrate:
+    image: ${SKF_IMAGE_REGISTRY:?}/skf-studio/web-tools:${SKF_IMAGE_TAG:?}
+    command: ["pnpm", "auth:migrate"]
+    env_file: [env/web.env]
+    environment: *web-env
+    restart: "no"
+    logging: *logging
+    depends_on: *db-dependency
+
+  migrate:
+    image: ${SKF_IMAGE_REGISTRY:?}/skf-studio/api:${SKF_IMAGE_TAG:?}
+    command: ["skf-api", "migrate"]
+    env_file: [env/api.env]
+    environment: *backend-env
+    restart: "no"
+    logging: *logging
+    depends_on: *db-dependency
+
+  api:
+    image: ${SKF_IMAGE_REGISTRY:?}/skf-studio/api:${SKF_IMAGE_TAG:?}
+    init: true
+    env_file: [env/api.env]
+    environment: *backend-env
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+
+  worker:
+    image: ${SKF_IMAGE_REGISTRY:?}/skf-studio/worker:${SKF_IMAGE_TAG:?}
+    env_file: [env/api.env]
+    environment: *backend-env
+    volumes: [workdata:/var/lib/skf/work]
+    # Local CPU evaluation stages run inside this container; keep them from starving the web tier.
+    cpus: ${SKF_WORKER_CPUS:-3}
+    restart: unless-stopped
+    # Long stages are supervised by this process; give arq time to finish its current job step.
+    stop_grace_period: 60s
+    logging: *logging
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+      api: {condition: service_healthy}
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redisdata:/data]
+    restart: unless-stopped
+    logging: *logging
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  postgres:
+    profiles: [localdb]
+    image: postgres:17-alpine
+    env_file: [env/postgres.env]
+    environment:
+      POSTGRES_USER: skf
+      POSTGRES_DB: skf
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    restart: unless-stopped
+    logging: *logging
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skf -d skf"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  caddy_data:
+  caddy_config:
+  redisdata:
+  workdata:
+  pgdata:

@@ -1,0 +1,22 @@
+# Drop-in replacement for the `minio` service, for machines that can't pull minio/minio (Docker Hub and
+# quay.io stopped serving it). Same service name, host ports and credentials, so nothing else changes:
+#
+#   make infra-up S3=rustfs
+#   docker compose -f infra/compose.yaml -f infra/compose.rustfs.yaml up -d postgres redis minio
+#
+# Data lives in its own volume; artifacts in an existing `miniodata` volume are not migrated.
+services:
+  minio:
+    image: rustfs/rustfs:1.0.0
+    command: !reset null
+    environment: !override
+      RUSTFS_ACCESS_KEY: skfminio
+      RUSTFS_SECRET_KEY: skfminio-dev-secret
+      RUSTFS_CONSOLE_ENABLE: "true"
+    volumes: !override
+      - rustfsdata:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9000/health"]
+
+volumes:
+  rustfsdata:

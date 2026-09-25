@@ -1,0 +1,8 @@
+# The reporter runs inside jobs on whatever Python the job host has (Kaggle image, AWS box, worker),
+# so it is stdlib-only and linted for Python 3.8.
+line-length = 110
+target-version = "py38"
+
+[lint]
+select = ["E", "F", "I", "B", "UP", "S", "SIM", "RUF"]
+ignore = ["S101", "S603", "S607"]

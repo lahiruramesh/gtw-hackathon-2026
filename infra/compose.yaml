@@ -1,0 +1,161 @@
+# Local development services. `make infra-up` starts postgres, redis and minio;
+# `docker compose -f infra/compose.yaml --profile app up` also runs api, worker and web in containers.
+name: skf-studio
+
+# Wiring shared by the api, migrate and worker containers (SPEC §3). Secrets come from the root `.env`
+# (copy `.env.example`). It is optional here so `infra-up`/`down` work without it; `make up` insists on it,
+# and the api and web refuse to start without SECRET_KEY / BETTER_AUTH_SECRET.
+x-backend-env: &backend-env
+  DATABASE_URL: postgresql+asyncpg://skf:skf@postgres:5432/skf
+  REDIS_URL: redis://redis:6379/0
+  AUTH_JWKS_URL: http://web:3000/api/auth/jwks
+  AUTH_ISSUER: skf-skill-studio
+  AUTH_AUDIENCE: skf-api
+  S3_ENDPOINT_URL: http://minio:9000
+  S3_PUBLIC_ENDPOINT_URL: http://localhost:59000
+  S3_BUCKET: skf-artifacts
+  S3_REGION: eu-north-1
+  S3_ACCESS_KEY_ID: skfminio
+  S3_SECRET_ACCESS_KEY: skfminio-dev-secret
+  INTERNAL_INGEST_URL: http://api:8000/ingest/v1
+  PIPELINE_REPO_DIR: /app/pipeline
+  PIPELINE_PYTHON: /app/pipeline/.venv/bin/python
+  WORK_DIR: /var/lib/skf/work
+  LOG_MAX_LINES_PER_RUN: "200000"
+  ENVIRONMENT: development
+
+x-app-env-file: &app-env-file
+  - path: ../.env
+    required: false
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: skf
+      POSTGRES_PASSWORD: skf
+      POSTGRES_DB: skf
+    ports: ["55432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skf -d skf"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports: ["56379:6379"]
+    volumes: [redisdata:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  minio:
+    image: minio/minio:latest
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: skfminio
+      MINIO_ROOT_PASSWORD: skfminio-dev-secret
+    ports: ["59000:9000", "59001:9001"]
+    volumes: [miniodata:/data]
+    # buckets are created by the API on startup (core/storage.py ensure_bucket)
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # --- profile "app": the application itself, built from infra/docker/*.Dockerfile -------------------
+
+  migrate:
+    profiles: [app]
+    image: skf-studio/api:dev
+    build: &api-build
+      context: ..
+      dockerfile: infra/docker/api.Dockerfile
+      target: runtime
+    command: ["skf-api", "migrate"]
+    env_file: *app-env-file
+    environment: *backend-env
+    restart: "no"
+    depends_on:
+      postgres: {condition: service_healthy}
+
+  api:
+    profiles: [app]
+    image: skf-studio/api:dev
+    build: *api-build
+    init: true
+    env_file: *app-env-file
+    environment: *backend-env
+    ports: ["8000:8000"]
+    restart: unless-stopped
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      minio: {condition: service_healthy}
+
+  worker:
+    profiles: [app]
+    image: skf-studio/worker:dev
+    build:
+      context: ..
+      dockerfile: infra/docker/worker.Dockerfile
+      target: runtime
+    env_file: *app-env-file
+    environment: *backend-env
+    volumes: [workdata:/var/lib/skf/work]
+    restart: unless-stopped
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+      # local_cpu jobs phone home to INTERNAL_INGEST_URL on the api container.
+      api: {condition: service_healthy}
+
+  web-migrate:
+    profiles: [app]
+    image: skf-studio/web-tools:dev
+    build:
+      context: ..
+      dockerfile: infra/docker/web.Dockerfile
+      target: tools
+    command: ["pnpm", "auth:migrate"]
+    env_file: *app-env-file
+    environment: &web-env
+      DATABASE_URL: postgresql://skf:skf@postgres:5432/skf
+      BETTER_AUTH_URL: http://localhost:3100
+      API_INTERNAL_URL: http://api:8000
+      AUTH_ISSUER: skf-skill-studio
+      AUTH_AUDIENCE: skf-api
+    restart: "no"
+    depends_on:
+      postgres: {condition: service_healthy}
+
+  web:
+    profiles: [app]
+    image: skf-studio/web:dev
+    build:
+      context: ..
+      dockerfile: infra/docker/web.Dockerfile
+      target: runtime
+    init: true
+    env_file: *app-env-file
+    environment: *web-env
+    ports: ["3100:3000"]
+    restart: unless-stopped
+    depends_on:
+      web-migrate: {condition: service_completed_successfully}
+      postgres: {condition: service_healthy}
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:
+  workdata:

@@ -1,0 +1,63 @@
+# Stair climbing with a height scan: g1pipe.train --task stairs, then the 96-run strict test
+# (g1pipe.stairs_eval, held-out stairs, 3 start variants) on CPU.
+# Schema: docs/webapp/SPEC.md §7 (validated by skf_api.skills_registry.manifest).
+id: g1-stairs
+name: Stair climbing (height scan)
+summary: Walk up and down held-out staircases using a terrain height scan.
+description: |
+  The G1 walks straight over pyramids (up, across, down) and pits (down, across, up) with step
+  heights it never saw in training. The policy observes a height scan around its feet; with
+  `scan_model: camera` it is trained with the errors of the simulated head depth camera.
+
+  Warm-started from the flat step-length policy and refined over 11 versions (curriculum, sole
+  contacts, leg action range, stairs cadence). The **strict test** runs every staircase of the
+  held-out layout from 3 start variants (96 crossings) at 0.7 m/s. A step height is **certified**
+  when it and every lower height pass with no falls, torso tilt < 25° and pelvis > 0.55 m.
+robot: unitree-g1
+category: locomotion
+method: rl-ppo-curriculum
+status: active
+params:
+  timesteps:        {type: integer, title: Training steps, default: 200000000, minimum: 20000, maximum: 2000000000}
+  smoke:            {type: boolean, title: Smoke test (tiny CPU run), default: false}
+  scan_model:       {type: string, title: Height-scan noise model, enum: [uniform, camera], default: uniform}
+  leg_action_scale: {type: number, title: Leg action scale (rad), description: "Target range of hip pitch, knee and ankle pitch; empty keeps Playground's 0.5", default: null, nullable: true, minimum: 0.1, maximum: 2}
+  lr:               {type: number, title: Learning rate, description: "PPO learning rate (Playground G1: 3e-4); lower to fine-tune", default: null, nullable: true, minimum: 0.000001, maximum: 0.01}
+  seed:             {type: integer, title: Seed, default: 0, minimum: 0}
+  init_from:        {type: checkpoint, title: Warm start from, nullable: true, default: null}
+presets:
+  - {id: smoke, name: Smoke test, description: "Tiny CPU training run; the strict test still runs in full", params: {smoke: true, timesteps: 20000}}
+  - id: v11-finetune
+    name: v11 fine-tune
+    description: "v11 recipe: camera scan noise, wide leg range, lr 1e-4, 300M steps (warm start from a v10 checkpoint)"
+    params: {timesteps: 300000000, scan_model: camera, leg_action_scale: 1.0, lr: 0.0001}
+pipeline:
+  - id: train
+    kind: train
+    title: Train (Brax PPO, stairs curriculum)
+    runs_on: target
+    argv: [python, -m, g1pipe.train, --task, stairs, --out, "{out_dir}", --timesteps, "{timesteps}", --seed, "{seed}"]
+    flags: {smoke: --smoke, scan_model: --scan-model, leg_action_scale: --leg-action-scale, lr: --lr, init_from: --init-from}
+    progress_csv: progress.csv
+  - id: evaluate
+    kind: evaluate
+    title: Strict test (96 crossings, held-out stairs)
+    runs_on: local
+    estimate_minutes: 25
+    argv: [python, -m, g1pipe.stairs_eval, "{input_dir}/train/params.pkl", --starts, "3", --out, "{out_dir}/strict.json"]
+    inputs: [train/params.pkl, train/config.json]
+    suite: strict-96
+  - id: gate
+    kind: gate
+    title: Release gate
+gate:
+  - {metric: evaluate.crossed_rate, op: ">=", value: 0.9, label: Crosses at least 90 % of held-out staircases}
+  - {metric: evaluate.fell, op: "<=", value: 5, label: At most 5 falls in the strict test}
+  - {metric: evaluate.certified_cm, op: ">=", value: 10, label: Certified step height of at least 10 cm}
+headline:
+  - {label: Crossed, metric: evaluate.crossed_rate, unit: "%", scale: 100, digits: 0}
+  - {label: Falls, metric: evaluate.fell, digits: 0}
+  - {label: Certified height, metric: evaluate.certified_cm, unit: cm, digits: 1}
+metrics:
+  keys: ["eval/episode_reward", "eval/episode_crossed", "eval/episode_terrain_level", "eval/episode_step_len_err", "eval/avg_episode_length", "eval/sps"]
+  primary: eval/episode_crossed

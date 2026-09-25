@@ -1,0 +1,155 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    name: API (ruff, pyright, pytest)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: apps/api
+    services:
+      # Same images, credentials and host ports as infra/compose.yaml, so the dev defaults just work.
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: skf
+          POSTGRES_PASSWORD: skf
+          POSTGRES_DB: skf
+        ports: ["55432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U skf -d skf" --health-interval 5s --health-timeout 3s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ["56379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 20
+      # minio/minio can no longer be pulled from Docker Hub; RustFS speaks the same S3 API with the same keys.
+      s3:
+        image: rustfs/rustfs:1.0.0
+        env:
+          RUSTFS_ACCESS_KEY: skfminio
+          RUSTFS_SECRET_KEY: skfminio-dev-secret
+        ports: ["59000:9000"]
+        options: >-
+          --health-cmd "curl -fsS http://localhost:9000/health" --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      # tests/conftest.py targets the service ports above (skf_test database, Redis db 15, bucket
+      # skf-artifacts-test). Modules that read settings at import time still need a SECRET_KEY:
+      # a throwaway value for this job only; real keys live in SSM Parameter Store.
+      SECRET_KEY: ci-only-secret-key-not-used-anywhere-else-0000
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.x"
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+      - name: Create schemas and the test database (infra/postgres/init.sql)
+        run: psql "postgresql://skf:skf@localhost:55432/skf" -v ON_ERROR_STOP=1 -f ../../infra/postgres/init.sql
+      - run: uv sync --frozen
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run pyright
+      - run: uv run pytest -q
+
+  web:
+    name: Web (API types, lint, typecheck, test, build)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: apps/web/package.json
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.x"
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+      # The web types alias the API's OpenAPI schema; a stale schema.d.ts means the two apps drifted apart.
+      - name: API types are generated from the current API
+        run: |
+          uv run --project ../api --frozen skf-api openapi > "$RUNNER_TEMP/openapi.json"
+          OPENAPI_SOURCE="$RUNNER_TEMP/openapi.json" pnpm gen:api
+          git diff --exit-code -- src/lib/api/schema.d.ts
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+  infra:
+    name: Infra (compose, Caddyfile, shellcheck, hadolint)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.x"
+      - name: Validate compose files
+        run: |
+          touch .env
+          docker compose -f infra/compose.yaml --profile app config -q
+          docker compose -f infra/compose.yaml -f infra/compose.rustfs.yaml config -q
+          mkdir -p /tmp/prod/env && cp infra/compose.prod.yaml /tmp/prod/
+          touch /tmp/prod/env/api.env /tmp/prod/env/web.env /tmp/prod/env/postgres.env
+          SKF_DOMAIN=ci.example.com ACME_EMAIL=ci@example.com S3_ASSET_ORIGIN=https://ci.s3.amazonaws.com \
+          SKF_IMAGE_REGISTRY=registry.example.com SKF_IMAGE_TAG=ci \
+            docker compose -f /tmp/prod/compose.prod.yaml --profile localdb config -q
+      - name: Validate Caddyfile
+        run: >-
+          docker run --rm -e SKF_DOMAIN=ci.example.com -e ACME_EMAIL=ci@example.com -e S3_ASSET_ORIGIN=https://ci.s3.amazonaws.com
+          -v "$PWD/infra/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2.10-alpine
+          caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+      - name: Shellcheck
+        run: uvx --from shellcheck-py shellcheck -x infra/aws/*.sh infra/aws/host/*.sh
+      - name: Hadolint
+        run: for f in infra/docker/*.Dockerfile; do uvx --from hadolint-bin hadolint "$f"; done
+
+  images:
+    name: Docker image (${{ matrix.image }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {image: api, dockerfile: infra/docker/api.Dockerfile, target: runtime}
+          - {image: web, dockerfile: infra/docker/web.Dockerfile, target: runtime}
+          - {image: web-tools, dockerfile: infra/docker/web.Dockerfile, target: tools}
+          - {image: worker, dockerfile: infra/docker/worker.Dockerfile, target: runtime}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          target: ${{ matrix.target }}
+          build-args: GIT_SHA=${{ github.sha }}
+          tags: skf-studio/${{ matrix.image }}:ci
+          push: false
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}

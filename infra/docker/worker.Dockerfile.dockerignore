@@ -1,0 +1,21 @@
+# Build context is the repo root; send the API plus the research pipeline the worker runs.
+*
+!apps/api
+!apps/reporter
+!shared
+!skills
+!g1pipe
+!jev_agent
+!scripts
+!pyproject.toml
+!uv.lock
+
+apps/api/.venv
+apps/api/tests
+apps/api/.env
+apps/api/.env.*
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.ruff_cache
+**/.mypy_cache

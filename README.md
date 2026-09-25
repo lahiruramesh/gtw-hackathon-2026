@@ -32,6 +32,25 @@ export PYTHONPATH=.
 
 Kaggle needs `~/.kaggle/kaggle.json` (Kaggle → Settings → API → Create token) and a phone-verified account (for GPU + internet).
 
+## Web app (SKF Skill Studio)
+
+A web app wraps this pipeline for a team: sign in, launch training on Kaggle, an AWS GPU box or the local CPU,
+watch logs and metrics live, run evaluation and the release gate automatically, compare runs and approve
+releases by role. Code is in `apps/` (FastAPI API + worker, Next.js web, in-job reporter), skill manifests in
+`skills/`, and Docker/AWS deployment in `infra/`.
+
+```bash
+make infra-up api-install web-install migrate seed   # once (copy the .env.example files first)
+make api   # :8000        make worker        make web   # http://localhost:3100
+```
+
+| Doc | What |
+|---|---|
+| [docs/webapp/PLAN.md](docs/webapp/PLAN.md) | why the app exists and how it is designed |
+| [docs/webapp/SPEC.md](docs/webapp/SPEC.md) | the implementation contract: API, data model, state machine, backends, UI |
+| [docs/webapp/RUNBOOK.md](docs/webapp/RUNBOOK.md) | local setup, users and roles, compute targets, troubleshooting, secret rotation |
+| [infra/aws/README.md](infra/aws/README.md) | production deployment on AWS (EC2 + RDS + S3, Caddy TLS) |
+
 ## Layout
 
 | Path | What |

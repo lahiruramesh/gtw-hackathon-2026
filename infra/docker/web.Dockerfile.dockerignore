@@ -1,0 +1,14 @@
+# Build context is the repo root; send the web app and the shared role matrix it imports.
+*
+!apps/web
+!shared
+
+apps/web/node_modules
+apps/web/.next
+apps/web/out
+apps/web/coverage
+apps/web/playwright-report
+apps/web/test-results
+apps/web/.env
+apps/web/.env.*
+apps/web/*.tsbuildinfo

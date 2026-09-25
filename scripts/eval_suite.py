@@ -5,7 +5,7 @@
   +   a scheduled run (step length changes mid-walk) for the demo video
 
     uv run scripts/eval_suite.py runs/<name>/run/params.pkl --tag v1
-Outputs results/eval_<tag>/{grid.csv, stress.csv, *.png, demo.mp4, summary.json}
+Outputs results/eval_<tag>/{grid.csv, stress.csv, *.png, demo.mp4, summary.json}, or --out DIR
 """
 import argparse
 import csv
@@ -34,8 +34,9 @@ def main():
     ap.add_argument("--tag", default="latest")
     ap.add_argument("--seeds", type=int, default=2)
     ap.add_argument("--quick", action="store_true")
+    ap.add_argument("--out", default=None, help="output directory (default: results/eval_<tag>)")
     a = ap.parse_args()
-    out = Path("results") / f"eval_{a.tag}"
+    out = Path(a.out) if a.out else Path("results") / f"eval_{a.tag}"
     out.mkdir(parents=True, exist_ok=True)
     r = PolicyRunner(a.params)
 

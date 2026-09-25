@@ -1,0 +1,7 @@
+-- Runs once on first start of the postgres container.
+CREATE SCHEMA IF NOT EXISTS auth AUTHORIZATION skf;
+CREATE SCHEMA IF NOT EXISTS app AUTHORIZATION skf;
+CREATE DATABASE skf_test OWNER skf;
+\connect skf_test
+CREATE SCHEMA IF NOT EXISTS auth AUTHORIZATION skf;
+CREATE SCHEMA IF NOT EXISTS app AUTHORIZATION skf;

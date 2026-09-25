@@ -1,0 +1,60 @@
+# Step-length adjustment on flat ground: g1pipe.train (task flat, its default), then scripts/eval_suite.py on CPU.
+# Schema: docs/webapp/SPEC.md §7 (validated by skf_api.skills_registry.manifest).
+id: g1-step-length
+name: Step-length adjustment
+summary: Walk at a commanded speed and step length.
+description: |
+  The Unitree G1 walks forward at a commanded speed (0.3–0.9 m/s) **and** step length (15–35 cm),
+  so cadence follows from the two (0.9–1.8 Hz). Trained with Brax PPO on Playground's tuned G1
+  recipe with domain randomisation, then evaluated in a different engine (MuJoCo C on CPU):
+
+  - **E2** step-length tracking over a speed × step-length grid (unseen engine),
+  - **E3** stress tests: low friction, payload, pushes and action latency,
+  - a demo where the step length changes while walking.
+
+  v1 took 202M steps in 95 min on a free Kaggle T4. See `docs/pipeline.md` for the full write-up.
+robot: unitree-g1
+category: locomotion
+method: rl-ppo
+status: active
+params:
+  timesteps: {type: integer, title: Training steps, default: 200000000, minimum: 20000, maximum: 2000000000}
+  smoke:     {type: boolean, title: Smoke test (tiny CPU run), default: false}
+  no_dr:     {type: boolean, title: Disable domain randomisation, default: false}
+  lr:        {type: number, title: Learning rate, description: "PPO learning rate (Playground G1: 3e-4)", default: null, nullable: true}
+  seed:      {type: integer, title: Seed, default: 0}
+  init_from: {type: checkpoint, title: Warm start from, nullable: true, default: null}
+presets:
+  - {id: smoke, name: Smoke test, description: 90 s CPU check of the whole pipeline, params: {smoke: true, timesteps: 20000}}
+  - {id: v1, name: v1 (with randomisation), description: "The reference run (Kaggle T4, about 95 min)", params: {timesteps: 200000000}}
+  - {id: e3-no-dr, name: E3 without randomisation, description: Ablation for experiment E3, params: {timesteps: 200000000, no_dr: true}}
+pipeline:
+  - id: train
+    kind: train
+    title: Train (Brax PPO)
+    runs_on: target
+    argv: [python, -m, g1pipe.train, --out, "{out_dir}", --timesteps, "{timesteps}", --seed, "{seed}"]
+    flags: {smoke: --smoke, no_dr: --no-dr, lr: --lr, init_from: --init-from}
+    progress_csv: progress.csv
+  - id: evaluate
+    kind: evaluate
+    title: Cross-engine evaluation and stress tests
+    runs_on: local
+    estimate_minutes: 15
+    argv: [python, scripts/eval_suite.py, "{input_dir}/train/params.pkl", --out, "{out_dir}", --quick]
+    inputs: [train/params.pkl, train/config.json]
+    suite: e2e-stress
+  - id: gate
+    kind: gate
+    title: Release gate
+gate:
+  - {metric: evaluate.grid_fall_rate, op: "==", value: 0, label: No falls on the command grid}
+  - {metric: evaluate.grid_step_abs_err_cm, op: "<", value: 3, label: Step-length error < 3 cm (unseen engine)}
+  - {metric: evaluate.stress.push_0.5mps.fall_rate, op: "==", value: 0, label: Survives 0.5 m/s pushes}
+  - {metric: evaluate.stress.latency_20ms.fall_rate, op: "==", value: 0, label: Survives 20 ms latency}
+headline:
+  - {label: Step error, metric: evaluate.grid_step_abs_err_cm, unit: cm, digits: 1}
+  - {label: Grid falls, metric: evaluate.grid_fall_rate, unit: "%", scale: 100, digits: 0}
+metrics:
+  keys: ["eval/episode_reward", "eval/episode_step_len_err", "eval/avg_episode_length", "eval/episode_crossed", "eval/sps"]
+  primary: eval/episode_reward

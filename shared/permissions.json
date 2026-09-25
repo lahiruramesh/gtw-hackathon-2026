@@ -1,0 +1,41 @@
+{
+  "$comment": "Single source of truth for app roles and permissions. Read by apps/api (skf_api.core.permissions) and apps/web (src/lib/permissions.ts). Change here only.",
+  "roles": {
+    "admin": {
+      "label": "Admin",
+      "description": "Platform owner. Manages users, compute targets and secrets.",
+      "permissions": [
+        "skill:read", "skill:write",
+        "run:read", "run:create_preset", "run:create_custom", "run:cancel_any", "run:approve_launch", "run:evaluate",
+        "release:review",
+        "compute:read", "compute:write",
+        "audit:read", "user:manage"
+      ]
+    },
+    "ml_engineer": {
+      "label": "ML engineer",
+      "description": "Creates skills and presets, launches any run, evaluates checkpoints.",
+      "permissions": [
+        "skill:read", "skill:write",
+        "run:read", "run:create_preset", "run:create_custom", "run:cancel_any", "run:approve_launch", "run:evaluate",
+        "compute:read"
+      ]
+    },
+    "operator": {
+      "label": "Operator",
+      "description": "Launches runs from approved presets within a GPU-hour budget.",
+      "permissions": ["skill:read", "run:read", "run:create_preset", "compute:read"]
+    },
+    "safety_reviewer": {
+      "label": "Safety reviewer",
+      "description": "Reviews gate reports and approves or rejects releases.",
+      "permissions": ["skill:read", "run:read", "release:review", "compute:read"]
+    },
+    "viewer": {
+      "label": "Viewer",
+      "description": "Read-only access to dashboards, runs and reports.",
+      "permissions": ["skill:read", "run:read", "compute:read"]
+    }
+  },
+  "default_role": "viewer"
+}
