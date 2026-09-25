@@ -305,3 +305,11 @@ def test_progress_tail_handles_partial_rows_and_rewrites(tmp_path: Path) -> None
     assert tail.read_points() == [{"step": 20, "wall_s": 2.0, "values": {"loss": 0.25}}]
     path.write_text("step,wall_s,loss\n5,0.1,9\n")  # a new run rewrote the file
     assert [p["step"] for p in tail.read_points()] == [5]
+
+
+def test_garbled_gpu_printf_lines_count_as_noise() -> None:
+    """Warp's per-step note as it arrives when GPU threads interleave mid-line (seen live on an L40S)."""
+    garbled = "To disable the prinhe print warning: m.opt.warn_overflow &= ~mjw.OverflowType.LS_ITERATIONS"
+    noise = load_reporter().DEFAULT_NOISE
+    assert any(n in garbled for n in noise)
+    assert not any(n in "[   936s] step 131,072,000  reward  19.63  step_len_err 0.036" for n in noise)

@@ -34,7 +34,15 @@ from typing import Callable, Sequence
 
 # Must stay identical to NOISE in scripts/kaggle_job.py (tests/backends/test_reporter.py checks it).
 # MuJoCo Warp prints a solver-overflow note every step (~14 MB/s) that would otherwise flood the log.
-DEFAULT_NOISE = ("iterations limit reached", "To disable the print warning", "Warning", "warnings.warn")
+DEFAULT_NOISE = (
+    "iterations limit reached",
+    "To disable the print warning",
+    "Warning",
+    "warnings.warn",
+    # GPU printf output from parallel threads interleaves mid-line; these tails survive intact
+    "warn_overflow",
+    "mjw.OverflowType",
+)
 
 MAX_LINE_CHARS = 4000  # the API truncates to this anyway
 FLUSH_LINES = 500  # ship a batch at least every --flush-seconds or this many lines

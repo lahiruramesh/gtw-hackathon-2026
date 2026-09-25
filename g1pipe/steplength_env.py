@@ -37,6 +37,11 @@ class StepLength(g1_joystick.Joystick):
 
     def __init__(self, task: str = "flat_terrain", config=None, config_overrides=None):
         super().__init__(task=task, config=config or default_config(), config_overrides=config_overrides)
+        if self._config.impl == "warp":
+            # Contacts often use all of the model's solver iterations, and MuJoCo Warp then printf's a
+            # note from the GPU kernel on every step: a flooded log and a ~3x slower run (as in stairs_env)
+            opt = self._mjx_model.opt
+            self._mjx_model = self._mjx_model.replace(opt=opt.replace(_impl=opt._impl.replace(warn_overflow=0)))
 
     # -- command ---------------------------------------------------------------
     def _sample_gait(self, rng, command):

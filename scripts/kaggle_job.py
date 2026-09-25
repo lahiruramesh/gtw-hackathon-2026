@@ -45,7 +45,7 @@ if INIT_KERNEL:  # warm start: the source kernel's output is mounted read-only u
     args += ["--init-from", str(found[0])]
 p = subprocess.Popen([sys.executable, "-u", "-m", "g1pipe.train", "--out", "/kaggle/working/run", *args],
                      env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-NOISE = ("iterations limit reached", "To disable the print warning", "Warning", "warnings.warn")
+NOISE = ("iterations limit reached", "To disable the print warning", "Warning", "warnings.warn", "warn_overflow", "mjw.OverflowType")
 for line in p.stdout:  # MuJoCo Warp prints a solver-overflow note every step; keep the log readable
     if not any(n in line for n in NOISE):
         print(line, end="", flush=True)
