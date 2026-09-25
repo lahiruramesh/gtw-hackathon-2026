@@ -41,7 +41,6 @@ services:
     ports: ["80:80", "443:443", "443:443/udp"]
     environment:
       SKF_DOMAIN: ${SKF_DOMAIN:?SKF_DOMAIN is not set in deploy.env}
-      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL is not set in deploy.env}
       S3_ASSET_ORIGIN: ${S3_ASSET_ORIGIN:?S3_ASSET_ORIGIN is not set in deploy.env}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro

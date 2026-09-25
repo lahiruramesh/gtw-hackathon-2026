@@ -5,9 +5,8 @@
 #
 # The internal API (/api/v1, /docs, /openapi.json) is never routed from the internet.
 # Caddy obtains and renews the certificate itself; ports 80 and 443 must be open to the world.
-{
-	email {$ACME_EMAIL}
-}
+# No ACME contact email is configured: Caddy renews certificates itself. To get Let's Encrypt expiry notices,
+# add a global options block with `email you@example.com` at the top of this file.
 
 {$SKF_DOMAIN} {
 	encode zstd gzip

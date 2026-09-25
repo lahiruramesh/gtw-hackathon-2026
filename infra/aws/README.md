@@ -194,7 +194,6 @@ is the variable name. Use `SecureString` for secrets. Values must not contain `'
 | Parameter | Type | Value |
 |---|---|---|
 | `/skf-studio/host/SKF_DOMAIN` | String | `studio.example.com` |
-| `/skf-studio/host/ACME_EMAIL` | String | ops mailbox for Let's Encrypt expiry notices |
 | `/skf-studio/host/S3_ASSET_ORIGIN` | String | `https://<bucket>.s3.<region>.amazonaws.com` (CSP for videos/images) |
 | `/skf-studio/host/SKF_IMAGE_REGISTRY` | String | `<account>.dkr.ecr.<region>.amazonaws.com` |
 | `/skf-studio/host/BACKUP_BUCKET` | String | the artifact bucket (only used with `localdb`) |

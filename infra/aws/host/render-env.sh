@@ -42,7 +42,7 @@ render "$SSM_PREFIX/api" "$APP_DIR/env/api.env"
 render "$SSM_PREFIX/web" "$APP_DIR/env/web.env"
 render "$SSM_PREFIX/postgres" "$APP_DIR/env/postgres.env"
 
-for required in SKF_DOMAIN ACME_EMAIL S3_ASSET_ORIGIN SKF_IMAGE_REGISTRY; do
+for required in SKF_DOMAIN S3_ASSET_ORIGIN SKF_IMAGE_REGISTRY; do
   grep -q "^$required=" "$APP_DIR/deploy.env" || { echo "render-env: missing $SSM_PREFIX/host/$required" >&2; exit 1; }
 done
 echo "render-env: wrote deploy.env and env/{api,web,postgres}.env from $SSM_PREFIX"

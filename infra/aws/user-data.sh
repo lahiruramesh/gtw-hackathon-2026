@@ -35,6 +35,8 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.
   >/etc/apt/sources.list.d/docker.list
 apt-get update -q
 apt-get install -y -q docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+# Start the socket unit first: dockerd uses socket activation and fails if docker.socket isn't up yet.
+systemctl enable --now docker.socket
 systemctl enable --now docker
 usermod -aG docker "$DEPLOY_USER"
 

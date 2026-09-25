@@ -29,7 +29,8 @@ if [[ $action != --status ]]; then
   rsync -az -e "ssh ${ssh_opts[*]}" \
     --include compose.prod.yaml --include Caddyfile --include 'postgres/' --include 'postgres/init.sql' \
     --exclude '*' "$ROOT/infra/" "$HOST:$APP_DIR/"
-  rsync -az --delete-after --chmod=F755 -e "ssh ${ssh_opts[*]}" "$ROOT/infra/aws/host/" "$HOST:$APP_DIR/bin/"
+  # host scripts are 0755 in git and -a keeps the mode (macOS openrsync has no --chmod)
+  rsync -az --delete-after -e "ssh ${ssh_opts[*]}" "$ROOT/infra/aws/host/" "$HOST:$APP_DIR/bin/"
 fi
 
 # Login shell so /etc/profile.d/skf-studio.sh (AWS_REGION) is loaded. ssh joins its arguments into one
