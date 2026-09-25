@@ -1,0 +1,38 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "jev-live",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "PYTHONPATH=.",
+        "uv",
+        "run",
+        "python",
+        "-m",
+        "jev_agent.live",
+        "runs/g1-steplength-v1/run/params.pkl",
+        "--port",
+        "8765"
+      ],
+      "port": 8765
+    },
+    {
+      "name": "jev-stairs",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "PYTHONPATH=.",
+        "uv",
+        "run",
+        "python",
+        "-m",
+        "jev_agent.live",
+        "--world",
+        "stairs",
+        "--port",
+        "8766"
+      ],
+      "port": 8766
+    }
+  ]
+}

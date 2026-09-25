@@ -46,8 +46,13 @@ def command_to_gait(vx: float, step_len: float) -> tuple[float, float]:
 
 
 class PolicyRunner:
+    heading_wz_max = 0.5   # rad/s, yaw-rate limit of the heading-hold loop
     def __init__(self, params_path: str | Path, env=None):
         blob = pickle.load(open(params_path, "rb"))
+        if not (isinstance(blob, dict) and "params" in blob):
+            # a periodic checkpoint (ckpt_*.pkl) holds raw params; network shape comes from the run's params.pkl
+            meta = pickle.load(open(Path(params_path).with_name("params.pkl"), "rb"))
+            blob = {**meta, "params": blob}
         if env is None:
             cfg = default_config()
             cfg.impl = "jax"
@@ -74,6 +79,10 @@ class PolicyRunner:
         self._policy = jax.jit(make_inf(blob["params"], deterministic=True))
         self._priv = np.zeros(blob["obs_size"]["privileged_state"][0], np.float32)
         self._key = jax.random.PRNGKey(0)
+
+    def _ground_z(self, xy) -> float:
+        """Ground height under xy; flat floor here, terrain in subclasses (fall = pelvis too low above it)."""
+        return 0.0
 
     def _sensor(self, name):
         s = self.m.sensor(name)
@@ -132,7 +141,7 @@ class PolicyRunner:
             yaw = np.arctan2(R[1, 0], R[0, 0])
             if k == 0:
                 yaw0 = yaw
-            wz = float(np.clip(HEADING_KP * np.angle(np.exp(1j * (yaw0 - yaw))), -0.5, 0.5)) if heading_hold else 0.0
+            wz = float(np.clip(HEADING_KP * np.angle(np.exp(1j * (yaw0 - yaw))), -self.heading_wz_max, self.heading_wz_max)) if heading_hold else 0.0
             obs = self._obs(np.array([cvx, 0.0, wz]), obs_act, obs_phase, step_cmd, f)
             self._key, sub = jax.random.split(self._key)
             act, _ = self._policy(obs, sub)
@@ -167,7 +176,7 @@ class PolicyRunner:
             log["cmd_vx"].append(cvx); log["cmd_step"].append(step_cmd)
 
             up = self.d.xmat[self.torso].reshape(3, 3)[2, 2]
-            if up < 0.3 or self.d.qpos[2] < 0.4:
+            if up < 0.3 or self.d.qpos[2] - self._ground_z(self.d.qpos[:2]) < 0.4:
                 fell_at = t
                 break
             if renderer is not None and k % frame_every == 0:

@@ -1,0 +1,19 @@
+{
+ "_note": "p90 of each feature over 0.5 s windows of normal walking on flat nominal ground (cautious/normal/stride gaits, 12 s each). Regenerate: python -m jev_agent.calibrate",
+ "v1": {
+  "max_tilt_deg": 7.046,
+  "max_gyro": 3.366,
+  "max_slip": 0.306,
+  "vx_err": 0.24,
+  "lat_speed": 0.151,
+  "step_err": 0.223
+ },
+ "vendor": {
+  "max_tilt_deg": 6.259,
+  "max_gyro": 1.464,
+  "max_slip": 0.026,
+  "vx_err": 0.063,
+  "lat_speed": 0.067,
+  "step_err": 0.077
+ }
+}

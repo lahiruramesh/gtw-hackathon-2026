@@ -6,3 +6,5 @@ kaggle_jobs/
 *.mp4
 !results/**/*.mp4
 .DS_Store
+.env
+MUJOCO_LOG.TXT
