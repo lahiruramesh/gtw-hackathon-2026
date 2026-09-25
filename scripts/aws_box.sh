@@ -84,7 +84,7 @@ case "${1:-status}" in
       -o ServerAliveInterval=30 "ubuntu@$(ip)" "$@" ;;
   sync)
     rsync -az --delete -e "ssh -i $KEYFILE -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=$HOME/.ssh/known_hosts_g1train" \
-      --exclude .venv --exclude runs --exclude third_party --exclude kaggle_jobs --exclude .git \
+      --exclude .venv --exclude .claude --exclude runs --exclude third_party --exclude kaggle_jobs --exclude .git --exclude 'ubuntu@*' \
       --exclude '__pycache__' --exclude results/videos --exclude .env \
       "$REPO/" "ubuntu@$(ip):gtw/" ;;
   train)

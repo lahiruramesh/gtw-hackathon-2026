@@ -68,6 +68,14 @@ v11 (v10 on the held-out stairs, by commanded cadence f = vx / (2 step): 1.0 Hz 
 gait is sampled from STAIRS_GAIT_FREQ (config gait_freq_range) instead of the flat task's 0.9-1.8 Hz,
 and the operator commands STAIRS_CADENCE (step length = vx / (2 * 1.4), about one step per tread).
 
+v14 (the first certification suite: every policy since v1 falls with a 20 ms actuation delay, and
+half the crossings fall at friction 0.3): each episode draws an actuation delay of 0 or 1 control step
+(config action_delay_max), and the floor friction is sampled from FRICTION_RANGE (0.25-1.0).
+
+v15 (v14 certified 9.9 cm with 1/96 falls, but 17/32 falls with a constant 20 ms delay and 4/32 with
+a 5 kg payload): 70 % of episodes carry the delay (action_delay_p), and the torso gets 0-4 kg of extra
+mass (PAYLOAD_KG) on top of Playground's +-1 kg.
+
 v12 (v11: 2 falls in 72 strict runs up to 11.6 cm, but 1 in 3 at 15 cm): TOP_REPLAY_P of the
 robots that beat the top level replay the tallest TOP_REPLAY_LEVELS (12-16 cm) instead of a random one.
 
@@ -145,6 +153,8 @@ def default_config():
     cfg.reward_config.scales.base_height_rel = -20.0
     cfg.scan_model = "uniform"   # or "camera"
     cfg.gait_freq_range = list(STAIRS_GAIT_FREQ)
+    cfg.action_delay_max = 1     # v14: actuation latency, control steps (20 ms each), sampled per episode
+    cfg.action_delay_p = 0.7     # v15: share of episodes with a delay (v14: uniform over 0..max, i.e. 0.5)
     cfg.leg_action_scale = 0.0   # >0: action scale of LEG_JOINTS (v8); 0 keeps Playground's 0.5 everywhere
     # contact buffers (Playground: 8 contacts per robot): a foot on the stairs now has up to 7
     cfg.naconmax = 20 * 8192
@@ -152,14 +162,23 @@ def default_config():
     return cfg
 
 
+FRICTION_RANGE = (0.25, 1.0)   # v14: floor friction; Playground samples 0.4-1.0
+PAYLOAD_KG = (0.0, 4.0)        # v15: extra torso mass on top of Playground's +-1 kg (carrying, a battery pack)
+
+
 def domain_randomize(model, rng):
-    """Playground's G1 randomisation, which sets the random floor friction on pairs 0-1 only (its
-    two sole boxes); here every foot-floor pair gets it. The compiler orders pairs with the floor
-    pairs first, so pair 0 is one of them."""
+    """Playground's G1 randomisation (masses, joint friction, armature, qpos0), with the floor
+    friction drawn from FRICTION_RANGE for every foot-floor pair (Playground sets pairs 0-1 only, its
+    two sole boxes). The compiler orders pairs with the floor pairs first, so pair 0 is one of them."""
     floor = np.flatnonzero(np.asarray(model.pair_geom1) == int(np.asarray(model.pair_geom1)[0]))
     model, in_axes = g1_randomize.domain_randomize(model, rng)
-    pf = model.pair_friction
-    model = model.tree_replace({"pair_friction": pf.at[:, floor, 0:2].set(pf[:, 0:1, 0:2])})
+    mu = jax.vmap(lambda k: jax.random.uniform(jax.random.fold_in(k, 17), (), minval=FRICTION_RANGE[0],
+                                               maxval=FRICTION_RANGE[1]))(rng)
+    pf = model.pair_friction.at[:, floor, 0:2].set(mu[:, None, None])
+    load = jax.vmap(lambda k: jax.random.uniform(jax.random.fold_in(k, 29), (), minval=PAYLOAD_KG[0],
+                                                 maxval=PAYLOAD_KG[1]))(rng)
+    mass = model.body_mass.at[:, g1_randomize.TORSO_BODY_ID].add(load)
+    model = model.tree_replace({"pair_friction": pf, "body_mass": mass})
     return model, in_axes
 
 
@@ -198,6 +217,12 @@ class StairsStepLength(StepLength):
             self._config._fields["action_scale"] = scales
         self._hgrid = jp.asarray(T.heights(layout), dtype=jp.float32)
         self._eval_levels = eval_levels
+
+    def _delay(self, rng):
+        """Actuation latency for an episode: 0..action_delay_max control steps."""
+        k1, k2 = jax.random.split(jax.random.fold_in(rng, 3))
+        delayed = jax.random.bernoulli(k1, self._config.action_delay_p)
+        return jp.where(delayed, jax.random.randint(k2, (), 1, self._config.action_delay_max + 1), 0)
 
     def _sample_gait(self, rng, command):
         lo, hi = self._config.gait_freq_range
@@ -247,7 +272,7 @@ class StairsStepLength(StepLength):
         data = mjx.forward(self.mjx_model, data)
         info = dict(state.info)
         info["curriculum"] = {"level": level, "origin": xy, "heading": heading, "dist": jp.zeros(()), "cmd_dist": jp.zeros(()),
-                              "scan_offset": self._scan_offset(drift_rng),
+                              "scan_offset": self._scan_offset(drift_rng), "delay": self._delay(drift_rng),
                               "fell": jp.zeros((), bool), "crossed": jp.zeros((), bool)}
         metrics = dict(state.metrics, crossed=jp.zeros(()), turned=jp.zeros(()), terrain_level=level.astype(jp.float32))
         obs = self._get_obs(data, info, self._contact(data))
@@ -267,7 +292,7 @@ class StairsStepLength(StepLength):
         level = jp.where(level >= TRAIN_LEVELS, jax.random.randint(lvl_rng, (), lo, TRAIN_LEVELS), jp.maximum(level, 0))
         data, xy, heading = self._place(state.data, place_rng, level)
         info["curriculum"] = {"level": level, "origin": xy, "heading": heading, "dist": jp.zeros(()), "cmd_dist": jp.zeros(()),
-                              "scan_offset": self._scan_offset(drift_rng),
+                              "scan_offset": self._scan_offset(drift_rng), "delay": self._delay(drift_rng),
                               "fell": jp.zeros((), bool), "crossed": jp.zeros((), bool)}
         return state.replace(data=data, info=info)
 
@@ -290,7 +315,11 @@ class StairsStepLength(StepLength):
         cmd = state.info["command"]
         wz = jp.where(jp.linalg.norm(cmd[:2]) > 0.01, jp.clip(HEADING_KP * err, -HEADING_WZ_MAX, HEADING_WZ_MAX), 0.0)
         state = state.replace(info=dict(state.info, command=cmd.at[2].set(wz)))
-        state = super().step(state, action)
+        # actuation latency: with a delay the motors get the previous control step's action; the
+        # policy still sees its own actions in the observation (last_act), as on the robot
+        prev = state.info["last_act"]
+        state = super().step(state, jp.where(cur["delay"] > 0, prev, action))
+        state = state.replace(info=dict(state.info, last_act=action, last_last_act=prev))
         # turned away from the stairs while commanded to walk: end the episode as a fall
         d = cur["heading"] - self._yaw(state.data)
         turned = ((jp.abs(jp.arctan2(jp.sin(d), jp.cos(d))) > jp.deg2rad(MAX_HEADING_DEV_DEG))
