@@ -78,21 +78,21 @@ def default_seeds(kaggle_username: str | None = None) -> list[TargetSeed]:
             kind=BackendKind.AWS_EC2,
             enabled=False,
             gpu_label="1x L40S 48 GB",
-            description="The g1-train box from scripts/aws_box.sh (g6e.2xlarge on demand, idle auto-stop).",
+            description="The g1-train box from scripts/aws_box.sh (g6e.xlarge on demand, idle auto-stop).",
             steps_per_second=100_000,
             overhead_minutes=12,
-            cost_per_gpu_hour=2.25,
+            cost_per_gpu_hour=1.86,  # g6e.xlarge on demand, us-east-1
             max_concurrent=1,
             max_unapproved_gpu_hours=2,
             config={
                 "region": "us-east-1",
                 "instance_name": "g1-train",
-                "instance_type": "g6e.2xlarge",
+                "instance_type": "g6e.xlarge",
                 "ami_id": "ami-028e28e7fc9d87d00",
                 "subnet_id": "subnet-0dc6bf369fb078ba3",
                 "security_group_id": "sg-01c410eb3570de544",
                 "key_name": "g1-train",
-                "aws_profile": "sylonik-sso",
+                # No named profile: the worker always runs in the cloud and uses the host's IAM role.
             },
         ),
     ]
