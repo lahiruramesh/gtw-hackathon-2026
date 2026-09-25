@@ -46,6 +46,7 @@ _INIT_FROM = re.compile(r"(?:^|/)runs/([^/]+)/run/([^/]+)$")
 TRAIN_FILES = ("params.pkl", "config.json", "progress.csv")
 STRICT_FILE = "strict.json"
 VIDEO_FILE = "crossing.mp4"
+CARD_FILE = "policy_card.md"
 
 
 class SkipExperiment(Exception):
@@ -279,14 +280,23 @@ class HistoryImporter:
         if isinstance(exp.results, StepLengthResults):
             await self._evaluation(session, run, stage, stage_def, self._results / exp.results.directory)
             return
-        strict = self._results / "stairs" / f"strict_v{exp.results.version}_params.json"
-        video = self._results / "videos" / exp.results.video if exp.results.video else None
+        results = exp.results
+        strict = (
+            self._runs / results.final_strict
+            if results.final_strict
+            else self._results / "stairs" / f"strict_v{results.version}_params.json"
+        )
+        extras = {
+            VIDEO_FILE: self._results / "videos" / results.video if results.video else None,
+            CARD_FILE: self._results / "stairs" / results.card if results.card else None,
+        }
         with tempfile.TemporaryDirectory(prefix="skf-import-") as tmp:
             out = Path(tmp)
             if strict.is_file():
                 shutil.copyfile(strict, out / STRICT_FILE)
-            if video and video.is_file():
-                shutil.copyfile(video, out / VIDEO_FILE)
+            for name, source in extras.items():
+                if source and source.is_file():
+                    shutil.copyfile(source, out / name)
             if not strict.is_file():
                 stage.message = "The final policy was not strict-tested; see the checkpoint evaluations"
                 await store_outputs(session, self._ctx.storage, stage, out)

@@ -22,10 +22,16 @@ class StepLengthResults:
 @dataclass(frozen=True)
 class StairsResults:
     """g1pipe.stairs_eval strict tests: results/stairs/strict_v<N>_params.json (final policy) and
-    strict_v<N>_ckpt_<step>.json (periodic checkpoints), plus an optional crossing video."""
+    strict_v<N>_ckpt_<step>.json (periodic checkpoints), plus an optional crossing video.
+
+    Runs certified by scripts/certify.py keep the final policy's strict test next to the weights instead:
+    `final_strict` is then that file, relative to --runs-dir. `card` is the policy card under results/stairs/.
+    """
 
     version: int
     video: str | None = None
+    final_strict: str | None = None
+    card: str | None = None
 
 
 @dataclass(frozen=True)
@@ -84,5 +90,32 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         effort_match="g1-stairs-v11",
         results=StairsResults(11, video="stairs_v11.mp4"),
         notes="Stairs cadence 1.25-1.6 Hz, warm start from v10 @ 254M, lr 1e-4, 300M steps in 55 min.",
+    ),
+    Experiment(
+        name="g1-stairs-v12",
+        skill_id="g1-stairs",
+        target=AWS_L40S,
+        preset_id=None,
+        effort_match="AWS g1-stairs-v12",
+        results=StairsResults(12, video="stairs_v12.mp4"),
+        notes="Curriculum sends 70% of top-level graduates back to the 12-16 cm rows; "
+        "warm start from v11 @ 191M, 300M steps. "
+        "The 254M checkpoint (91/96 crossed, 5 falls) is the one later runs start from.",
+    ),
+    Experiment(
+        name="g1-stairs-v14",
+        skill_id="g1-stairs",
+        target=AWS_L40S,
+        preset_id=None,
+        effort_match="First full g1job run: g1-stairs-v14",
+        results=StairsResults(
+            14,
+            video="stairs_v14.mp4",
+            final_strict="g1-stairs-v14/run/cert_params/strict.json",
+            card="card_v14.md",
+        ),
+        notes="Actuation delay 0/20 ms and friction 0.25-1.0 randomised; "
+        "warm start from v12 @ 254M, 100M steps. "
+        "Strict test 95/96 crossed with 1 fall, certified 9.9 cm; see the policy card.",
     ),
 )

@@ -75,6 +75,8 @@ async def test_import_history(
         "g1-stairs-v9",
         "g1-stairs-v10",
         "g1-stairs-v11",
+        "g1-stairs-v12",
+        "g1-stairs-v14",
     }
     assert all(r["imported"] and r["status"] == "gate_failed" for r in runs.values())
     assert runs["g1-steplength-v1"]["compute_target"]["name"] == "Kaggle T4"
@@ -86,6 +88,10 @@ async def test_import_history(
     assert runs["g1-stairs-v11"]["parent"]["checkpoint"]["step"] == 253624320
     assert runs["g1-stairs-v10"]["parent"]["checkpoint"]["name"] == "params.pkl"
     assert runs["g1-stairs-v9"]["parent"] is None
+    # v14 was certified by scripts/certify.py: its final strict test lives next to the weights.
+    assert runs["g1-stairs-v14"]["parent"]["run"]["name"] == "g1-stairs-v12"
+    assert runs["g1-stairs-v14"]["parent"]["checkpoint"]["step"] == 254279680
+    assert runs["g1-stairs-v14"]["gpu_hours"] == 0.7
 
     v1 = (await client.get(f"/api/v1/runs/{runs['g1-steplength-v1']['id']}", headers=auth("viewer"))).json()
     criteria = {c["metric"]: c for c in v1["gate"]["criteria"]}
@@ -161,10 +167,25 @@ async def test_import_is_idempotent(ctx: AppContext, targets: dict[str, uuid.UUI
     await import_history(ctx)
     first = await counts(ctx)
     await import_history(ctx)
-    assert await counts(ctx) == first == (5, 20, first[2], 9)
+    # 7 runs; v12 adds 4 checkpoint evaluations and v14 its certified final strict test
+    assert await counts(ctx) == first == (7, 30, first[2], 14)
 
 
 async def test_import_needs_seeded_targets(ctx: AppContext, skills: list[str]) -> None:
     lines = await import_history(ctx)
     assert lines[0].startswith("skip g1-steplength-v1: compute target Kaggle T4 not found")
     assert await counts(ctx) == (0, 0, 0, 0)
+
+
+async def test_import_history_certified_run_keeps_its_card(
+    client: httpx.AsyncClient, auth: Auth, ctx: AppContext, targets: dict[str, uuid.UUID]
+) -> None:
+    await import_history(ctx)
+    runs = {r["name"]: r for r in (await client.get("/api/v1/runs", headers=auth("viewer"))).json()["items"]}
+    v14 = runs["g1-stairs-v14"]["id"]
+    evaluations = (await client.get(f"/api/v1/runs/{v14}/evaluations", headers=auth("viewer"))).json()
+    final = next(e for e in evaluations if e["stage_key"] == "evaluate")
+    assert final["summary"]["n"] == 96 and final["summary"]["crossed"] == 95 and final["summary"]["fell"] == 1
+    artifacts = (await client.get(f"/api/v1/runs/{v14}/artifacts", headers=auth("viewer"))).json()
+    names = {a["name"] for a in artifacts}
+    assert {"policy_card.md", "crossing.mp4", "strict.json", "params.pkl"} <= names
