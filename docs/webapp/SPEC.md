@@ -443,11 +443,12 @@ Common: `Config` and `Secret` pydantic models per backend (used by `config_schem
   job once ingest keeps rejecting heartbeats because the stage is terminal) and the push timeout is a hard limit.
   validate(): `kaggle kernels list --mine --page-size 1`, plus `kaggle quota --csv` for GPU hours left (degraded < 1 h;
   `details.gpu_remaining_hours` feeds the target's `quota_left_hours`).
-- **aws_ec2** (`AwsEc2Config {region, instance_name, instance_type, ami_id, subnet_id, security_group_id, key_name,
+- **aws_ec2** (`AwsEc2Config {region, instance_name, fallback_instance_names: [], instance_type, ami_id, subnet_id, security_group_id, key_name,
   ssh_user: "ubuntu", remote_repo_dir: "~/gtw", bootstrap_command: "MJX_ONLY=1 bash ~/gtw/scripts/aws_bootstrap.sh",
   volume_gb: 250, create_if_missing: false, stop_when_idle: true, aws_profile: str|None}`, `AwsEc2Secret {ssh_private_key,
   aws_access_key_id?, aws_secret_access_key?, aws_session_token?}` — empty keys = default credential chain / instance role):
-  mirrors `scripts/aws_box.sh`: find instance by Name tag, start if stopped (retry capacity errors as
+  mirrors `scripts/aws_box.sh`: find instance by Name tag (primary, then `fallback_instance_names`, e.g. the same box in
+  other availability zones: a running candidate is reused, otherwise the first one AWS has capacity to start), start if stopped (retry capacity errors as
   `BackendError(retryable=True)`), wait for SSH, `rsync` the pipeline repo (g1pipe, jev_agent, scripts, skills,
   apps/reporter, pyproject.toml, uv.lock; exclude runs/.venv/third_party) at the current commit, upload inputs via `scp`,
   upload `run.sh`/`job.sh` and start `tmux new-session -d -s skf-<stage8> bash ~/skf/<stage_id>/run.sh`: `run.sh` runs

@@ -1,8 +1,10 @@
-"""aws_ec2: runs a stage on one long-lived EC2 GPU box, the way scripts/aws_box.sh does by hand.
+"""aws_ec2: runs a stage on a long-lived EC2 GPU box, the way scripts/aws_box.sh does by hand.
 
 submit: find the box by its Name tag (optionally create it), start it if stopped, wait for SSH, rsync
 the pipeline subset of the repo, upload inputs, and start a tmux session that runs the job under the
-reporter. The one-time bootstrap (scripts/aws_bootstrap.sh) runs inside that session, guarded by a
+reporter. GPU capacity comes and goes per availability zone, so a target can list fallback boxes
+(same setup, other zones): submit uses one that is already up, else starts the first that AWS has
+capacity for. The one-time bootstrap (scripts/aws_bootstrap.sh) runs inside that session, guarded by a
 marker file and a lock, so its output shows up in the stage log. Remote layout per stage:
 
     ~/skf/<stage_id>/{in/, out/, run.sh, job.sh, job.log, exit_code, cancelled, reported}
@@ -93,6 +95,11 @@ class AwsEc2Config(BaseModel):
 
     region: str = Field(..., min_length=1, description="e.g. us-east-1")
     instance_name: str = Field(..., min_length=1, description="Name tag of the training box")
+    fallback_instance_names: list[str] = Field(
+        default_factory=list,
+        description="Other boxes (Name tags) to try in order when AWS has no capacity for the first, "
+        "e.g. the same box in other availability zones",
+    )
     instance_type: str = Field("g6e.2xlarge", description="Used when the box is created")
     ami_id: str | None = Field(None, description="Deep Learning AMI (Ubuntu); needed to create the box")
     subnet_id: str | None = None
@@ -107,6 +114,11 @@ class AwsEc2Config(BaseModel):
     create_if_missing: bool = False
     stop_when_idle: bool = Field(True, description="Stop the box when no stage is using it any more")
     aws_profile: str | None = Field(None, description="Named AWS profile; empty = keys or instance role")
+
+    @property
+    def instance_names(self) -> list[str]:
+        """The primary box first, then the fallbacks, without duplicates."""
+        return list(dict.fromkeys([self.instance_name, *self.fallback_instance_names]))
 
     @model_validator(mode="after")
     def _creatable(self) -> AwsEc2Config:
@@ -238,33 +250,42 @@ class AwsEc2Backend:
 
     async def validate(self) -> HealthReport:
         try:
-            instance = await self._find_instance()
+            boxes = await self._find_instances()
         except BackendError as exc:
             return HealthReport(HealthStatus.DOWN, str(exc))
         if self.secret is None:
             return HealthReport(HealthStatus.DOWN, "SSH private key not set for this target")
-        if instance is None:
+        found = [(name, box) for name, box in boxes.items() if box is not None]
+        if not found:
             if self.config.create_if_missing:
                 message = f"no instance named {self.config.instance_name} yet; created on first run"
                 return HealthReport(HealthStatus.OK, message)
-            return HealthReport(
-                HealthStatus.DOWN, f"no instance named {self.config.instance_name} in {self.config.region}"
-            )
-        details = {
-            "instance_id": instance["InstanceId"],
-            "instance_type": instance["InstanceType"],
-            "state": instance["State"]["Name"],
-            "availability_zone": instance.get("Placement", {}).get("AvailabilityZone"),
-            "public_ip": instance.get("PublicIpAddress"),
-        }
-        return HealthReport(
-            HealthStatus.OK,
-            f"{details['instance_id']} ({details['instance_type']}) is {details['state']}",
-            details,
+            names = ", ".join(self.config.instance_names)
+            return HealthReport(HealthStatus.DOWN, f"no instance named {names} in {self.config.region}")
+        summaries = [
+            {
+                "name": name,
+                "instance_id": box["InstanceId"],
+                "instance_type": box["InstanceType"],
+                "state": box["State"]["Name"],
+                "availability_zone": box.get("Placement", {}).get("AvailabilityZone"),
+                "public_ip": box.get("PublicIpAddress"),
+            }
+            for name, box in found
+        ]
+        missing = [name for name, box in boxes.items() if box is None]
+        message = "; ".join(
+            f"{b['instance_id']} ({b['instance_type']}, {b['availability_zone']}) is {b['state']}"
+            for b in summaries
         )
+        if missing:
+            message += f"; not found: {', '.join(missing)}"
+        details = {**summaries[0], "boxes": summaries}
+        status = HealthStatus.DEGRADED if missing else HealthStatus.OK
+        return HealthReport(status, message, details)
 
     async def submit(self, spec: JobSpec) -> ExternalRef:
-        instance = await self._ensure_running()
+        instance = await self._acquire()
         async with self._ssh(instance) as ssh:
             await self._wait_for_ssh(ssh)
             home = (await ssh.check('printf %s "$HOME"')).text.strip()
@@ -359,9 +380,11 @@ class AwsEc2Backend:
             )
 
     async def release(self) -> None:
-        instance = await self._find_instance()
-        if instance is None or instance["State"]["Name"] != "running":
-            return
+        for instance in (await self._find_instances()).values():
+            if instance is not None and instance["State"]["Name"] == "running":
+                await self._release_box(instance)
+
+    async def _release_box(self, instance: dict[str, Any]) -> None:
         async with self._ssh(instance) as ssh:
             # A `reported` stage's outcome has been read, and it is collected by now (release is only called
             # once no stage uses the target), so its dir - inputs, checkpoints, log - is removed.
@@ -395,18 +418,49 @@ class AwsEc2Backend:
         except BotoCoreError as exc:
             raise BackendError(f"AWS {method}: {exc}") from exc
 
-    async def _find_instance(self) -> dict[str, Any] | None:
+    async def _find_instances(self) -> dict[str, dict[str, Any] | None]:
+        """Every candidate box by Name tag, in preference order (None where no such box exists)."""
+        names = self.config.instance_names
         response = await self._ec2(
             "describe_instances",
             Filters=[
-                {"Name": "tag:Name", "Values": [self.config.instance_name]},
+                {"Name": "tag:Name", "Values": names},
                 {"Name": "instance-state-name", "Values": list(ACTIVE_STATES)},
             ],
         )
-        instances = [i for r in response["Reservations"] for i in r["Instances"]]
-        if len(instances) > 1:
-            raise BackendError(f"{len(instances)} instances are named {self.config.instance_name}; keep one")
-        return instances[0] if instances else None
+        by_name: dict[str, list[dict[str, Any]]] = {name: [] for name in names}
+        for reservation in response["Reservations"]:
+            for instance in reservation["Instances"]:
+                tags = {t["Key"]: t["Value"] for t in instance.get("Tags", [])}
+                if tags.get("Name") in by_name:
+                    by_name[tags["Name"]].append(instance)
+        for name, instances in by_name.items():
+            if len(instances) > 1:
+                raise BackendError(f"{len(instances)} instances are named {name}; keep one")
+        return {name: instances[0] if instances else None for name, instances in by_name.items()}
+
+    async def _acquire(self) -> dict[str, Any]:
+        """The box for a new stage: a candidate that is already up, else the first one AWS can start."""
+        boxes = await self._find_instances()
+        for instance in boxes.values():
+            if instance is not None and instance["State"]["Name"] in ("pending", "running"):
+                return await self._wait_running(instance["InstanceId"])
+        busy: list[str] = []
+        for name, instance in boxes.items():
+            if instance is None:
+                if name != self.config.instance_name or not self.config.create_if_missing:
+                    continue
+                instance = await self._create_instance()
+            try:
+                return await self._ensure_running(instance["InstanceId"])
+            except BackendError as exc:
+                if not exc.retryable:
+                    raise
+                busy.append(f"{name}: {exc}")  # no capacity in its zone, or still stopping: try the next
+        if not busy:
+            c = self.config
+            raise BackendError(f"no EC2 instance named {', '.join(c.instance_names)} in {c.region}")
+        raise BackendError("; ".join(busy), retryable=True)
 
     async def _describe(self, instance_id: str) -> dict[str, Any] | None:
         try:
@@ -418,13 +472,10 @@ class AwsEc2Backend:
         instances = [i for r in response["Reservations"] for i in r["Instances"]]
         return instances[0] if instances else None
 
-    async def _ensure_running(self, instance_id: str | None = None) -> dict[str, Any]:
-        instance = await (self._describe(instance_id) if instance_id else self._find_instance())
+    async def _ensure_running(self, instance_id: str) -> dict[str, Any]:
+        instance = await self._describe(instance_id)
         if instance is None:
-            if instance_id or not self.config.create_if_missing:
-                c = self.config
-                raise BackendError(f"no EC2 instance named {c.instance_name} in {c.region}")
-            instance = await self._create_instance()
+            raise BackendError(f"EC2 instance {instance_id} no longer exists")
         state = instance["State"]["Name"]
         if state == "stopping":
             raise BackendError("the instance is still stopping; retrying shortly", retryable=True)

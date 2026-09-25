@@ -86,6 +86,7 @@ export interface JsonSchema {
   minimum?: number;
   maximum?: number;
   properties?: Record<string, JsonSchema>;
+  items?: JsonSchema;
   required?: string[];
   anyOf?: JsonSchema[];
   allOf?: JsonSchema[];

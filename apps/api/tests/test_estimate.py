@@ -11,7 +11,7 @@ import pytest
 
 from skf_api.context import AppContext
 from skf_api.core.db import utcnow
-from skf_api.modules.compute.seeds import AWS_L40S, KAGGLE_T4, LOCAL_CPU
+from skf_api.modules.compute.seeds import AWS_L40S, AWS_L40S_COST_PER_GPU_HOUR, KAGGLE_T4, LOCAL_CPU
 from skf_api.modules.runs.models import Run, RunsOn, RunStatus, Stage, StageKind, StageStatus
 
 Auth = Callable[..., dict[str, str]]
@@ -48,7 +48,7 @@ async def test_gpu_target_estimate(
     assert body["train_minutes"] == pytest.approx(62.0)
     assert body["total_minutes"] == pytest.approx(87.0)
     assert body["gpu_hours"] == pytest.approx(62 / 60, abs=1e-3)
-    assert body["cost"] == pytest.approx(62 / 60 * 2.25, abs=0.01)
+    assert body["cost"] == pytest.approx(62 / 60 * AWS_L40S_COST_PER_GPU_HOUR, abs=0.01)
     assert body["needs_approval"] is False and body["warnings"] == [] and body["blockers"] == []
 
 

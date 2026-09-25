@@ -20,6 +20,11 @@ interface SchemaFieldsProps {
   renderCheckpoint?: (field: FieldSpec, value: unknown, onChange: (value: unknown) => void) => ReactNode;
 }
 
+/** Comma-separated text <-> string list; a trailing comma survives while typing the next item. */
+function listFromInput(raw: string): string[] {
+  return raw.split(",").map((item) => item.trim());
+}
+
 function numberFromInput(raw: string): number | null {
   if (raw.trim() === "") return null;
   const value = Number(raw);
@@ -99,6 +104,18 @@ export function SchemaFields({ fields, control, renderCheckpoint }: SchemaFields
                       spellCheck={false}
                       autoComplete="off"
                       className="font-mono text-xs"
+                    />
+                  </FormControl>
+                ) : spec.kind === "list" ? (
+                  <FormControl>
+                    <Input
+                      name={field.name}
+                      ref={field.ref}
+                      onBlur={field.onBlur}
+                      value={Array.isArray(field.value) ? field.value.join(", ") : ""}
+                      onChange={(event) => field.onChange(listFromInput(event.target.value))}
+                      placeholder="Separate items with commas"
+                      autoComplete="off"
                     />
                   </FormControl>
                 ) : spec.kind === "integer" || spec.kind === "number" ? (

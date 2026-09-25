@@ -6,7 +6,8 @@ import type { JsonSchema } from "@/lib/api/types";
  * One generated form field. Built from JSON Schema (a skill's `params_schema` or a backend's pydantic
  * config/secret schema), so the run wizard and compute target forms share validation and rendering.
  */
-export type FieldKind = "integer" | "number" | "boolean" | "enum" | "string" | "multiline" | "secret" | "checkpoint";
+export type FieldKind =
+  "integer" | "number" | "boolean" | "enum" | "string" | "list" | "multiline" | "secret" | "checkpoint";
 
 export interface FieldOption {
   value: string | number;
@@ -97,6 +98,7 @@ export function fieldsFromJsonSchema(root: JsonSchema, options: { secret?: boole
     }
     const type = Array.isArray(schema.type) ? schema.type.find((item) => item !== "null") : schema.type;
     if (type === "integer" || type === "number" || type === "boolean") return { ...base, kind: type };
+    if (type === "array") return { ...base, kind: "list", required: false };
     if (options.secret) return { ...base, kind: MULTILINE_NAME.test(name) ? "multiline" : "secret" };
     return { ...base, kind: MULTILINE_NAME.test(name) ? "multiline" : "string" };
   });
@@ -122,6 +124,13 @@ function fieldValidator(field: FieldSpec): z.ZodType {
     }
     case "boolean":
       validator = z.boolean();
+      break;
+    case "list":
+      // typed as comma-separated text; blanks left by a trailing comma are dropped
+      validator = z.preprocess(
+        (value) => (Array.isArray(value) ? value.filter((item) => item !== "") : value),
+        z.array(z.string()),
+      );
       break;
     case "enum": {
       const values = (field.options ?? []).map((option) => option.value);

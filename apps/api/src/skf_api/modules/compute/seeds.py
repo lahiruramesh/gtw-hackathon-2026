@@ -19,6 +19,7 @@ from skf_api.modules.compute.models import ComputeTarget
 LOCAL_CPU = "Local CPU"
 KAGGLE_T4 = "Kaggle T4"
 AWS_L40S = "AWS L40S"
+AWS_L40S_COST_PER_GPU_HOUR = 1.86  # g6e.xlarge on demand, us-east-1
 
 
 @dataclass(frozen=True)
@@ -81,12 +82,14 @@ def default_seeds(kaggle_username: str | None = None) -> list[TargetSeed]:
             description="The g1-train box from scripts/aws_box.sh (g6e.xlarge on demand, idle auto-stop).",
             steps_per_second=100_000,
             overhead_minutes=12,
-            cost_per_gpu_hour=1.86,  # g6e.xlarge on demand, us-east-1
+            cost_per_gpu_hour=AWS_L40S_COST_PER_GPU_HOUR,
             max_concurrent=1,
             max_unapproved_gpu_hours=2,
             config={
                 "region": "us-east-1",
                 "instance_name": "g1-train",
+                # the same box in other zones: g6e capacity comes and goes per availability zone
+                "fallback_instance_names": ["g1-train-2", "g1-train-3"],
                 "instance_type": "g6e.xlarge",
                 "ami_id": "ami-028e28e7fc9d87d00",
                 "subnet_id": "subnet-0dc6bf369fb078ba3",

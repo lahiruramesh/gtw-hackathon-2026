@@ -90,3 +90,25 @@ describe("fieldsFromJsonSchema", () => {
     expect(compactValues({ ssh_private_key: "k", aws_access_key_id: "" })).toEqual({ ssh_private_key: "k" });
   });
 });
+
+describe("list fields", () => {
+  /** AwsEc2Config.fallback_instance_names as pydantic emits it. */
+  const schema: JsonSchema = {
+    type: "object",
+    properties: {
+      fallback_instance_names: { title: "Fallback instance names", type: "array", items: { type: "string" } },
+    },
+  };
+  const fields = fieldsFromJsonSchema(schema);
+
+  it("maps string arrays to an optional list field", () => {
+    expect(fields.map((field) => [field.name, field.kind, field.required])).toEqual([
+      ["fallback_instance_names", "list", false],
+    ]);
+  });
+
+  it("drops blanks left by a trailing comma", () => {
+    const parsed = fieldsValidator(fields).parse({ fallback_instance_names: ["g1-train-2", "g1-train-3", ""] });
+    expect(parsed).toEqual({ fallback_instance_names: ["g1-train-2", "g1-train-3"] });
+  });
+});

@@ -8,6 +8,7 @@ const KIND_LABELS: Record<FieldSpec["kind"], string> = {
   boolean: "yes / no",
   enum: "choice",
   string: "text",
+  list: "list",
   multiline: "text",
   secret: "secret",
   checkpoint: "checkpoint",

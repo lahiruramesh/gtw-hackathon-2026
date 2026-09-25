@@ -13,7 +13,7 @@ from api_fakes import FakeWorld, RecordingJobQueue
 
 from skf_api.backends.base import JobState
 from skf_api.context import AppContext
-from skf_api.modules.compute.seeds import AWS_L40S, KAGGLE_T4, LOCAL_CPU
+from skf_api.modules.compute.seeds import AWS_L40S, AWS_L40S_COST_PER_GPU_HOUR, KAGGLE_T4, LOCAL_CPU
 from skf_api.modules.runs.models import Stage, StageStatus
 from skf_api.orchestrator.reconciler import reconcile
 
@@ -87,7 +87,7 @@ async def test_happy_path_to_approved_release(
     run = await detail(client, auth, run["id"])
     train = stage(run, "train")
     assert train["status"] == "running"
-    assert train["gpu_seconds"] == 1800 and train["cost"] == pytest.approx(1.125)
+    assert train["gpu_seconds"] == 1800 and train["cost"] == pytest.approx(0.5 * AWS_L40S_COST_PER_GPU_HOUR)
     logs = (await client.get(f"/api/v1/runs/{run['id']}/logs", headers=auth("viewer"))).json()["items"]
     assert [line["level"] for line in logs] == ["info", "error", "warn"]
 
@@ -118,7 +118,7 @@ async def test_happy_path_to_approved_release(
     assert run["gate"]["verdict"] == "pass" and run["gate"]["review_status"] == "pending"
     assert stage(run, "gate")["status"] == "succeeded"
     assert run["headline"][0] == {"label": "Crossed", "value": 100.0, "unit": "%"}
-    assert run["gpu_hours"] == 1.0 and run["cost"] == 2.25
+    assert run["gpu_hours"] == 1.0 and run["cost"] == pytest.approx(AWS_L40S_COST_PER_GPU_HOUR)
 
     own = await client.post(
         f"/api/v1/runs/{run['id']}/review",

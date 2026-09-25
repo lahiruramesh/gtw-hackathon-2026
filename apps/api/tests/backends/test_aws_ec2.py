@@ -88,18 +88,29 @@ def removed(paths: set[str]) -> bool:
 
 
 class RecordingClient:
-    """Wraps the moto client: records method names, optionally fails one of them."""
+    """Wraps the moto client: records method names, optionally fails a method (for every call, or
+    only `start_instances` of given instance ids, as AWS does when one zone is out of capacity)."""
 
-    def __init__(self, client: Any, fail: dict[str, str] | None = None) -> None:
+    def __init__(
+        self, client: Any, fail: dict[str, str] | None = None, no_capacity: set[str] | None = None
+    ) -> None:
         self.client = client
         self.fail = fail or {}
+        self.no_capacity = no_capacity or set()
         self.methods: list[str] = []
+        self.started: list[str] = []
 
     def __getattr__(self, name: str) -> Any:
         def call(**kwargs: Any) -> Any:
             self.methods.append(name)
-            if name in self.fail:
-                raise ClientError({"Error": {"Code": self.fail[name], "Message": "no capacity"}}, name)
+            code = self.fail.get(name)
+            if name == "start_instances":
+                if self.no_capacity & set(kwargs["InstanceIds"]):
+                    code = "InsufficientInstanceCapacity"
+                elif code is None:
+                    self.started += kwargs["InstanceIds"]
+            if code:
+                raise ClientError({"Error": {"Code": code, "Message": "no capacity"}}, name)
             return getattr(self.client, name)(**kwargs)
 
         return call
@@ -146,9 +157,13 @@ class FakeBox:
 
 
 def make(
-    ctx: TargetContext, ec2: Any, box: FakeBox, fail: dict[str, str] | None = None
+    ctx: TargetContext,
+    ec2: Any,
+    box: FakeBox,
+    fail: dict[str, str] | None = None,
+    no_capacity: set[str] | None = None,
 ) -> tuple[AwsEc2Backend, FakeRunner, RecordingClient]:
-    client = RecordingClient(ec2, fail)
+    client = RecordingClient(ec2, fail, no_capacity)
     runner = FakeRunner(box)
     backend = AwsEc2Backend(
         ctx,
@@ -274,6 +289,70 @@ async def test_capacity_errors_are_retryable(ctx: TargetContext, ec2: Any, tmp_p
         await backend.submit(train_spec(tmp_path))
     assert info.value.retryable is True
     assert runner.calls == []
+
+
+FALLBACK_CONFIG = {**CONFIG, "fallback_instance_names": ["g1-train-2", "g1-train-3"]}
+
+
+async def test_submit_falls_back_to_a_box_in_a_zone_with_capacity(
+    make_ctx: Any, ec2: Any, tmp_path: Path
+) -> None:
+    first, second, third = launch(ec2, "g1-train"), launch(ec2, "g1-train-2"), launch(ec2, "g1-train-3")
+    ctx = make_ctx(FALLBACK_CONFIG, {"ssh_private_key": SSH_KEY})
+    backend, _, client = make(ctx, ec2, FakeBox(), no_capacity={first})
+    ref = await backend.submit(train_spec(tmp_path))
+    assert ref.data["instance_id"] == second
+    assert client.started == [second]
+    assert state(ec2, first) == "stopped" and state(ec2, third) == "stopped"
+
+
+async def test_submit_uses_a_candidate_that_is_already_running(
+    make_ctx: Any, ec2: Any, tmp_path: Path
+) -> None:
+    launch(ec2, "g1-train")
+    running = launch(ec2, "g1-train-3", stopped=False)
+    backend, _, client = make(make_ctx(FALLBACK_CONFIG, {"ssh_private_key": SSH_KEY}), ec2, FakeBox())
+    ref = await backend.submit(train_spec(tmp_path))
+    assert ref.data["instance_id"] == running
+    assert "start_instances" not in client.methods
+
+
+async def test_no_capacity_anywhere_is_retryable_and_names_every_box(
+    make_ctx: Any, ec2: Any, tmp_path: Path
+) -> None:
+    boxes = {launch(ec2, "g1-train"), launch(ec2, "g1-train-2")}
+    ctx = make_ctx({**CONFIG, "fallback_instance_names": ["g1-train-2"]}, {"ssh_private_key": SSH_KEY})
+    backend, runner, _ = make(ctx, ec2, FakeBox(), no_capacity=boxes)
+    with pytest.raises(BackendError) as info:
+        await backend.submit(train_spec(tmp_path))
+    assert info.value.retryable is True
+    assert "g1-train:" in str(info.value) and "g1-train-2:" in str(info.value)
+    assert runner.calls == []
+
+
+async def test_release_stops_whichever_candidate_is_idle(make_ctx: Any, ec2: Any) -> None:
+    stopped = launch(ec2, "g1-train")
+    running = launch(ec2, "g1-train-2", stopped=False)
+    backend, _, _ = make(make_ctx(FALLBACK_CONFIG, {"ssh_private_key": SSH_KEY}), ec2, FakeBox())
+    await backend.release()
+    assert state(ec2, running) == "stopped" and state(ec2, stopped) == "stopped"
+
+
+async def test_validate_reports_every_candidate(make_ctx: Any, ec2: Any) -> None:
+    launch(ec2, "g1-train")
+    launch(ec2, "g1-train-2")
+    backend, _, client = make(make_ctx(FALLBACK_CONFIG, {"ssh_private_key": SSH_KEY}), ec2, FakeBox())
+    report = await backend.validate()
+    assert report.status is HealthStatus.DEGRADED and "not found: g1-train-3" in report.message
+    assert [b["name"] for b in report.details["boxes"]] == ["g1-train", "g1-train-2"]
+    assert client.methods == ["describe_instances"]
+
+
+def test_fallback_names_keep_order_without_duplicates() -> None:
+    config = AwsEc2Config.model_validate(
+        {**CONFIG, "fallback_instance_names": ["g1-train-2", "g1-train", "g1-train-2"]}
+    )
+    assert config.instance_names == ["g1-train", "g1-train-2"]
 
 
 async def test_missing_box_is_an_error_unless_it_may_be_created(

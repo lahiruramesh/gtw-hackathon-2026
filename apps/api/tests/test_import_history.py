@@ -15,6 +15,7 @@ import sqlalchemy as sa
 from skf_api.context import AppContext
 from skf_api.history.importer import HistoryImporter
 from skf_api.modules.artifacts.models import Artifact
+from skf_api.modules.compute.seeds import AWS_L40S_COST_PER_GPU_HOUR
 from skf_api.modules.runs.models import Evaluation, Run, Stage
 from skf_api.settings import REPO_ROOT
 
@@ -79,7 +80,7 @@ async def test_import_history(
     assert runs["g1-steplength-v1"]["compute_target"]["name"] == "Kaggle T4"
     assert runs["g1-steplength-v1"]["gpu_hours"] == 1.6  # docs/effort_log.csv
     assert runs["g1-stairs-v11"]["compute_target"]["name"] == "AWS L40S"
-    assert runs["g1-stairs-v11"]["cost"] == 2.25  # 1.0 GPU-h at 2.25/h
+    assert runs["g1-stairs-v11"]["cost"] == pytest.approx(AWS_L40S_COST_PER_GPU_HOUR)  # 1.0 GPU-h
     # Lineage is part of the list view, so the skill page builds the tree from one request.
     assert runs["g1-stairs-v11"]["parent"]["run"]["name"] == "g1-stairs-v10"
     assert runs["g1-stairs-v11"]["parent"]["checkpoint"]["step"] == 253624320

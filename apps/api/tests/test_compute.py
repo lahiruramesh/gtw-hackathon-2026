@@ -154,6 +154,7 @@ async def test_seeds_are_idempotent_and_valid(ctx: AppContext, skills: list[str]
     assert by_name["Local CPU"].enabled and not by_name[KAGGLE_T4].enabled and not by_name[AWS_L40S].enabled
     assert by_name[AWS_L40S].config["instance_type"] == "g6e.xlarge"
     assert "aws_profile" not in by_name[AWS_L40S].config  # the worker uses the host's IAM role
+    assert by_name[AWS_L40S].config["fallback_instance_names"] == ["g1-train-2", "g1-train-3"]
     assert by_name[KAGGLE_T4].weekly_quota_gpu_hours == 30
     for target in rows:
         _validate(ctx.backends.schema(target.kind)["config"], target.config, "config")
