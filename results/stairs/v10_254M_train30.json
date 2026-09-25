@@ -1,0 +1,930 @@
+[
+ {
+  "rise_m": 0.02,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   0
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.06,
+   0.06
+  ],
+  "pelvis_rel_m": [
+   0.713,
+   0.769
+  ],
+  "tilt_deg": [
+   3.5,
+   11.0
+  ],
+  "progress_m": 9.39,
+  "heading_dev_deg": 22.2,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.02,
+  "kind": "pit",
+  "cell": [
+   1,
+   0
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.06,
+   0.06
+  ],
+  "pelvis_rel_m": [
+   0.695,
+   0.768
+  ],
+  "tilt_deg": [
+   4.1,
+   16.2
+  ],
+  "progress_m": 9.27,
+  "heading_dev_deg": 21.8,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.02,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   0
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.06,
+   0.06
+  ],
+  "pelvis_rel_m": [
+   0.73,
+   0.768
+  ],
+  "tilt_deg": [
+   4.0,
+   10.0
+  ],
+  "progress_m": 9.54,
+  "heading_dev_deg": 27.0,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.02,
+  "kind": "pit",
+  "cell": [
+   3,
+   0
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.06,
+   0.06
+  ],
+  "pelvis_rel_m": [
+   0.713,
+   0.772
+  ],
+  "tilt_deg": [
+   3.8,
+   12.3
+  ],
+  "progress_m": 9.27,
+  "heading_dev_deg": 21.1,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.04,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   1
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.12,
+   0.12
+  ],
+  "pelvis_rel_m": [
+   0.709,
+   0.766
+  ],
+  "tilt_deg": [
+   3.7,
+   10.0
+  ],
+  "progress_m": 8.72,
+  "heading_dev_deg": 25.5,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.04,
+  "kind": "pit",
+  "cell": [
+   1,
+   1
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.12,
+   0.12
+  ],
+  "pelvis_rel_m": [
+   0.672,
+   0.76
+  ],
+  "tilt_deg": [
+   4.0,
+   13.3
+  ],
+  "progress_m": 8.05,
+  "heading_dev_deg": 34.8,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.04,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   1
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.12,
+   0.12
+  ],
+  "pelvis_rel_m": [
+   0.683,
+   0.765
+  ],
+  "tilt_deg": [
+   3.4,
+   10.7
+  ],
+  "progress_m": 8.92,
+  "heading_dev_deg": 35.1,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.04,
+  "kind": "pit",
+  "cell": [
+   3,
+   1
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.12,
+   0.12
+  ],
+  "pelvis_rel_m": [
+   0.687,
+   0.763
+  ],
+  "tilt_deg": [
+   4.1,
+   11.1
+  ],
+  "progress_m": 8.45,
+  "heading_dev_deg": 24.1,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.06,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   2
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.18,
+   0.18
+  ],
+  "pelvis_rel_m": [
+   0.68,
+   0.763
+  ],
+  "tilt_deg": [
+   4.0,
+   10.7
+  ],
+  "progress_m": 8.46,
+  "heading_dev_deg": 29.7,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.06,
+  "kind": "pit",
+  "cell": [
+   1,
+   2
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.18,
+   0.18
+  ],
+  "pelvis_rel_m": [
+   0.715,
+   0.765
+  ],
+  "tilt_deg": [
+   3.2,
+   10.1
+  ],
+  "progress_m": 8.91,
+  "heading_dev_deg": 24.4,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.06,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   2
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.18,
+   0.18
+  ],
+  "pelvis_rel_m": [
+   0.686,
+   0.765
+  ],
+  "tilt_deg": [
+   4.4,
+   13.2
+  ],
+  "progress_m": 7.16,
+  "heading_dev_deg": 36.3,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.06,
+  "kind": "pit",
+  "cell": [
+   3,
+   2
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.18,
+   0.18
+  ],
+  "pelvis_rel_m": [
+   0.7,
+   0.765
+  ],
+  "tilt_deg": [
+   3.7,
+   10.5
+  ],
+  "progress_m": 9.5,
+  "heading_dev_deg": 24.8,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.08,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   3
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.24,
+   0.24
+  ],
+  "pelvis_rel_m": [
+   0.66,
+   0.761
+  ],
+  "tilt_deg": [
+   4.6,
+   13.8
+  ],
+  "progress_m": 6.93,
+  "heading_dev_deg": 41.4,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.08,
+  "kind": "pit",
+  "cell": [
+   1,
+   3
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.24,
+   0.24
+  ],
+  "pelvis_rel_m": [
+   0.676,
+   0.761
+  ],
+  "tilt_deg": [
+   3.9,
+   12.1
+  ],
+  "progress_m": 7.85,
+  "heading_dev_deg": 37.9,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.08,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   3
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.24,
+   0.24
+  ],
+  "pelvis_rel_m": [
+   0.67,
+   0.764
+  ],
+  "tilt_deg": [
+   4.2,
+   12.9
+  ],
+  "progress_m": 9.21,
+  "heading_dev_deg": 23.9,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.08,
+  "kind": "pit",
+  "cell": [
+   3,
+   3
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.24,
+   0.24
+  ],
+  "pelvis_rel_m": [
+   0.66,
+   0.764
+  ],
+  "tilt_deg": [
+   4.3,
+   11.4
+  ],
+  "progress_m": 8.35,
+  "heading_dev_deg": 39.0,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.1,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   4
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.0,
+   0.3
+  ],
+  "pelvis_rel_m": [
+   0.488,
+   0.748
+  ],
+  "tilt_deg": [
+   4.7,
+   21.7
+  ],
+  "progress_m": 7.82,
+  "heading_dev_deg": 111.0,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.1,
+  "kind": "pit",
+  "cell": [
+   1,
+   4
+  ],
+  "fell": true,
+  "reached_centre": true,
+  "crossed": false,
+  "ground_range_m": [
+   -0.3,
+   -0.0
+  ],
+  "pelvis_rel_m": [
+   0.444,
+   0.753
+  ],
+  "tilt_deg": [
+   6.0,
+   17.1
+  ],
+  "progress_m": 3.63,
+  "heading_dev_deg": 75.1,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.1,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   4
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.3,
+   0.3
+  ],
+  "pelvis_rel_m": [
+   0.629,
+   0.752
+  ],
+  "tilt_deg": [
+   4.9,
+   18.1
+  ],
+  "progress_m": 7.41,
+  "heading_dev_deg": 34.6,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.1,
+  "kind": "pit",
+  "cell": [
+   3,
+   4
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.3,
+   0.3
+  ],
+  "pelvis_rel_m": [
+   0.648,
+   0.757
+  ],
+  "tilt_deg": [
+   4.6,
+   18.3
+  ],
+  "progress_m": 5.55,
+  "heading_dev_deg": 57.3,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.12,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   5
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.36,
+   0.36
+  ],
+  "pelvis_rel_m": [
+   0.643,
+   0.765
+  ],
+  "tilt_deg": [
+   3.9,
+   12.1
+  ],
+  "progress_m": 8.69,
+  "heading_dev_deg": 24.3,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.12,
+  "kind": "pit",
+  "cell": [
+   1,
+   5
+  ],
+  "fell": true,
+  "reached_centre": true,
+  "crossed": false,
+  "ground_range_m": [
+   -0.36,
+   0.36
+  ],
+  "pelvis_rel_m": [
+   0.424,
+   0.757
+  ],
+  "tilt_deg": [
+   5.1,
+   19.1
+  ],
+  "progress_m": 4.95,
+  "heading_dev_deg": 55.9,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.12,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   5
+  ],
+  "fell": true,
+  "reached_centre": true,
+  "crossed": false,
+  "ground_range_m": [
+   -0.0,
+   0.36
+  ],
+  "pelvis_rel_m": [
+   0.408,
+   0.759
+  ],
+  "tilt_deg": [
+   4.3,
+   18.4
+  ],
+  "progress_m": 7.71,
+  "heading_dev_deg": 33.0,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.12,
+  "kind": "pit",
+  "cell": [
+   3,
+   5
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.36,
+   0.36
+  ],
+  "pelvis_rel_m": [
+   0.564,
+   0.764
+  ],
+  "tilt_deg": [
+   4.8,
+   19.1
+  ],
+  "progress_m": 8.56,
+  "heading_dev_deg": 36.5,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.14,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   6
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.42,
+   0.42
+  ],
+  "pelvis_rel_m": [
+   0.63,
+   0.758
+  ],
+  "tilt_deg": [
+   4.1,
+   12.1
+  ],
+  "progress_m": 8.95,
+  "heading_dev_deg": 38.2,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.14,
+  "kind": "pit",
+  "cell": [
+   1,
+   6
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.42,
+   0.42
+  ],
+  "pelvis_rel_m": [
+   0.64,
+   0.757
+  ],
+  "tilt_deg": [
+   4.4,
+   14.2
+  ],
+  "progress_m": 9.14,
+  "heading_dev_deg": 32.9,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.14,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   6
+  ],
+  "fell": true,
+  "reached_centre": true,
+  "crossed": false,
+  "ground_range_m": [
+   -0.42,
+   0.42
+  ],
+  "pelvis_rel_m": [
+   0.433,
+   0.752
+  ],
+  "tilt_deg": [
+   4.5,
+   25.4
+  ],
+  "progress_m": 6.0,
+  "heading_dev_deg": 35.2,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.14,
+  "kind": "pit",
+  "cell": [
+   3,
+   6
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": false,
+  "ground_range_m": [
+   -0.42,
+   -0.0
+  ],
+  "pelvis_rel_m": [
+   0.648,
+   0.753
+  ],
+  "tilt_deg": [
+   5.1,
+   16.8
+  ],
+  "progress_m": 3.53,
+  "heading_dev_deg": 68.7,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.16,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   7
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.48,
+   0.48
+  ],
+  "pelvis_rel_m": [
+   0.632,
+   0.757
+  ],
+  "tilt_deg": [
+   4.1,
+   10.4
+  ],
+  "progress_m": 7.67,
+  "heading_dev_deg": 27.7,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.16,
+  "kind": "pit",
+  "cell": [
+   1,
+   7
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.48,
+   0.48
+  ],
+  "pelvis_rel_m": [
+   0.608,
+   0.759
+  ],
+  "tilt_deg": [
+   4.9,
+   18.1
+  ],
+  "progress_m": 6.91,
+  "heading_dev_deg": 34.9,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.16,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   7
+  ],
+  "fell": true,
+  "reached_centre": true,
+  "crossed": false,
+  "ground_range_m": [
+   -0.42,
+   0.48
+  ],
+  "pelvis_rel_m": [
+   0.405,
+   0.751
+  ],
+  "tilt_deg": [
+   5.0,
+   27.8
+  ],
+  "progress_m": 7.27,
+  "heading_dev_deg": 104.5,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.16,
+  "kind": "pit",
+  "cell": [
+   3,
+   7
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.48,
+   0.48
+  ],
+  "pelvis_rel_m": [
+   0.611,
+   0.754
+  ],
+  "tilt_deg": [
+   4.3,
+   12.2
+  ],
+  "progress_m": 9.51,
+  "heading_dev_deg": 32.8,
+  "start": [
+   0.0,
+   0.0
+  ]
+ }
+]

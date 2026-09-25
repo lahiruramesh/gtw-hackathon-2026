@@ -1,0 +1,2786 @@
+[
+ {
+  "rise_m": 0.03,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   0
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.12,
+   0.12
+  ],
+  "pelvis_rel_m": [
+   0.722,
+   0.766
+  ],
+  "tilt_deg": [
+   3.8,
+   12.4
+  ],
+  "progress_m": 8.93,
+  "heading_dev_deg": 24.9,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.03,
+  "kind": "pit",
+  "cell": [
+   1,
+   0
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.12,
+   0.12
+  ],
+  "pelvis_rel_m": [
+   0.721,
+   0.768
+  ],
+  "tilt_deg": [
+   3.9,
+   10.0
+  ],
+  "progress_m": 8.73,
+  "heading_dev_deg": 17.1,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.03,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   0
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.12,
+   0.12
+  ],
+  "pelvis_rel_m": [
+   0.722,
+   0.77
+  ],
+  "tilt_deg": [
+   4.0,
+   9.9
+  ],
+  "progress_m": 8.27,
+  "heading_dev_deg": 19.2,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.03,
+  "kind": "pit",
+  "cell": [
+   3,
+   0
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.12,
+   0.12
+  ],
+  "pelvis_rel_m": [
+   0.73,
+   0.768
+  ],
+  "tilt_deg": [
+   4.0,
+   9.8
+  ],
+  "progress_m": 8.18,
+  "heading_dev_deg": 23.1,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.0471,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   1
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.189,
+   0.189
+  ],
+  "pelvis_rel_m": [
+   0.702,
+   0.768
+  ],
+  "tilt_deg": [
+   3.9,
+   10.7
+  ],
+  "progress_m": 8.55,
+  "heading_dev_deg": 19.9,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.0471,
+  "kind": "pit",
+  "cell": [
+   1,
+   1
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.189,
+   0.189
+  ],
+  "pelvis_rel_m": [
+   0.715,
+   0.765
+  ],
+  "tilt_deg": [
+   3.9,
+   10.1
+  ],
+  "progress_m": 8.51,
+  "heading_dev_deg": 21.7,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.0471,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   1
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.189,
+   0.189
+  ],
+  "pelvis_rel_m": [
+   0.726,
+   0.765
+  ],
+  "tilt_deg": [
+   4.2,
+   10.4
+  ],
+  "progress_m": 7.77,
+  "heading_dev_deg": 28.6,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.0471,
+  "kind": "pit",
+  "cell": [
+   3,
+   1
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.189,
+   0.189
+  ],
+  "pelvis_rel_m": [
+   0.699,
+   0.764
+  ],
+  "tilt_deg": [
+   3.7,
+   9.3
+  ],
+  "progress_m": 9.03,
+  "heading_dev_deg": 19.1,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.0643,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   2
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.257,
+   0.257
+  ],
+  "pelvis_rel_m": [
+   0.693,
+   0.767
+  ],
+  "tilt_deg": [
+   4.2,
+   13.3
+  ],
+  "progress_m": 8.33,
+  "heading_dev_deg": 24.2,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.0643,
+  "kind": "pit",
+  "cell": [
+   1,
+   2
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.257,
+   0.257
+  ],
+  "pelvis_rel_m": [
+   0.68,
+   0.766
+  ],
+  "tilt_deg": [
+   4.4,
+   11.5
+  ],
+  "progress_m": 7.79,
+  "heading_dev_deg": 24.4,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.0643,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   2
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.257,
+   0.257
+  ],
+  "pelvis_rel_m": [
+   0.695,
+   0.762
+  ],
+  "tilt_deg": [
+   3.8,
+   13.3
+  ],
+  "progress_m": 8.42,
+  "heading_dev_deg": 26.9,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.0643,
+  "kind": "pit",
+  "cell": [
+   3,
+   2
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.257,
+   0.193
+  ],
+  "pelvis_rel_m": [
+   0.695,
+   0.763
+  ],
+  "tilt_deg": [
+   4.3,
+   11.5
+  ],
+  "progress_m": 7.76,
+  "heading_dev_deg": 17.8,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.0814,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   3
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.326,
+   0.326
+  ],
+  "pelvis_rel_m": [
+   0.682,
+   0.767
+  ],
+  "tilt_deg": [
+   4.2,
+   14.4
+  ],
+  "progress_m": 8.07,
+  "heading_dev_deg": 30.8,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.0814,
+  "kind": "pit",
+  "cell": [
+   1,
+   3
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.326,
+   0.326
+  ],
+  "pelvis_rel_m": [
+   0.685,
+   0.765
+  ],
+  "tilt_deg": [
+   4.3,
+   10.4
+  ],
+  "progress_m": 8.48,
+  "heading_dev_deg": 31.7,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.0814,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   3
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.326,
+   0.326
+  ],
+  "pelvis_rel_m": [
+   0.681,
+   0.768
+  ],
+  "tilt_deg": [
+   4.6,
+   13.0
+  ],
+  "progress_m": 7.89,
+  "heading_dev_deg": 23.3,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.0814,
+  "kind": "pit",
+  "cell": [
+   3,
+   3
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.326,
+   0.244
+  ],
+  "pelvis_rel_m": [
+   0.696,
+   0.765
+  ],
+  "tilt_deg": [
+   4.4,
+   9.9
+  ],
+  "progress_m": 8.57,
+  "heading_dev_deg": 32.9,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.0986,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   4
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.394,
+   0.394
+  ],
+  "pelvis_rel_m": [
+   0.566,
+   0.768
+  ],
+  "tilt_deg": [
+   4.7,
+   10.9
+  ],
+  "progress_m": 8.12,
+  "heading_dev_deg": 58.7,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.0986,
+  "kind": "pit",
+  "cell": [
+   1,
+   4
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.394,
+   0.394
+  ],
+  "pelvis_rel_m": [
+   0.635,
+   0.763
+  ],
+  "tilt_deg": [
+   4.3,
+   13.2
+  ],
+  "progress_m": 7.21,
+  "heading_dev_deg": 24.8,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.0986,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   4
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.394,
+   0.394
+  ],
+  "pelvis_rel_m": [
+   0.652,
+   0.765
+  ],
+  "tilt_deg": [
+   4.8,
+   12.8
+  ],
+  "progress_m": 7.56,
+  "heading_dev_deg": 36.6,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.0986,
+  "kind": "pit",
+  "cell": [
+   3,
+   4
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.394,
+   0.394
+  ],
+  "pelvis_rel_m": [
+   0.681,
+   0.764
+  ],
+  "tilt_deg": [
+   4.4,
+   11.8
+  ],
+  "progress_m": 8.21,
+  "heading_dev_deg": 25.6,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.1157,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   5
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.463,
+   0.463
+  ],
+  "pelvis_rel_m": [
+   0.653,
+   0.764
+  ],
+  "tilt_deg": [
+   3.9,
+   12.8
+  ],
+  "progress_m": 9.69,
+  "heading_dev_deg": 23.6,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.1157,
+  "kind": "pit",
+  "cell": [
+   1,
+   5
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.463,
+   0.463
+  ],
+  "pelvis_rel_m": [
+   0.63,
+   0.756
+  ],
+  "tilt_deg": [
+   4.8,
+   14.1
+  ],
+  "progress_m": 5.27,
+  "heading_dev_deg": 42.5,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.1157,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   5
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.463,
+   0.463
+  ],
+  "pelvis_rel_m": [
+   0.664,
+   0.761
+  ],
+  "tilt_deg": [
+   4.3,
+   12.6
+  ],
+  "progress_m": 8.9,
+  "heading_dev_deg": 26.4,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.1157,
+  "kind": "pit",
+  "cell": [
+   3,
+   5
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.463,
+   0.463
+  ],
+  "pelvis_rel_m": [
+   0.669,
+   0.764
+  ],
+  "tilt_deg": [
+   4.1,
+   12.0
+  ],
+  "progress_m": 9.78,
+  "heading_dev_deg": 17.0,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.1329,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   6
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.531,
+   0.531
+  ],
+  "pelvis_rel_m": [
+   0.649,
+   0.765
+  ],
+  "tilt_deg": [
+   4.7,
+   11.3
+  ],
+  "progress_m": 8.65,
+  "heading_dev_deg": 21.8,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.1329,
+  "kind": "pit",
+  "cell": [
+   1,
+   6
+  ],
+  "fell": true,
+  "reached_centre": true,
+  "crossed": false,
+  "ground_range_m": [
+   -0.531,
+   0.514
+  ],
+  "pelvis_rel_m": [
+   0.415,
+   0.755
+  ],
+  "tilt_deg": [
+   4.4,
+   18.0
+  ],
+  "progress_m": 6.64,
+  "heading_dev_deg": 79.3,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.1329,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   6
+  ],
+  "fell": true,
+  "reached_centre": true,
+  "crossed": false,
+  "ground_range_m": [
+   -0.531,
+   0.531
+  ],
+  "pelvis_rel_m": [
+   0.413,
+   0.763
+  ],
+  "tilt_deg": [
+   4.4,
+   17.0
+  ],
+  "progress_m": 7.73,
+  "heading_dev_deg": 47.4,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.1329,
+  "kind": "pit",
+  "cell": [
+   3,
+   6
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.531,
+   0.531
+  ],
+  "pelvis_rel_m": [
+   0.59,
+   0.76
+  ],
+  "tilt_deg": [
+   4.2,
+   10.6
+  ],
+  "progress_m": 8.51,
+  "heading_dev_deg": 21.1,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.15,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   7
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.0,
+   0.6
+  ],
+  "pelvis_rel_m": [
+   0.625,
+   0.767
+  ],
+  "tilt_deg": [
+   4.5,
+   12.6
+  ],
+  "progress_m": 8.79,
+  "heading_dev_deg": 37.1,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.15,
+  "kind": "pit",
+  "cell": [
+   1,
+   7
+  ],
+  "fell": true,
+  "reached_centre": true,
+  "crossed": false,
+  "ground_range_m": [
+   -0.6,
+   0.6
+  ],
+  "pelvis_rel_m": [
+   0.406,
+   0.759
+  ],
+  "tilt_deg": [
+   5.6,
+   18.0
+  ],
+  "progress_m": 5.25,
+  "heading_dev_deg": 36.8,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.15,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   7
+  ],
+  "fell": true,
+  "reached_centre": true,
+  "crossed": false,
+  "ground_range_m": [
+   -0.232,
+   0.6
+  ],
+  "pelvis_rel_m": [
+   0.404,
+   0.761
+  ],
+  "tilt_deg": [
+   3.7,
+   15.8
+  ],
+  "progress_m": 4.63,
+  "heading_dev_deg": 29.2,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.15,
+  "kind": "pit",
+  "cell": [
+   3,
+   7
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.6,
+   0.6
+  ],
+  "pelvis_rel_m": [
+   0.603,
+   0.763
+  ],
+  "tilt_deg": [
+   4.7,
+   13.8
+  ],
+  "progress_m": 6.99,
+  "heading_dev_deg": 43.7,
+  "start": [
+   0.0,
+   0.0
+  ]
+ },
+ {
+  "rise_m": 0.03,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   0
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.12,
+   0.12
+  ],
+  "pelvis_rel_m": [
+   0.71,
+   0.769
+  ],
+  "tilt_deg": [
+   4.3,
+   12.6
+  ],
+  "progress_m": 8.52,
+  "heading_dev_deg": 25.8,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.03,
+  "kind": "pit",
+  "cell": [
+   1,
+   0
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.12,
+   0.12
+  ],
+  "pelvis_rel_m": [
+   0.722,
+   0.769
+  ],
+  "tilt_deg": [
+   4.1,
+   9.2
+  ],
+  "progress_m": 8.14,
+  "heading_dev_deg": 26.1,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.03,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   0
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.12,
+   0.12
+  ],
+  "pelvis_rel_m": [
+   0.724,
+   0.767
+  ],
+  "tilt_deg": [
+   3.6,
+   12.8
+  ],
+  "progress_m": 8.45,
+  "heading_dev_deg": 17.8,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.03,
+  "kind": "pit",
+  "cell": [
+   3,
+   0
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.12,
+   0.12
+  ],
+  "pelvis_rel_m": [
+   0.713,
+   0.77
+  ],
+  "tilt_deg": [
+   4.3,
+   12.3
+  ],
+  "progress_m": 8.22,
+  "heading_dev_deg": 23.4,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.0471,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   1
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.189,
+   0.189
+  ],
+  "pelvis_rel_m": [
+   0.698,
+   0.768
+  ],
+  "tilt_deg": [
+   4.4,
+   9.3
+  ],
+  "progress_m": 8.58,
+  "heading_dev_deg": 26.2,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.0471,
+  "kind": "pit",
+  "cell": [
+   1,
+   1
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.189,
+   0.189
+  ],
+  "pelvis_rel_m": [
+   0.715,
+   0.767
+  ],
+  "tilt_deg": [
+   4.1,
+   11.0
+  ],
+  "progress_m": 8.13,
+  "heading_dev_deg": 29.6,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.0471,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   1
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.094,
+   0.189
+  ],
+  "pelvis_rel_m": [
+   0.663,
+   0.767
+  ],
+  "tilt_deg": [
+   4.4,
+   14.2
+  ],
+  "progress_m": 8.09,
+  "heading_dev_deg": 28.9,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.0471,
+  "kind": "pit",
+  "cell": [
+   3,
+   1
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.189,
+   0.189
+  ],
+  "pelvis_rel_m": [
+   0.691,
+   0.767
+  ],
+  "tilt_deg": [
+   4.2,
+   11.6
+  ],
+  "progress_m": 7.5,
+  "heading_dev_deg": 33.8,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.0643,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   2
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.257,
+   0.257
+  ],
+  "pelvis_rel_m": [
+   0.689,
+   0.766
+  ],
+  "tilt_deg": [
+   4.3,
+   10.0
+  ],
+  "progress_m": 8.59,
+  "heading_dev_deg": 22.8,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.0643,
+  "kind": "pit",
+  "cell": [
+   1,
+   2
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.257,
+   0.257
+  ],
+  "pelvis_rel_m": [
+   0.708,
+   0.765
+  ],
+  "tilt_deg": [
+   3.7,
+   11.1
+  ],
+  "progress_m": 8.41,
+  "heading_dev_deg": 34.0,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.0643,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   2
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.257,
+   0.257
+  ],
+  "pelvis_rel_m": [
+   0.702,
+   0.765
+  ],
+  "tilt_deg": [
+   4.1,
+   11.1
+  ],
+  "progress_m": 8.8,
+  "heading_dev_deg": 22.4,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.0643,
+  "kind": "pit",
+  "cell": [
+   3,
+   2
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.257,
+   0.257
+  ],
+  "pelvis_rel_m": [
+   0.701,
+   0.764
+  ],
+  "tilt_deg": [
+   4.3,
+   12.2
+  ],
+  "progress_m": 8.17,
+  "heading_dev_deg": 22.3,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.0814,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   3
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.326,
+   0.326
+  ],
+  "pelvis_rel_m": [
+   0.623,
+   0.765
+  ],
+  "tilt_deg": [
+   4.1,
+   15.8
+  ],
+  "progress_m": 9.06,
+  "heading_dev_deg": 30.2,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.0814,
+  "kind": "pit",
+  "cell": [
+   1,
+   3
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.326,
+   0.326
+  ],
+  "pelvis_rel_m": [
+   0.696,
+   0.767
+  ],
+  "tilt_deg": [
+   3.9,
+   10.1
+  ],
+  "progress_m": 8.75,
+  "heading_dev_deg": 26.9,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.0814,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   3
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.326,
+   0.326
+  ],
+  "pelvis_rel_m": [
+   0.656,
+   0.769
+  ],
+  "tilt_deg": [
+   4.0,
+   12.1
+  ],
+  "progress_m": 9.02,
+  "heading_dev_deg": 66.7,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.0814,
+  "kind": "pit",
+  "cell": [
+   3,
+   3
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.326,
+   0.326
+  ],
+  "pelvis_rel_m": [
+   0.658,
+   0.763
+  ],
+  "tilt_deg": [
+   4.4,
+   12.2
+  ],
+  "progress_m": 8.34,
+  "heading_dev_deg": 56.6,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.0986,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   4
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.394,
+   0.394
+  ],
+  "pelvis_rel_m": [
+   0.661,
+   0.76
+  ],
+  "tilt_deg": [
+   5.1,
+   15.3
+  ],
+  "progress_m": 8.81,
+  "heading_dev_deg": 30.2,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.0986,
+  "kind": "pit",
+  "cell": [
+   1,
+   4
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.394,
+   0.394
+  ],
+  "pelvis_rel_m": [
+   0.666,
+   0.765
+  ],
+  "tilt_deg": [
+   4.5,
+   15.0
+  ],
+  "progress_m": 7.59,
+  "heading_dev_deg": 25.2,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.0986,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   4
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.394,
+   0.394
+  ],
+  "pelvis_rel_m": [
+   0.54,
+   0.762
+  ],
+  "tilt_deg": [
+   3.8,
+   22.1
+  ],
+  "progress_m": 8.67,
+  "heading_dev_deg": 89.2,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.0986,
+  "kind": "pit",
+  "cell": [
+   3,
+   4
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.394,
+   0.394
+  ],
+  "pelvis_rel_m": [
+   0.611,
+   0.763
+  ],
+  "tilt_deg": [
+   4.3,
+   17.3
+  ],
+  "progress_m": 7.93,
+  "heading_dev_deg": 28.3,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.1157,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   5
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.211,
+   0.463
+  ],
+  "pelvis_rel_m": [
+   0.512,
+   0.761
+  ],
+  "tilt_deg": [
+   4.2,
+   16.2
+  ],
+  "progress_m": 9.07,
+  "heading_dev_deg": 29.3,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.1157,
+  "kind": "pit",
+  "cell": [
+   1,
+   5
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.463,
+   0.463
+  ],
+  "pelvis_rel_m": [
+   0.65,
+   0.764
+  ],
+  "tilt_deg": [
+   4.4,
+   16.0
+  ],
+  "progress_m": 7.96,
+  "heading_dev_deg": 33.3,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.1157,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   5
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.463,
+   0.463
+  ],
+  "pelvis_rel_m": [
+   0.644,
+   0.765
+  ],
+  "tilt_deg": [
+   4.3,
+   11.9
+  ],
+  "progress_m": 8.26,
+  "heading_dev_deg": 36.3,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.1157,
+  "kind": "pit",
+  "cell": [
+   3,
+   5
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.463,
+   0.463
+  ],
+  "pelvis_rel_m": [
+   0.586,
+   0.759
+  ],
+  "tilt_deg": [
+   4.4,
+   12.3
+  ],
+  "progress_m": 8.59,
+  "heading_dev_deg": 28.0,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.1329,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   6
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.531,
+   0.531
+  ],
+  "pelvis_rel_m": [
+   0.638,
+   0.759
+  ],
+  "tilt_deg": [
+   4.3,
+   13.1
+  ],
+  "progress_m": 9.28,
+  "heading_dev_deg": 39.2,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.1329,
+  "kind": "pit",
+  "cell": [
+   1,
+   6
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.531,
+   0.531
+  ],
+  "pelvis_rel_m": [
+   0.662,
+   0.755
+  ],
+  "tilt_deg": [
+   4.7,
+   13.1
+  ],
+  "progress_m": 8.97,
+  "heading_dev_deg": 32.1,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.1329,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   6
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.531,
+   0.531
+  ],
+  "pelvis_rel_m": [
+   0.638,
+   0.759
+  ],
+  "tilt_deg": [
+   4.6,
+   11.2
+  ],
+  "progress_m": 7.89,
+  "heading_dev_deg": 27.6,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.1329,
+  "kind": "pit",
+  "cell": [
+   3,
+   6
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.531,
+   0.531
+  ],
+  "pelvis_rel_m": [
+   0.646,
+   0.763
+  ],
+  "tilt_deg": [
+   4.3,
+   12.9
+  ],
+  "progress_m": 8.18,
+  "heading_dev_deg": 27.7,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.15,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   7
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.6,
+   0.6
+  ],
+  "pelvis_rel_m": [
+   0.617,
+   0.762
+  ],
+  "tilt_deg": [
+   4.8,
+   13.7
+  ],
+  "progress_m": 9.1,
+  "heading_dev_deg": 29.4,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.15,
+  "kind": "pit",
+  "cell": [
+   1,
+   7
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.6,
+   0.6
+  ],
+  "pelvis_rel_m": [
+   0.612,
+   0.762
+  ],
+  "tilt_deg": [
+   4.7,
+   14.5
+  ],
+  "progress_m": 8.23,
+  "heading_dev_deg": 43.1,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.15,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   7
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.6,
+   0.6
+  ],
+  "pelvis_rel_m": [
+   0.62,
+   0.762
+  ],
+  "tilt_deg": [
+   4.4,
+   12.0
+  ],
+  "progress_m": 8.93,
+  "heading_dev_deg": 22.7,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.15,
+  "kind": "pit",
+  "cell": [
+   3,
+   7
+  ],
+  "fell": true,
+  "reached_centre": true,
+  "crossed": false,
+  "ground_range_m": [
+   -0.6,
+   0.6
+  ],
+  "pelvis_rel_m": [
+   0.408,
+   0.765
+  ],
+  "tilt_deg": [
+   4.3,
+   20.6
+  ],
+  "progress_m": 9.18,
+  "heading_dev_deg": 24.6,
+  "start": [
+   -0.35,
+   0.12
+  ]
+ },
+ {
+  "rise_m": 0.03,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   0
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.12,
+   0.12
+  ],
+  "pelvis_rel_m": [
+   0.705,
+   0.766
+  ],
+  "tilt_deg": [
+   4.0,
+   12.5
+  ],
+  "progress_m": 8.14,
+  "heading_dev_deg": 23.9,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.03,
+  "kind": "pit",
+  "cell": [
+   1,
+   0
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.12,
+   0.12
+  ],
+  "pelvis_rel_m": [
+   0.722,
+   0.768
+  ],
+  "tilt_deg": [
+   4.3,
+   12.2
+  ],
+  "progress_m": 7.36,
+  "heading_dev_deg": 19.3,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.03,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   0
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.12,
+   0.12
+  ],
+  "pelvis_rel_m": [
+   0.684,
+   0.765
+  ],
+  "tilt_deg": [
+   4.4,
+   10.6
+  ],
+  "progress_m": 7.79,
+  "heading_dev_deg": 37.5,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.03,
+  "kind": "pit",
+  "cell": [
+   3,
+   0
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.12,
+   0.12
+  ],
+  "pelvis_rel_m": [
+   0.723,
+   0.768
+  ],
+  "tilt_deg": [
+   3.8,
+   10.3
+  ],
+  "progress_m": 8.83,
+  "heading_dev_deg": 22.6,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.0471,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   1
+  ],
+  "fell": true,
+  "reached_centre": true,
+  "crossed": false,
+  "ground_range_m": [
+   -0.141,
+   0.189
+  ],
+  "pelvis_rel_m": [
+   0.401,
+   0.762
+  ],
+  "tilt_deg": [
+   4.1,
+   14.5
+  ],
+  "progress_m": 5.06,
+  "heading_dev_deg": 17.8,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.0471,
+  "kind": "pit",
+  "cell": [
+   1,
+   1
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.189,
+   0.189
+  ],
+  "pelvis_rel_m": [
+   0.689,
+   0.769
+  ],
+  "tilt_deg": [
+   4.7,
+   10.7
+  ],
+  "progress_m": 7.99,
+  "heading_dev_deg": 18.1,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.0471,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   1
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.189,
+   0.189
+  ],
+  "pelvis_rel_m": [
+   0.71,
+   0.767
+  ],
+  "tilt_deg": [
+   4.3,
+   10.1
+  ],
+  "progress_m": 8.39,
+  "heading_dev_deg": 25.0,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.0471,
+  "kind": "pit",
+  "cell": [
+   3,
+   1
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.189,
+   0.189
+  ],
+  "pelvis_rel_m": [
+   0.643,
+   0.768
+  ],
+  "tilt_deg": [
+   4.5,
+   11.4
+  ],
+  "progress_m": 7.74,
+  "heading_dev_deg": 30.2,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.0643,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   2
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.193,
+   0.257
+  ],
+  "pelvis_rel_m": [
+   0.655,
+   0.76
+  ],
+  "tilt_deg": [
+   4.1,
+   12.0
+  ],
+  "progress_m": 7.85,
+  "heading_dev_deg": 40.8,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.0643,
+  "kind": "pit",
+  "cell": [
+   1,
+   2
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.257,
+   0.257
+  ],
+  "pelvis_rel_m": [
+   0.699,
+   0.766
+  ],
+  "tilt_deg": [
+   4.0,
+   14.0
+  ],
+  "progress_m": 8.43,
+  "heading_dev_deg": 36.7,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.0643,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   2
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.257,
+   0.257
+  ],
+  "pelvis_rel_m": [
+   0.663,
+   0.767
+  ],
+  "tilt_deg": [
+   4.3,
+   11.9
+  ],
+  "progress_m": 8.79,
+  "heading_dev_deg": 29.5,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.0643,
+  "kind": "pit",
+  "cell": [
+   3,
+   2
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.257,
+   0.257
+  ],
+  "pelvis_rel_m": [
+   0.708,
+   0.767
+  ],
+  "tilt_deg": [
+   4.0,
+   10.6
+  ],
+  "progress_m": 8.0,
+  "heading_dev_deg": 21.9,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.0814,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   3
+  ],
+  "fell": true,
+  "reached_centre": true,
+  "crossed": false,
+  "ground_range_m": [
+   0.0,
+   0.326
+  ],
+  "pelvis_rel_m": [
+   0.427,
+   0.764
+  ],
+  "tilt_deg": [
+   4.1,
+   19.2
+  ],
+  "progress_m": 3.08,
+  "heading_dev_deg": 19.0,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.0814,
+  "kind": "pit",
+  "cell": [
+   1,
+   3
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.326,
+   0.326
+  ],
+  "pelvis_rel_m": [
+   0.606,
+   0.761
+  ],
+  "tilt_deg": [
+   4.5,
+   12.1
+  ],
+  "progress_m": 7.72,
+  "heading_dev_deg": 30.8,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.0814,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   3
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.269,
+   0.326
+  ],
+  "pelvis_rel_m": [
+   0.644,
+   0.758
+  ],
+  "tilt_deg": [
+   4.6,
+   11.4
+  ],
+  "progress_m": 6.93,
+  "heading_dev_deg": 33.1,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.0814,
+  "kind": "pit",
+  "cell": [
+   3,
+   3
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.326,
+   0.326
+  ],
+  "pelvis_rel_m": [
+   0.692,
+   0.766
+  ],
+  "tilt_deg": [
+   4.5,
+   14.2
+  ],
+  "progress_m": 7.55,
+  "heading_dev_deg": 30.0,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.0986,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   4
+  ],
+  "fell": true,
+  "reached_centre": true,
+  "crossed": false,
+  "ground_range_m": [
+   -0.394,
+   0.394
+  ],
+  "pelvis_rel_m": [
+   0.427,
+   0.759
+  ],
+  "tilt_deg": [
+   5.2,
+   35.3
+  ],
+  "progress_m": 8.88,
+  "heading_dev_deg": 83.2,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.0986,
+  "kind": "pit",
+  "cell": [
+   1,
+   4
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.394,
+   0.296
+  ],
+  "pelvis_rel_m": [
+   0.682,
+   0.767
+  ],
+  "tilt_deg": [
+   4.9,
+   14.5
+  ],
+  "progress_m": 6.87,
+  "heading_dev_deg": 33.8,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.0986,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   4
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.394,
+   0.394
+  ],
+  "pelvis_rel_m": [
+   0.665,
+   0.764
+  ],
+  "tilt_deg": [
+   4.2,
+   11.6
+  ],
+  "progress_m": 8.96,
+  "heading_dev_deg": 29.7,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.0986,
+  "kind": "pit",
+  "cell": [
+   3,
+   4
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.394,
+   0.394
+  ],
+  "pelvis_rel_m": [
+   0.624,
+   0.766
+  ],
+  "tilt_deg": [
+   4.3,
+   12.4
+  ],
+  "progress_m": 6.95,
+  "heading_dev_deg": 33.4,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.1157,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   5
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.463,
+   0.463
+  ],
+  "pelvis_rel_m": [
+   0.669,
+   0.766
+  ],
+  "tilt_deg": [
+   4.3,
+   13.4
+  ],
+  "progress_m": 8.57,
+  "heading_dev_deg": 30.9,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.1157,
+  "kind": "pit",
+  "cell": [
+   1,
+   5
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.463,
+   0.347
+  ],
+  "pelvis_rel_m": [
+   0.673,
+   0.762
+  ],
+  "tilt_deg": [
+   4.6,
+   14.6
+  ],
+  "progress_m": 8.96,
+  "heading_dev_deg": 35.2,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.1157,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   5
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.463,
+   0.463
+  ],
+  "pelvis_rel_m": [
+   0.581,
+   0.761
+  ],
+  "tilt_deg": [
+   4.3,
+   12.1
+  ],
+  "progress_m": 7.54,
+  "heading_dev_deg": 46.2,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.1157,
+  "kind": "pit",
+  "cell": [
+   3,
+   5
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.463,
+   0.231
+  ],
+  "pelvis_rel_m": [
+   0.633,
+   0.766
+  ],
+  "tilt_deg": [
+   4.3,
+   12.2
+  ],
+  "progress_m": 8.69,
+  "heading_dev_deg": 41.9,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.1329,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   6
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.531,
+   0.531
+  ],
+  "pelvis_rel_m": [
+   0.574,
+   0.757
+  ],
+  "tilt_deg": [
+   4.9,
+   14.0
+  ],
+  "progress_m": 6.79,
+  "heading_dev_deg": 44.1,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.1329,
+  "kind": "pit",
+  "cell": [
+   1,
+   6
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.531,
+   0.399
+  ],
+  "pelvis_rel_m": [
+   0.641,
+   0.763
+  ],
+  "tilt_deg": [
+   4.6,
+   10.8
+  ],
+  "progress_m": 8.28,
+  "heading_dev_deg": 38.5,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.1329,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   6
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.531,
+   0.531
+  ],
+  "pelvis_rel_m": [
+   0.659,
+   0.762
+  ],
+  "tilt_deg": [
+   4.7,
+   11.1
+  ],
+  "progress_m": 8.05,
+  "heading_dev_deg": 27.7,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.1329,
+  "kind": "pit",
+  "cell": [
+   3,
+   6
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.531,
+   0.399
+  ],
+  "pelvis_rel_m": [
+   0.637,
+   0.763
+  ],
+  "tilt_deg": [
+   4.1,
+   11.2
+  ],
+  "progress_m": 8.94,
+  "heading_dev_deg": 45.0,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.15,
+  "kind": "pyramid",
+  "cell": [
+   0,
+   7
+  ],
+  "fell": true,
+  "reached_centre": true,
+  "crossed": false,
+  "ground_range_m": [
+   -0.3,
+   0.6
+  ],
+  "pelvis_rel_m": [
+   0.439,
+   0.758
+  ],
+  "tilt_deg": [
+   4.5,
+   19.2
+  ],
+  "progress_m": 4.78,
+  "heading_dev_deg": 43.9,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.15,
+  "kind": "pit",
+  "cell": [
+   1,
+   7
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.6,
+   0.506
+  ],
+  "pelvis_rel_m": [
+   0.606,
+   0.761
+  ],
+  "tilt_deg": [
+   4.6,
+   11.6
+  ],
+  "progress_m": 8.51,
+  "heading_dev_deg": 37.9,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.15,
+  "kind": "pyramid",
+  "cell": [
+   2,
+   7
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.6,
+   0.6
+  ],
+  "pelvis_rel_m": [
+   0.593,
+   0.759
+  ],
+  "tilt_deg": [
+   4.5,
+   12.0
+  ],
+  "progress_m": 7.68,
+  "heading_dev_deg": 45.6,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ },
+ {
+  "rise_m": 0.15,
+  "kind": "pit",
+  "cell": [
+   3,
+   7
+  ],
+  "fell": false,
+  "reached_centre": true,
+  "crossed": true,
+  "ground_range_m": [
+   -0.6,
+   0.45
+  ],
+  "pelvis_rel_m": [
+   0.643,
+   0.765
+  ],
+  "tilt_deg": [
+   4.5,
+   10.4
+  ],
+  "progress_m": 8.68,
+  "heading_dev_deg": 41.2,
+  "start": [
+   0.35,
+   -0.12
+  ]
+ }
+]

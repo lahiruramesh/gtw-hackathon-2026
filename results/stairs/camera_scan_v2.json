@@ -1,0 +1,1036 @@
+{
+ "stats": {
+  "n_steps": 20407,
+  "unseen_frac": [
+   [
+    0.237,
+    0.225,
+    0.212,
+    0.204,
+    0.195
+   ],
+   [
+    0.195,
+    0.184,
+    0.178,
+    0.174,
+    0.167
+   ],
+   [
+    0.159,
+    0.152,
+    0.147,
+    0.141,
+    0.13
+   ],
+   [
+    0.122,
+    0.115,
+    0.111,
+    0.106,
+    0.099
+   ],
+   [
+    0.068,
+    0.062,
+    0.052,
+    0.045,
+    0.038
+   ],
+   [
+    0.009,
+    0.006,
+    0.004,
+    0.004,
+    0.004
+   ],
+   [
+    0.002,
+    0.002,
+    0.001,
+    0.001,
+    0.001
+   ],
+   [
+    0.001,
+    0.001,
+    0.001,
+    0.0,
+    0.001
+   ],
+   [
+    0.001,
+    0.0,
+    0.0,
+    0.0,
+    0.001
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  ],
+  "seen_err_std_cm": [
+   [
+    0.7200000286102295,
+    0.7099999785423279,
+    0.699999988079071,
+    0.8299999833106995,
+    1.190000057220459
+   ],
+   [
+    0.7699999809265137,
+    0.7799999713897705,
+    0.7300000190734863,
+    0.8600000143051147,
+    1.2100000381469727
+   ],
+   [
+    0.8399999737739563,
+    0.8100000023841858,
+    0.7699999809265137,
+    0.8899999856948853,
+    1.2100000381469727
+   ],
+   [
+    0.949999988079071,
+    1.1100000143051147,
+    0.9800000190734863,
+    1.1100000143051147,
+    1.2699999809265137
+   ],
+   [
+    1.0700000524520874,
+    1.059999942779541,
+    1.159999966621399,
+    1.3300000429153442,
+    1.2799999713897705
+   ],
+   [
+    1.4299999475479126,
+    1.3700000047683716,
+    1.2999999523162842,
+    1.2300000190734863,
+    1.159999966621399
+   ],
+   [
+    0.8700000047683716,
+    0.9100000262260437,
+    0.9200000166893005,
+    0.949999988079071,
+    1.059999942779541
+   ],
+   [
+    1.0499999523162842,
+    1.0399999618530273,
+    1.0700000524520874,
+    1.0099999904632568,
+    1.0499999523162842
+   ],
+   [
+    0.8999999761581421,
+    0.8799999952316284,
+    0.8799999952316284,
+    0.9100000262260437,
+    1.0299999713897705
+   ],
+   [
+    1.0,
+    1.059999942779541,
+    1.090000033378601,
+    1.0299999713897705,
+    1.0399999618530273
+   ],
+   [
+    0.8399999737739563,
+    0.8799999952316284,
+    0.9100000262260437,
+    0.9599999785423279,
+    0.9399999976158142
+   ]
+  ],
+  "seen_err_bias_cm": [
+   [
+    0.10000000149011612,
+    0.09000000357627869,
+    0.09000000357627869,
+    0.11999999731779099,
+    0.20999999344348907
+   ],
+   [
+    0.10999999940395355,
+    0.11999999731779099,
+    0.11999999731779099,
+    0.12999999523162842,
+    0.20000000298023224
+   ],
+   [
+    0.12999999523162842,
+    0.12999999523162842,
+    0.10999999940395355,
+    0.12999999523162842,
+    0.23000000417232513
+   ],
+   [
+    0.11999999731779099,
+    0.18000000715255737,
+    0.17000000178813934,
+    0.18000000715255737,
+    0.23000000417232513
+   ],
+   [
+    0.1599999964237213,
+    0.18000000715255737,
+    0.2199999988079071,
+    0.23000000417232513,
+    0.20000000298023224
+   ],
+   [
+    0.10000000149011612,
+    0.14000000059604645,
+    0.18000000715255737,
+    0.15000000596046448,
+    0.14000000059604645
+   ],
+   [
+    0.03999999910593033,
+    0.05999999865889549,
+    0.05000000074505806,
+    0.03999999910593033,
+    0.07999999821186066
+   ],
+   [
+    0.029999999329447746,
+    0.019999999552965164,
+    0.03999999910593033,
+    0.019999999552965164,
+    0.05000000074505806
+   ],
+   [
+    0.05000000074505806,
+    0.009999999776482582,
+    0.03999999910593033,
+    0.029999999329447746,
+    0.03999999910593033
+   ],
+   [
+    0.03999999910593033,
+    0.019999999552965164,
+    0.03999999910593033,
+    0.029999999329447746,
+    0.029999999329447746
+   ],
+   [
+    0.03999999910593033,
+    0.029999999329447746,
+    0.03999999910593033,
+    0.05999999865889549,
+    0.05999999865889549
+   ]
+  ],
+  "seen_abs_p95_cm": 1.8636845350265503,
+  "seen_abs_p99_cm": 5.228969097137451,
+  "unseen_abs_mean_cm": 3.489786386489868,
+  "overall_mae_cm": 0.5553092956542969,
+  "scan_x": [
+   -0.3,
+   -0.15,
+   0.0,
+   0.14999999999999997,
+   0.3,
+   0.45,
+   0.5999999999999999,
+   0.75,
+   0.8999999999999999,
+   1.0499999999999998,
+   1.2
+  ],
+  "scan_y": [
+   -0.3,
+   -0.15,
+   0.0,
+   0.14999999999999997,
+   0.3
+  ]
+ },
+ "results": [
+  {
+   "rise_m": 0.03,
+   "kind": "pyramid",
+   "cell": [
+    0,
+    0
+   ],
+   "fell": false,
+   "reached_centre": true,
+   "crossed": true,
+   "ground_range_m": [
+    -0.12,
+    0.12
+   ],
+   "pelvis_rel_m": [
+    0.702,
+    0.759
+   ],
+   "tilt_deg": [
+    4.1,
+    11.3
+   ],
+   "progress_m": 6.81
+  },
+  {
+   "rise_m": 0.03,
+   "kind": "pit",
+   "cell": [
+    1,
+    0
+   ],
+   "fell": false,
+   "reached_centre": true,
+   "crossed": true,
+   "ground_range_m": [
+    -0.12,
+    0.12
+   ],
+   "pelvis_rel_m": [
+    0.673,
+    0.759
+   ],
+   "tilt_deg": [
+    3.7,
+    17.4
+   ],
+   "progress_m": 8.22
+  },
+  {
+   "rise_m": 0.03,
+   "kind": "pyramid",
+   "cell": [
+    2,
+    0
+   ],
+   "fell": false,
+   "reached_centre": true,
+   "crossed": true,
+   "ground_range_m": [
+    -0.12,
+    0.12
+   ],
+   "pelvis_rel_m": [
+    0.705,
+    0.754
+   ],
+   "tilt_deg": [
+    4.3,
+    9.4
+   ],
+   "progress_m": 7.47
+  },
+  {
+   "rise_m": 0.03,
+   "kind": "pit",
+   "cell": [
+    3,
+    0
+   ],
+   "fell": false,
+   "reached_centre": true,
+   "crossed": true,
+   "ground_range_m": [
+    -0.12,
+    0.12
+   ],
+   "pelvis_rel_m": [
+    0.699,
+    0.761
+   ],
+   "tilt_deg": [
+    3.8,
+    10.1
+   ],
+   "progress_m": 6.46
+  },
+  {
+   "rise_m": 0.0471,
+   "kind": "pyramid",
+   "cell": [
+    0,
+    1
+   ],
+   "fell": false,
+   "reached_centre": true,
+   "crossed": true,
+   "ground_range_m": [
+    -0.189,
+    0.189
+   ],
+   "pelvis_rel_m": [
+    0.674,
+    0.759
+   ],
+   "tilt_deg": [
+    4.0,
+    15.4
+   ],
+   "progress_m": 6.7
+  },
+  {
+   "rise_m": 0.0471,
+   "kind": "pit",
+   "cell": [
+    1,
+    1
+   ],
+   "fell": false,
+   "reached_centre": true,
+   "crossed": true,
+   "ground_range_m": [
+    -0.189,
+    0.189
+   ],
+   "pelvis_rel_m": [
+    0.706,
+    0.759
+   ],
+   "tilt_deg": [
+    3.7,
+    12.7
+   ],
+   "progress_m": 7.94
+  },
+  {
+   "rise_m": 0.0471,
+   "kind": "pyramid",
+   "cell": [
+    2,
+    1
+   ],
+   "fell": false,
+   "reached_centre": true,
+   "crossed": true,
+   "ground_range_m": [
+    -0.257,
+    0.189
+   ],
+   "pelvis_rel_m": [
+    0.677,
+    0.758
+   ],
+   "tilt_deg": [
+    3.5,
+    12.5
+   ],
+   "progress_m": 6.33
+  },
+  {
+   "rise_m": 0.0471,
+   "kind": "pit",
+   "cell": [
+    3,
+    1
+   ],
+   "fell": false,
+   "reached_centre": true,
+   "crossed": true,
+   "ground_range_m": [
+    -0.189,
+    0.189
+   ],
+   "pelvis_rel_m": [
+    0.676,
+    0.762
+   ],
+   "tilt_deg": [
+    3.7,
+    10.7
+   ],
+   "progress_m": 6.2
+  },
+  {
+   "rise_m": 0.0643,
+   "kind": "pyramid",
+   "cell": [
+    0,
+    2
+   ],
+   "fell": false,
+   "reached_centre": false,
+   "crossed": false,
+   "ground_range_m": [
+    0.0,
+    0.193
+   ],
+   "pelvis_rel_m": [
+    0.683,
+    0.757
+   ],
+   "tilt_deg": [
+    4.2,
+    14.5
+   ],
+   "progress_m": 1.06
+  },
+  {
+   "rise_m": 0.0643,
+   "kind": "pit",
+   "cell": [
+    1,
+    2
+   ],
+   "fell": false,
+   "reached_centre": true,
+   "crossed": false,
+   "ground_range_m": [
+    -0.257,
+    -0.0
+   ],
+   "pelvis_rel_m": [
+    0.693,
+    0.764
+   ],
+   "tilt_deg": [
+    3.4,
+    13.3
+   ],
+   "progress_m": 3.08
+  },
+  {
+   "rise_m": 0.0643,
+   "kind": "pyramid",
+   "cell": [
+    2,
+    2
+   ],
+   "fell": false,
+   "reached_centre": false,
+   "crossed": false,
+   "ground_range_m": [
+    -0.0,
+    0.129
+   ],
+   "pelvis_rel_m": [
+    0.705,
+    0.768
+   ],
+   "tilt_deg": [
+    4.3,
+    12.0
+   ],
+   "progress_m": 0.74
+  },
+  {
+   "rise_m": 0.0643,
+   "kind": "pit",
+   "cell": [
+    3,
+    2
+   ],
+   "fell": false,
+   "reached_centre": true,
+   "crossed": false,
+   "ground_range_m": [
+    -0.257,
+    -0.0
+   ],
+   "pelvis_rel_m": [
+    0.719,
+    0.77
+   ],
+   "tilt_deg": [
+    3.9,
+    11.5
+   ],
+   "progress_m": 3.28
+  },
+  {
+   "rise_m": 0.0814,
+   "kind": "pyramid",
+   "cell": [
+    0,
+    3
+   ],
+   "fell": false,
+   "reached_centre": false,
+   "crossed": true,
+   "ground_range_m": [
+    -0.0,
+    0.081
+   ],
+   "pelvis_rel_m": [
+    0.686,
+    0.762
+   ],
+   "tilt_deg": [
+    3.5,
+    10.0
+   ],
+   "progress_m": 4.19
+  },
+  {
+   "rise_m": 0.0814,
+   "kind": "pit",
+   "cell": [
+    1,
+    3
+   ],
+   "fell": true,
+   "reached_centre": true,
+   "crossed": false,
+   "ground_range_m": [
+    -0.326,
+    -0.0
+   ],
+   "pelvis_rel_m": [
+    0.416,
+    0.753
+   ],
+   "tilt_deg": [
+    4.7,
+    25.2
+   ],
+   "progress_m": 1.61
+  },
+  {
+   "rise_m": 0.0814,
+   "kind": "pyramid",
+   "cell": [
+    2,
+    3
+   ],
+   "fell": true,
+   "reached_centre": false,
+   "crossed": false,
+   "ground_range_m": [
+    0.0,
+    0.163
+   ],
+   "pelvis_rel_m": [
+    0.419,
+    0.783
+   ],
+   "tilt_deg": [
+    5.3,
+    17.8
+   ],
+   "progress_m": 0.77
+  },
+  {
+   "rise_m": 0.0814,
+   "kind": "pit",
+   "cell": [
+    3,
+    3
+   ],
+   "fell": true,
+   "reached_centre": true,
+   "crossed": false,
+   "ground_range_m": [
+    -0.326,
+    -0.0
+   ],
+   "pelvis_rel_m": [
+    0.404,
+    0.761
+   ],
+   "tilt_deg": [
+    4.4,
+    18.4
+   ],
+   "progress_m": 2.76
+  },
+  {
+   "rise_m": 0.0986,
+   "kind": "pyramid",
+   "cell": [
+    0,
+    4
+   ],
+   "fell": true,
+   "reached_centre": false,
+   "crossed": false,
+   "ground_range_m": [
+    0.0,
+    0.172
+   ],
+   "pelvis_rel_m": [
+    0.416,
+    0.759
+   ],
+   "tilt_deg": [
+    4.1,
+    17.3
+   ],
+   "progress_m": 0.86
+  },
+  {
+   "rise_m": 0.0986,
+   "kind": "pit",
+   "cell": [
+    1,
+    4
+   ],
+   "fell": false,
+   "reached_centre": true,
+   "crossed": false,
+   "ground_range_m": [
+    -0.394,
+    -0.0
+   ],
+   "pelvis_rel_m": [
+    0.694,
+    0.767
+   ],
+   "tilt_deg": [
+    4.3,
+    18.9
+   ],
+   "progress_m": 2.99
+  },
+  {
+   "rise_m": 0.0986,
+   "kind": "pyramid",
+   "cell": [
+    2,
+    4
+   ],
+   "fell": true,
+   "reached_centre": false,
+   "crossed": false,
+   "ground_range_m": [
+    -0.099,
+    0.099
+   ],
+   "pelvis_rel_m": [
+    0.431,
+    0.765
+   ],
+   "tilt_deg": [
+    4.8,
+    19.1
+   ],
+   "progress_m": 0.43
+  },
+  {
+   "rise_m": 0.0986,
+   "kind": "pit",
+   "cell": [
+    3,
+    4
+   ],
+   "fell": false,
+   "reached_centre": true,
+   "crossed": false,
+   "ground_range_m": [
+    -0.394,
+    -0.0
+   ],
+   "pelvis_rel_m": [
+    0.676,
+    0.764
+   ],
+   "tilt_deg": [
+    4.4,
+    15.6
+   ],
+   "progress_m": 2.54
+  },
+  {
+   "rise_m": 0.1157,
+   "kind": "pyramid",
+   "cell": [
+    0,
+    5
+   ],
+   "fell": false,
+   "reached_centre": false,
+   "crossed": false,
+   "ground_range_m": [
+    0.0,
+    0.0
+   ],
+   "pelvis_rel_m": [
+    0.687,
+    0.76
+   ],
+   "tilt_deg": [
+    3.8,
+    12.5
+   ],
+   "progress_m": 0.25
+  },
+  {
+   "rise_m": 0.1157,
+   "kind": "pit",
+   "cell": [
+    1,
+    5
+   ],
+   "fell": false,
+   "reached_centre": true,
+   "crossed": false,
+   "ground_range_m": [
+    -0.463,
+    -0.0
+   ],
+   "pelvis_rel_m": [
+    0.69,
+    0.762
+   ],
+   "tilt_deg": [
+    4.2,
+    14.1
+   ],
+   "progress_m": 2.62
+  },
+  {
+   "rise_m": 0.1157,
+   "kind": "pyramid",
+   "cell": [
+    2,
+    5
+   ],
+   "fell": false,
+   "reached_centre": false,
+   "crossed": false,
+   "ground_range_m": [
+    -0.463,
+    0.116
+   ],
+   "pelvis_rel_m": [
+    0.646,
+    0.765
+   ],
+   "tilt_deg": [
+    4.7,
+    13.2
+   ],
+   "progress_m": 0.38
+  },
+  {
+   "rise_m": 0.1157,
+   "kind": "pit",
+   "cell": [
+    3,
+    5
+   ],
+   "fell": false,
+   "reached_centre": true,
+   "crossed": false,
+   "ground_range_m": [
+    -0.463,
+    -0.0
+   ],
+   "pelvis_rel_m": [
+    0.679,
+    0.763
+   ],
+   "tilt_deg": [
+    5.0,
+    13.0
+   ],
+   "progress_m": 2.8
+  },
+  {
+   "rise_m": 0.1329,
+   "kind": "pyramid",
+   "cell": [
+    0,
+    6
+   ],
+   "fell": false,
+   "reached_centre": false,
+   "crossed": false,
+   "ground_range_m": [
+    0.0,
+    0.0
+   ],
+   "pelvis_rel_m": [
+    0.693,
+    0.758
+   ],
+   "tilt_deg": [
+    4.0,
+    10.6
+   ],
+   "progress_m": 0.19
+  },
+  {
+   "rise_m": 0.1329,
+   "kind": "pit",
+   "cell": [
+    1,
+    6
+   ],
+   "fell": true,
+   "reached_centre": true,
+   "crossed": false,
+   "ground_range_m": [
+    -0.531,
+    -0.0
+   ],
+   "pelvis_rel_m": [
+    0.414,
+    0.72
+   ],
+   "tilt_deg": [
+    5.1,
+    17.3
+   ],
+   "progress_m": 2.94
+  },
+  {
+   "rise_m": 0.1329,
+   "kind": "pyramid",
+   "cell": [
+    2,
+    6
+   ],
+   "fell": true,
+   "reached_centre": false,
+   "crossed": false,
+   "ground_range_m": [
+    -0.266,
+    0.068
+   ],
+   "pelvis_rel_m": [
+    0.431,
+    0.79
+   ],
+   "tilt_deg": [
+    3.9,
+    28.2
+   ],
+   "progress_m": 0.33
+  },
+  {
+   "rise_m": 0.1329,
+   "kind": "pit",
+   "cell": [
+    3,
+    6
+   ],
+   "fell": false,
+   "reached_centre": true,
+   "crossed": false,
+   "ground_range_m": [
+    -0.531,
+    -0.0
+   ],
+   "pelvis_rel_m": [
+    0.549,
+    0.762
+   ],
+   "tilt_deg": [
+    4.3,
+    16.0
+   ],
+   "progress_m": 2.63
+  },
+  {
+   "rise_m": 0.15,
+   "kind": "pyramid",
+   "cell": [
+    0,
+    7
+   ],
+   "fell": false,
+   "reached_centre": false,
+   "crossed": false,
+   "ground_range_m": [
+    0.0,
+    0.0
+   ],
+   "pelvis_rel_m": [
+    0.713,
+    0.761
+   ],
+   "tilt_deg": [
+    3.9,
+    19.5
+   ],
+   "progress_m": 0.32
+  },
+  {
+   "rise_m": 0.15,
+   "kind": "pit",
+   "cell": [
+    1,
+    7
+   ],
+   "fell": true,
+   "reached_centre": false,
+   "crossed": false,
+   "ground_range_m": [
+    -0.3,
+    -0.0
+   ],
+   "pelvis_rel_m": [
+    0.411,
+    0.752
+   ],
+   "tilt_deg": [
+    9.7,
+    15.0
+   ],
+   "progress_m": 0.74
+  },
+  {
+   "rise_m": 0.15,
+   "kind": "pyramid",
+   "cell": [
+    2,
+    7
+   ],
+   "fell": true,
+   "reached_centre": false,
+   "crossed": false,
+   "ground_range_m": [
+    -0.3,
+    0.0
+   ],
+   "pelvis_rel_m": [
+    0.449,
+    0.764
+   ],
+   "tilt_deg": [
+    3.8,
+    24.3
+   ],
+   "progress_m": 0.22
+  },
+  {
+   "rise_m": 0.15,
+   "kind": "pit",
+   "cell": [
+    3,
+    7
+   ],
+   "fell": true,
+   "reached_centre": false,
+   "crossed": false,
+   "ground_range_m": [
+    -0.45,
+    -0.0
+   ],
+   "pelvis_rel_m": [
+    0.431,
+    0.716
+   ],
+   "tilt_deg": [
+    3.9,
+    57.3
+   ],
+   "progress_m": 0.9
+  }
+ ]
+}

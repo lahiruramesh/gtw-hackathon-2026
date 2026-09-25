@@ -137,3 +137,47 @@ evaluation rather than learning (see `effort_log.csv`).
 2. No fall under: friction ≥ 0.5, payload ≤ 3 kg, pushes ≤ 0.5 m/s, 20 ms latency.
 3. Joint torque and velocity within 90 % of limits over the whole evaluation suite.
 4. Then: gantry (harness) tests on the real robot, then supervised floor trials, then shadow operation.
+
+## 7. Stairs
+
+### v1: from scratch, no curriculum (failed)
+
+Same PPO recipe, plus a 55-point height scan and a 24 m map of pyramid staircases with 3–15 cm steps, shuffled.
+Every env saw every step height from the first update. After 202M steps, episodes were still 457 of 1000 steps on
+average, and about 89 % ended in a fall. In plain MuJoCo on its own training terrain (`results/stairs/eval_v1.json`):
+
+| step height | falls | reached top | crossed |
+|---|---|---|---|
+| flat | 1/5 | 5/5 | 4/5 |
+| 3 cm | 3/5 | 5/5 | 2/5 |
+| 5–7 cm | 8/10 | 9/10 | 2/10 |
+| 9–15 cm | 13/16 | 0/16 | 0/16 |
+
+On the held-out test stairs it crossed 1 of 32 staircases and fell on 27 (`results/stairs/eval_v1_heldout.json`). That is worse than
+Unitree's blind flat-ground policy, which crosses 4 cm steps. It also was not evaluated on held-out terrain: training and
+evaluation used the same terrain seed.
+
+### v2: terrain curriculum + warm start (training)
+
+Three changes to how it is trained, none to the reward:
+
+* **Terrain curriculum** (legged_gym style, as in Isaac Lab's and mjlab's G1 rough-terrain tasks). An 8 × 8 grid, where
+  each row is one level (2, 4, … 16 cm steps). Columns alternate between pyramids (walk down from the centre) and pits
+  (climb out of the centre). Each env spawns in the middle of a staircase of its level. It moves up a level after
+  walking more than 1.9 m from its spawn point, which means crossing the stairs. It moves down after a fall, or after
+  covering less than half the commanded distance. Envs start on levels 0–2. An env that passes the top level gets a
+  random level, so easy terrain isn't forgotten.
+* **Warm start from the flat v1 policy.** The height-scan inputs get zero weights in the first layer, so at step 0 the
+  policy walks exactly like v1 (checked: maximum action difference 0.0). The observation normaliser for the scan is
+  initialised from terrain statistics.
+* **Held-out evaluation.** `stairs_eval` uses a `test` layout by default, with step heights between the training levels
+  (3.0, 4.7, … 15 cm) and a 27 cm tread instead of 30 cm. The PPO eval env samples every level uniformly;
+  `eval/episode_crossed` is the fraction of eval episodes that crossed their staircase.
+
+Also: walking off the map ends the episode but is no longer punished as a fall.
+
+Results: pending (`g1-stairs-v2`, 200M steps on a T4).
+
+Still open, in order: randomise actuation delay (both flat policies fall at 20 ms); check shin and knee collisions with
+step edges (the Playground G1 scene only collides the feet with the floor, so stairs in simulation are easier than
+real ones); compare against mjlab's `Mjlab-Velocity-Rough-Unitree-G1` task.
