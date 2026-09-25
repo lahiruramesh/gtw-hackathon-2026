@@ -119,21 +119,32 @@ def certified_height(results) -> float:
     return cert
 
 
-def cross_cell(r: StairsPolicyRunner, ix: int, iy: int, vx=0.5, step=0.25, renderer=None, duration=16.0):
+def cross_cell(r: StairsPolicyRunner, ix: int, iy: int, vx=0.5, step=0.25, renderer=None, duration=16.0,
+               perturb=None):
     x0 = -T.GRID_HALF + ix * T.CELL
     y = -T.GRID_HALF + (iy + 0.5) * T.CELL
     r.place(x0 + 0.15, y)
     r.reset_scan()
-    track, tilt, yaws = [], [], []
+    track, tilt, yaws, torque, near_limit = [], [], [], [], []
+    m = r.m
+    jnt = m.actuator_trnid[:, 0]
+    tau_max = np.abs(m.jnt_actfrcrange[jnt]).max(1)            # motor torque limits (G1 spec)
+    lo, hi = m.jnt_range[jnt].T
+    qadr = m.jnt_qposadr[jnt]
 
     def schedule(t):
+        # the PD request is clipped at the joint's torque limit: count ticks where any motor saturates
+        torque.append(bool(np.any(np.abs(r.d.actuator_force) > tau_max)))
+        q = r.d.qpos[qadr]
+        near_limit.append(bool(np.any((q < lo + 0.02) | (q > hi - 0.02))))
         track.append(r.d.qpos[:3].copy())
         q = r.d.qpos
         yaws.append(np.degrees(np.arctan2(2 * (q[3] * q[6] + q[4] * q[5]), 1 - 2 * (q[5] ** 2 + q[6] ** 2))))
         tilt.append(np.degrees(np.arccos(np.clip(r.d.xmat[r.torso].reshape(3, 3)[2, 2], -1, 1))))
         return (vx, step)
 
-    summary, frames, _, _ = r.run(vx=vx, step_len=step, duration=duration, renderer=renderer, schedule=schedule)
+    summary, frames, _, _ = r.run(vx=vx, step_len=step, duration=duration, renderer=renderer, schedule=schedule,
+                                  perturb=perturb)
     p = np.array(track)
     ground = T.lookup(r.grid, p[:, :2])
     kind = int(r.kinds[iy, ix])
@@ -150,10 +161,20 @@ def cross_cell(r: StairsPolicyRunner, ix: int, iy: int, vx=0.5, step=0.25, rende
         "tilt_deg": [round(float(np.median(tilt)), 1), round(float(np.max(tilt)), 1)],
         "progress_m": round(float(p[:, 0].max() - x0), 2),
         "heading_dev_deg": round(float(np.max(np.abs(yaws))), 1),   # started facing east (0 deg)
+        # robot safety: share of time with a motor at its torque limit, and with a joint at its range limit
+        "torque_sat_frac": round(float(np.mean(torque)), 3),
+        "joint_limit_frac": round(float(np.mean(near_limit)), 3),
     }, frames
 
 
 START_VARIANTS = [(0.0, 0.0), (-0.35, 0.12), (0.35, -0.12)]   # (lateral offset m, heading rad)
+PERTURBS = {   # disturbance presets for certification (g1pipe.evaluate.Perturb)
+    "none": {},
+    "push": {"push_every_s": 3.0, "push_vel": 0.3},       # 0.3 m/s shove in a random direction every 3 s
+    "lowfric": {"friction": 0.5},                         # half the nominal foot-floor friction
+    "payload": {"payload_kg": 5.0},                       # 5 kg on the torso
+    "delay": {"action_delay_steps": 1},                   # 20 ms actuation delay
+}
 
 
 def main():
@@ -169,6 +190,8 @@ def main():
     ap.add_argument("--out", default=None, help="write per-cell results as JSON")
     ap.add_argument("--starts", type=int, default=1, choices=[1, 3],
                     help="3: also start every crossing 35 cm to each side and turned 7 deg (3x the runs)")
+    ap.add_argument("--perturb", default="none", choices=list(PERTURBS),
+                    help="disturbance preset: pushes, low friction, payload, actuation delay")
     ap.add_argument("--scan", default="true", choices=["true", "camera"],
                     help="height scan from the known terrain, or from the simulated head depth camera")
     a = ap.parse_args()
@@ -183,13 +206,15 @@ def main():
         renderer = mujoco.Renderer(r.m, 480, 640)
     results, frames_all, filmed = [], [], set()
     place = r.place
+    from g1pipe.evaluate import Perturb
+    perturb = Perturb(**PERTURBS[a.perturb])
     cells = [(ix, iy) for iy in range(T.GRID) for ix in range(min(a.cols, T.GRID))]
     for dy, yaw in START_VARIANTS[:a.starts]:
         r.place = lambda x, y, yaw0=0.0, dy=dy, yaw=yaw: place(x, y + dy, yaw)
         for ix, iy in cells:
             rise = float(r.rises[iy, ix])
             film = renderer if (renderer and rise not in filmed) else None
-            res, frames = cross_cell(r, ix, iy, a.vx, a.step, renderer=film)
+            res, frames = cross_cell(r, ix, iy, a.vx, a.step, renderer=film, perturb=perturb)
             if film:
                 filmed.add(rise)
                 frames_all += frames

@@ -30,6 +30,20 @@ export PYTHONPATH=.
 | **Watch it walk** (live 3D, keyboard control) | `scripts/view.sh --run v1` (or `--run nodr`) | Mac |
 | **E2/E3** evaluate + stress + demo video | `uv run python scripts/eval_suite.py runs/g1-steplength-v1/run/params.pkl --tag v1` | Mac |
 
+### Stairs training pipeline (AWS GPU)
+
+Best policy so far: `g1-stairs-v12` / `v13` (see [docs/effort_log.csv](docs/effort_log.csv)); the rules behind
+the pipeline are in [docs/lessons.md](docs/lessons.md).
+
+| Step | Command | Where |
+|---|---|---|
+| Train one run end to end: GPU box, budget cap, preflight, train, rank every checkpoint, stop | `uv run python scripts/g1job.py --run g1-stairs-v14 --init-from runs/g1-stairs-v13/run/params.pkl --budget-min 90 -- --task stairs --leg-action-scale 1.0 --lr 1e-4 --timesteps 300000000 --scan-model camera` | Mac → AWS |
+| Preflight only (engine parity, throughput, warm start) | `uv run python -m g1pipe.preflight --init-from <params> --leg-action-scale 1.0` | GPU box (CPU works, slowly) |
+| Rank checkpoints (2048 batched crossings each, 95 % intervals) | `uv run python -m g1pipe.gpu_eval runs/<run>/run/ckpt_*.pkl --scan camera` | GPU box |
+| Certify a policy + write its policy card | `uv run python scripts/certify.py runs/<run>/run/<ckpt>.pkl --target-cm 10` | Mac, ~20 min |
+| Strict held-out test by hand | `uv run python -m g1pipe.stairs_eval <params> --vx 0.7 --starts 3 [--scan camera] [--perturb push]` | Mac |
+| Box by hand | `scripts/aws_box.sh status / start / stop / ssh / sync / train` | Mac |
+
 Kaggle needs `~/.kaggle/kaggle.json` (Kaggle → Settings → API → Create token) and a phone-verified account (for GPU + internet).
 
 ## Web app (SKF Skill Studio)
@@ -63,7 +77,12 @@ make api   # :8000        make worker        make web   # http://localhost:3100
 | `scripts/eval_suite.py` | E2 tracking grid, E3 stress tests, on-the-fly step change demo |
 | `scripts/kaggle_job.py` | Bundle + push training to a private Kaggle GPU kernel, poll, pull results |
 | `g1pipe/stairs_terrain.py`, `g1pipe/stairs_env.py` | Stairs task: 8 × 8 curriculum grid (row = level, 2–16 cm steps; pyramids to walk down, pits to climb out of) + 55-point height scan in the observation + per-env terrain curriculum; `train.py --task stairs [--init-from flat params.pkl]` |
-| `g1pipe/stairs_eval.py` | Crosses staircases in plain MuJoCo on the held-out `test` layout (unseen step heights and tread); reached-centre / crossed / fell per step height |
+| `g1pipe/stairs_eval.py` | Crosses staircases in plain MuJoCo on the held-out `test` layout (unseen step heights and tread); crossed / fell / certified height, several start poses, disturbances, robot-safety numbers |
+| `g1pipe/preflight.py` | Before training: MJX-vs-MuJoCo parity on stair poses, throughput, warm-start identity |
+| `g1pipe/gpu_eval.py` | Batched held-out evaluation in MJX: ranks every checkpoint of a run with thousands of crossings |
+| `scripts/certify.py` | Certification suite (strict, camera, speed, tread, push, friction, payload, delay) → policy card |
+| `scripts/g1job.py`, `scripts/aws_box.sh`, `scripts/aws_bootstrap.sh` | One-command AWS training job; the box helper; box setup |
+| `docs/lessons.md` | What the stairs runs taught, as rules the pipeline enforces |
 | `jev_agent/` | Self-learning high-level agent: TypeSafe Jev picks the gait from sensors + mission, code gates it, learner adapts. See [jev_agent/README.md](jev_agent/README.md) |
 | `docs/effort_log.csv` | Hours per stage — evidence for "how much effort is required?" |
 
