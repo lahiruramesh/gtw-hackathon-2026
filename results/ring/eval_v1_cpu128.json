@@ -1,0 +1,37 @@
+[
+ {
+  "params": "runs/g1-ring-v1b/run/params.pkl",
+  "episodes": 128,
+  "success": 0,
+  "success_rate": 0.0,
+  "success_ci95": [
+   0.0,
+   0.02913799589810803
+  ],
+  "lifted": 125,
+  "lifted_rate": 0.9765625,
+  "lifted_ci95": [
+   0.9333551190997279,
+   0.9919977285598879
+  ],
+  "placed": 120,
+  "placed_rate": 0.9375,
+  "placed_ci95": [
+   0.8815107956585421,
+   0.9679934579306134
+  ],
+  "raceway": 1,
+  "raceway_rate": 0.0078125,
+  "raceway_ci95": [
+   0.0013803963628788857,
+   0.04292731834932121
+  ],
+  "dropped": 1,
+  "dropped_rate": 0.0078125,
+  "dropped_ci95": [
+   0.0013803963628788857,
+   0.04292731834932121
+  ],
+  "xy_err_median_mm": 0.9125725030899048
+ }
+]

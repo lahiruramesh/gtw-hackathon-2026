@@ -1,0 +1,1326 @@
+<title>Stairs to Release</title>
+<meta name="description" content="Technical report: a simulation training and validation pipeline for stair climbing on the Unitree G1 humanoid, with measured results, their limits, and why the release gate withheld the policy.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --ground:#f4f6f5; --paper:#ffffff; --ink:#14191c; --ink-2:#465158; --muted:#737e84;
+  --rule:#d9dfdc; --rule-2:#e9eeeb; --accent:#1d5aa0; --accent-soft:#e5edf7;
+  --signal:#b9501c; --signal-soft:#f8e9e0;
+  --good:#1c7a45; --good-soft:#e2f2e8; --warn:#9a6300; --warn-soft:#f7eed9; --crit:#b3302a; --crit-soft:#f8e3e1;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --grid:#e4e8e6; --axis:#9aa4a8;
+  --seq0:#f0f4f9; --seq1:#cde2fb; --seq2:#9ec5f4; --seq3:#5598e7; --seq4:#256abf; --seq5:#104281;
+  --display:"Archivo", "Helvetica Neue", Arial, sans-serif;
+  --serif:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --mono:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#0f1315; --paper:#161b1e; --ink:#e9eeec; --ink-2:#b3bdc1; --muted:#87939a;
+    --rule:#2a3237; --rule-2:#20272b; --accent:#74a9ea; --accent-soft:#182636;
+    --signal:#e98a55; --signal-soft:#2e1f17;
+    --good:#4cc07f; --good-soft:#14281d; --warn:#e0a93a; --warn-soft:#2b2312; --crit:#ef736b; --crit-soft:#2f1817;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+    --grid:#262e33; --axis:#5f6b72;
+    --seq0:#1a2229; --seq1:#15324f; --seq2:#184f95; --seq3:#256abf; --seq4:#3987e5; --seq5:#86b6ef;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#0f1315; --paper:#161b1e; --ink:#e9eeec; --ink-2:#b3bdc1; --muted:#87939a;
+  --rule:#2a3237; --rule-2:#20272b; --accent:#74a9ea; --accent-soft:#182636;
+  --signal:#e98a55; --signal-soft:#2e1f17;
+  --good:#4cc07f; --good-soft:#14281d; --warn:#e0a93a; --warn-soft:#2b2312; --crit:#ef736b; --crit-soft:#2f1817;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --grid:#262e33; --axis:#5f6b72;
+  --seq0:#1a2229; --seq1:#15324f; --seq2:#184f95; --seq3:#256abf; --seq4:#3987e5; --seq5:#86b6ef;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.62;margin:0;padding-inline:16px;padding-block:0 64px;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-underline-offset:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+.shell{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr);gap:48px}
+@media (max-width:980px){.shell{grid-template-columns:minmax(0,1fr);gap:0}.toc{display:none}}
+.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;padding-top:40px;font-family:var(--display);font-size:13px;max-height:calc(100vh - 48px);overflow:auto}
+.toc b{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:600}
+.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:2px;counter-reset:t}
+.toc li a{display:grid;grid-template-columns:24px 1fr;padding:4px 0;color:var(--ink-2);text-decoration:none;line-height:1.3}
+.toc li a span{font-family:var(--mono);font-size:11px;color:var(--muted);padding-top:1px}
+.toc li a:hover{color:var(--accent)}
+main{min-width:0;max-width:860px}
+.doc-head{padding-top:40px;border-bottom:2px solid var(--ink);padding-bottom:28px;margin-bottom:8px}
+.doc-meta{display:flex;flex-wrap:wrap;gap:6px 22px;font-family:var(--mono);font-size:12px;color:var(--ink-2);margin-bottom:26px;text-transform:uppercase;letter-spacing:.04em}
+.doc-meta span b{color:var(--ink);font-weight:600}
+h1{font-family:var(--display);font-stretch:112%;font-weight:800;font-size:clamp(34px,5.4vw,56px);line-height:1.02;letter-spacing:-.02em;margin:0 0 16px;text-wrap:balance}
+.sub{font-family:var(--display);font-size:clamp(17px,2.1vw,21px);line-height:1.4;color:var(--ink-2);max-width:40em;margin:0 0 22px;text-wrap:balance;font-weight:500}
+.authors{font-family:var(--display);font-size:14px;color:var(--ink-2)}
+.authors b{color:var(--ink);font-weight:700}
+h2{font-family:var(--display);font-stretch:108%;font-weight:750;font-size:clamp(25px,3vw,32px);line-height:1.15;letter-spacing:-.01em;margin:0 0 6px;text-wrap:balance}
+h2 .n{font-family:var(--mono);font-size:.5em;font-weight:600;color:var(--accent);letter-spacing:.02em;display:block;margin-bottom:6px}
+h3{font-family:var(--display);font-weight:700;font-size:20px;line-height:1.25;margin:34px 0 8px;text-wrap:balance}
+h4{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.01em;margin:22px 0 6px}
+section{padding-top:56px;scroll-margin-top:12px}
+p{margin:0 0 14px;max-width:68ch}
+.lede{font-size:19px;color:var(--ink-2);max-width:62ch;margin-bottom:22px}
+ul,ol{max-width:66ch;padding-left:22px;margin:0 0 14px}
+li{margin-bottom:6px}
+code,.mono{font-family:var(--mono);font-size:.82em}
+code{background:var(--rule-2);padding:1px 5px;border-radius:3px}
+small,.note{font-size:14px;color:var(--muted)}
+hr{border:0;border-top:1px solid var(--rule);margin:40px 0}
+
+.abstract{background:var(--paper);border:1px solid var(--rule);padding:22px 24px;margin:28px 0 0}
+.abstract h4{margin:0 0 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.abstract p{font-size:16.5px;max-width:none}
+.abstract p:last-child{margin-bottom:0}
+
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin:22px 0 0}
+@media (max-width:760px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile{background:var(--paper);padding:16px 16px 14px;display:flex;flex-direction:column;gap:4px}
+.tile .l{font-family:var(--display);font-size:12.5px;color:var(--ink-2);line-height:1.3;font-weight:600}
+.tile .v{font-family:var(--display);font-weight:750;font-size:34px;line-height:1.05;letter-spacing:-.02em}
+.tile .v small{font-size:15px;color:var(--ink-2);font-weight:600;letter-spacing:0}
+.tile .d{font-family:var(--mono);font-size:11.5px;color:var(--muted);line-height:1.4}
+
+.fig{background:var(--paper);border:1px solid var(--rule);padding:18px 18px 14px;margin:22px 0 26px}
+.fig .ft{font-family:var(--display);font-weight:700;font-size:15px;margin:0 0 2px}
+.fig .fs{font-family:var(--display);font-size:13px;color:var(--ink-2);margin:0 0 12px;line-height:1.4}
+.fig .cap{font-size:13.5px;color:var(--muted);margin:10px 0 0;line-height:1.5;max-width:none}
+.chart{width:100%;position:relative}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{font-family:var(--display);fill:var(--ink-2)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-family:var(--display);font-size:12.5px;color:var(--ink-2);margin:0 0 8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+#tip{position:fixed;pointer-events:none;z-index:50;background:var(--ink);color:var(--paper);font-family:var(--display);font-size:12.5px;line-height:1.4;padding:7px 10px;border-radius:4px;max-width:280px;opacity:0;transition:opacity .08s}
+#tip b{font-weight:700}
+
+.tw{overflow-x:auto;margin:18px 0 24px;border:1px solid var(--rule);background:var(--paper)}
+table{border-collapse:collapse;width:100%;font-family:var(--display);font-size:13.5px;line-height:1.4}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule-2);vertical-align:top}
+thead th{font-weight:700;color:var(--ink-2);font-size:12px;letter-spacing:.03em;border-bottom:1px solid var(--rule);background:var(--paper);white-space:nowrap}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+tr.hl td{background:var(--accent-soft)}
+.pill{display:inline-block;font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:3px;white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.crit{background:var(--crit-soft);color:var(--crit)}
+.pill.info{background:var(--accent-soft);color:var(--accent)}
+
+.callout{border-left:3px solid var(--accent);background:var(--accent-soft);padding:14px 18px;margin:20px 0;font-size:16px}
+.callout.risk{border-color:var(--signal);background:var(--signal-soft)}
+.callout p:last-child{margin-bottom:0}
+.callout b.k{font-family:var(--display);font-size:12px;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:4px}
+
+.thesis{font-family:var(--display);font-weight:600;font-size:clamp(19px,2.3vw,23px);line-height:1.35;border-top:2px solid var(--ink);border-bottom:1px solid var(--rule);padding:18px 0;margin:22px 0 26px;text-wrap:balance;max-width:none}
+
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;margin:18px 0 8px}
+.flow .st{flex:1 1 120px;background:var(--paper);border:1px solid var(--rule);padding:10px 12px;font-family:var(--display);font-size:12.5px;line-height:1.35;position:relative}
+.flow .st b{display:block;font-size:13.5px;margin-bottom:3px}
+.flow .st .t{font-family:var(--mono);font-size:10.5px;color:var(--muted);display:block;margin-top:4px}
+.flow .st.gate{border-color:var(--accent);background:var(--accent-soft)}
+.flow .ar{align-self:center;color:var(--axis);font-family:var(--mono)}
+@media (max-width:640px){.flow .ar{display:none}}
+
+.layers{display:grid;gap:6px;margin:18px 0}
+.layer{display:grid;grid-template-columns:150px minmax(0,1fr) 110px;gap:14px;align-items:start;background:var(--paper);border:1px solid var(--rule);padding:12px 14px;font-family:var(--display);font-size:13.5px;line-height:1.4}
+.layer .who{font-weight:700}
+.layer .rate{font-family:var(--mono);font-size:11.5px;color:var(--muted);text-align:right}
+@media (max-width:640px){.layer{grid-template-columns:1fr}.layer .rate{text-align:left}}
+
+.ipo{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin:10px 0 22px}
+@media (max-width:760px){.ipo{grid-template-columns:1fr}}
+.ipo .col{background:var(--paper);padding:12px 14px;font-family:var(--display);font-size:13.5px;line-height:1.45;min-width:0}
+.ipo .col .h{display:block;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.ipo ul,.ipo ol{padding-left:18px;margin:0}
+.ipo li{margin-bottom:5px}
+.ipo .tw table{font-size:12.5px}
+.ipo .tw td{padding:5px 8px}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:700px){.two{grid-template-columns:1fr}}
+.card{background:var(--paper);border:1px solid var(--rule);padding:14px 16px;font-size:15px}
+.card h4{margin-top:0}
+.card p{font-size:15px}
+.card ul{font-size:15px;padding-left:18px}
+
+video{width:100%;max-width:100%;display:block;background:#000;aspect-ratio:16/9}
+.vids{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0}
+@media (max-width:700px){.vids{grid-template-columns:1fr}}
+.vid{background:var(--paper);border:1px solid var(--rule);padding:10px}
+.vid .vt{font-family:var(--display);font-weight:700;font-size:14px;margin:8px 2px 2px}
+.vid .vc{font-family:var(--display);font-size:12.5px;color:var(--ink-2);margin:0 2px 2px;line-height:1.4}
+.vid.big{grid-column:1/-1}
+
+.heat td.c{text-align:center;font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums;border:2px solid var(--paper);padding:7px 4px}
+.hbar{display:inline-block;height:8px;border-radius:0 3px 3px 0;background:var(--s1);vertical-align:middle;margin-right:6px}
+
+.weights{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 18px;margin:6px 0 14px;font-family:var(--display);font-size:12.5px}
+@media (max-width:700px){.weights{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.weights label{display:flex;flex-direction:column;gap:2px;color:var(--ink-2)}
+.weights label span{display:flex;justify-content:space-between}
+.weights input{width:100%;accent-color:var(--accent)}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:4px;overflow:hidden;margin-bottom:12px}
+.seg button{font-family:var(--display);font-size:13px;font-weight:600;background:var(--paper);color:var(--ink-2);border:0;padding:6px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.score-cell{display:flex;align-items:center;gap:8px}
+.dots{display:inline-flex;gap:2px}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--rule)}
+.dots i.on{background:var(--accent)}
+
+.calc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 18px;font-family:var(--display);font-size:13px}
+@media (max-width:700px){.calc{grid-template-columns:1fr 1fr}}
+.calc label{display:flex;flex-direction:column;gap:4px;color:var(--ink-2)}
+.calc input{font-family:var(--mono);font-size:14px;padding:6px 8px;border:1px solid var(--rule);border-radius:3px;background:var(--ground);color:var(--ink);width:100%}
+.calc-out{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin-top:14px}
+@media (max-width:700px){.calc-out{grid-template-columns:1fr}}
+.calc-out div{background:var(--paper);padding:12px 14px;font-family:var(--display)}
+.calc-out b{display:block;font-size:24px;font-weight:750}
+.calc-out span{font-size:12.5px;color:var(--ink-2)}
+details{border:1px solid var(--rule);background:var(--paper);padding:10px 14px;margin:10px 0}
+details summary{cursor:pointer;font-family:var(--display);font-weight:700;font-size:14px}
+details[open] summary{margin-bottom:8px}
+.refs li{font-size:14.5px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div id="tip" role="tooltip"></div>
+<div class="shell">
+<nav class="toc" aria-label="Contents">
+  <b>Contents</b>
+  <ol>
+    <li><a href="#problem"><span>1</span>The problem</a></li>
+    <li><a href="#methods"><span>2</span>Learning methods compared</a></li>
+    <li><a href="#approach"><span>3</span>Our approach</a></li>
+    <li><a href="#impl"><span>4</span>Technical implementation</a></li>
+    <li><a href="#dataflow"><span></span>↳ Inputs → outputs</a></li>
+    <li><a href="#results"><span>5</span>Results</a></li>
+    <li><a href="#why"><span>6</span>Why it works, where it doesn't</a></li>
+    <li><a href="#tradeoffs"><span>7</span>Trade-offs</a></li>
+    <li><a href="#eval"><span>8</span>Evaluating the pipeline</a></li>
+    <li><a href="#studio"><span>9</span>Skill Studio platform</a></li>
+    <li><a href="#value"><span>10</span>Business value and KPIs</a></li>
+    <li><a href="#usecase"><span>11</span>Proposed SKF pipeline</a></li>
+    <li><a href="#roadmap"><span>12</span>Roadmap and conclusion</a></li>
+    <li><a href="#appendix"><span>A</span>Reproduce and references</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="doc-head">
+  <div class="doc-meta">
+    <span>Report <b>TR-G1-STAIRS-01</b></span>
+    <span>Rev <b>1.1</b></span>
+    <span>Date <b>2026-09-26</b></span>
+    <span>Robot <b>Unitree G1</b></span>
+    <span>Task <b>Stairs · step length</b></span>
+  </div>
+  <h1>Stairs to Release: a simulation training and validation pipeline for industrial humanoid locomotion</h1>
+  <p class="sub">How we trained a Unitree G1 to climb staircases in simulation, measured it with statistics rather than demos, and built a release gate that withheld the policy when the evidence fell short.</p>
+  <div class="authors">Authors <b>Lahiru</b> · <b>Ahmed</b> · <b>Roth</b> &nbsp;·&nbsp; Industrial partner context: SKF, machine elements and production</div>
+
+  <div class="abstract">
+    <h4>Abstract</h4>
+    <p>The question is how to make humanoid training in an industrial setting easier and more efficient. We argue that the bottleneck is not the learning algorithm but everything around it: simulation fidelity, evaluation that can be trusted, and a release process. We built a full pipeline for two locomotion skills on the Unitree G1: commanded <b>step length</b> on flat ground, and <b>vision-based stair climbing</b>. We used reinforcement learning (Brax PPO on MuJoCo Playground), a terrain curriculum, warm starts, domain randomisation and a height scan from a simulated head depth camera.</p>
+    <p><b>Main result: a simulation training and validation framework demonstrated substantial locomotion improvements and correctly withheld release, because perception and latency requirements remained unmet.</b></p>
+    <p>Over 14 stair versions, falls on staircases kept out of training went from 28 of 32 (v1) to <b>1 of 96</b> (v14) when the policy reads the <i>true</i> terrain height from the simulator. With the rendered head camera, the sensor it would deploy with, v14 crossed 86 of 96 with 8 falls. That is below our 90 % crossing target, and it limits the camera-qualified step height to <b>6.4 cm</b> against a 10 cm target. With one extra control step of actuation delay (40 ms in total) 17 of 32 runs fell, and with a 5 kg torso payload 4 of 32 fell. <b>v14 did not pass its release gate.</b> "Qualified" in this report means only that a policy passed our stated simulation tests. It is an internal gate, not evidence of conformity to any safety standard, and nothing has run on hardware.</p>
+    <p>Three limits apply to every number here. The staircases were never trained on, but we used their results to choose checkpoints and plan changes, so they are a <b>validation</b> benchmark, not a final test. In the camera condition the controller still receives exact base velocity and pose from the simulator. Shin and knee collisions with the stairs are not modelled. We trace the largest gains to making the simulator's foot contact and the action range physically right, but each version changed several things at once, so these attributions are not controlled. The data favour a layered design: RL for locomotion, demonstrations for manipulation, and deterministic sequencing for workflows. A language-model supervisor did not measurably change safety and remains an optional experiment. The <b>SKF Skill Studio</b> platform makes runs repeatable: each iteration takes about an hour and US$1–3 of GPU time, and releases are approved by role. Whether it reduces <i>engineering effort</i>, the dominant cost, has not been measured yet. §12 sets one bounded milestone to settle both questions.</p>
+  </div>
+
+  <div class="tiles" aria-label="Headline results">
+    <div class="tile"><span class="l">Release gate, v14</span><span class="v" style="color:var(--crit)">Not<small> passed</small></span><span class="d">camera, latency and payload<br>requirements unmet</span></div>
+    <div class="tile"><span class="l">Falls, strict test, true terrain scan</span><span class="v">1<small> / 96</small></span><span class="d">95 % CI 0.2–5.7 % (not a guarantee)<br>v1: 28 / 32</span></div>
+    <div class="tile"><span class="l">Camera-qualified step height</span><span class="v">6.4<small> cm</small></span><span class="d">target 10 cm · camera: 8 / 96 fell<br>true scan: 9.9 cm</span></div>
+    <div class="tile"><span class="l">Time per training iteration</span><span class="v">~1<small> h</small></span><span class="d">v14: 41 min end to end<br>≈33 GPU-h for the programme</span></div>
+  </div>
+
+  <div class="callout risk" style="margin-top:22px"><b class="k">Release status of v14 (simulation only)</b>
+    <div class="tw" style="margin:8px 0 10px"><table>
+      <thead><tr><th>Test</th><th class="num">v14 result</th><th>Interpretation</th></tr></thead>
+      <tbody>
+        <tr><td>True terrain scan (strict)</td><td class="num">95/96 crossed · 1 fell</td><td>Promising, but the policy reads terrain height directly from the simulator</td></tr>
+        <tr><td>Rendered head camera</td><td class="num">86/96 crossed · 8 fell</td><td>Below the 90 % crossing target; camera-qualified envelope only 6.4 cm</td></tr>
+        <tr><td>Actuation delay +1 step (40 ms total)</td><td class="num">17/32 fell</td><td>Major unresolved robustness problem</td></tr>
+        <tr><td>5 kg torso payload</td><td class="num">4/32 fell</td><td>Payload capability remains limited</td></tr>
+        <tr><td><b>Release gate</b></td><td class="num"><b>not passed</b></td><td>Correctly withheld</td></tr>
+      </tbody>
+    </table></div>
+    <p>All tests on this page ran on a validation suite that also guided development (§8.1). The evaluator applied a 20 ms actuation delay in every condition, including "strict" (§5.5).</p>
+  </div>
+
+  <details style="margin-top:14px">
+    <summary>What changed in Rev 1.1 (after external review)</summary>
+    <ul style="margin:6px 0 0;font-size:15px">
+      <li>Headline rewritten around the gate decision. "Certified" is replaced by "qualified in simulation" throughout (tool names such as <code>certify.py</code> are unchanged).</li>
+      <li>The held-out staircases are called a <b>validation</b> suite, because we used them for development. A frozen, untouched final test is now the first milestone (§12).</li>
+      <li>§8.1 now says what the confidence intervals do and do not establish, including how many zero-fall runs a 1 % bound needs (381).</li>
+      <li>Physical-realism limits are spelled out: shin and knee collisions, sole geometry, and what agreement between two engines does not prove (§4.6, §6.2).</li>
+      <li>§5.7 lists every simulator-provided signal that the camera condition still uses.</li>
+      <li>The language-model supervisor is reclassified as an optional experiment. It is separated from VLA models, and the tilt stop is flagged as undefined (§2, §5.8).</li>
+      <li>The engineering-effort benefit is marked as unmeasured, with a measurement plan (§10.4). The "a skill is just a file" claim is limited to supported task types (§9.2).</li>
+      <li>Corrections: E5 run count; step-length results reported against the original and the feasible command; outcomes split into falls, stalls and heading violations; a latency offset in the CPU evaluator (every "nominal" test ran at 20 ms, the "20 ms" condition at 40 ms); the comparison test is described as it is implemented; learning methods presented as complementary layers.</li>
+    </ul>
+  </details>
+</header>
+
+<!-- ============================ 1 ============================ -->
+<section id="problem">
+  <h2><span class="n">§1</span>The problem</h2>
+  <p class="lede">Industrial sites were built for people. Stairs, mezzanines, thresholds and platforms are everywhere, and a mobile robot that cannot use them needs ramps, lifts or a redesigned floor. The appeal of a humanoid is that it fits the existing plant. Its weakness is that every new skill today is a research project.</p>
+
+  <h3>1.1 What makes humanoid skills hard to industrialise</h3>
+  <ul>
+    <li><b>Balance is not optional.</b> An arm that stops is safe. A humanoid that stops can fall. Locomotion policies must be robust to things they have not seen: other floors, pushes, payloads, sensor noise and control latency.</li>
+    <li><b>Data is expensive or unavailable.</b> Nobody can record thousands of demonstrations of a robot falling down stairs. Demonstration-based methods also cannot teach recovery.</li>
+    <li><b>Results are hard to trust.</b> A policy that looks good in one video can fail on the next staircase. We measured this: changing the commanded step by 4 mm moved a 32-crossing test from 30/32 to 27/32. Small tests measure noise.</li>
+    <li><b>Simulation lies in specific ways.</b> The training engine and the test engine (and later the real robot) resolve contact differently. A policy will exploit whatever the simulator gets wrong.</li>
+    <li><b>Compute and tooling are fragile.</b> GPU capacity comes and goes, logs explode, quotas run out, and without lineage nobody can say which checkpoint was tested.</li>
+  </ul>
+
+  <h3>1.2 The task we chose and why</h3>
+  <p>The brief asks for a full pipeline for either <i>walking up stairs</i> or <i>changing step length</i>. We did both, because together they cover the two ends of the difficulty scale:</p>
+  <div class="two">
+    <div class="card"><h4>Step length (flat)</h4><p>A <b>command-tracking</b> problem. Can the robot walk at a given speed <i>and</i> a given step length, independently? This tests whether the reward and observation design can add a new controllable degree of freedom to an existing gait.</p></div>
+    <div class="card"><h4>Stair climbing (vision-based)</h4><p>A <b>perception and robustness</b> problem. The robot must see the terrain (height scan from a head depth camera), place its feet on treads it has never seen, and not fall, including under pushes, low friction, payload and actuation delay.</p></div>
+  </div>
+
+  <h3>1.3 Requirements we set before training</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Requirement</th><th>Target</th><th>How it is measured</th></tr></thead>
+    <tbody>
+      <tr><td>Step-length tracking</td><td>error &lt; 3 cm, speed error &lt; 0.1 m/s</td><td>command grid in two physics engines</td></tr>
+      <tr><td>Stairs: crossing</td><td>≥ 90 % crossed, ≤ 5 falls in 96</td><td>strict test: 8 validation heights × 4 staircases × 3 start poses</td></tr>
+      <tr><td>Stairs: qualified height</td><td>≥ 10 cm, zero falls at every height up to it</td><td>the tallest height with all runs crossed and no falls at it or below</td></tr>
+      <tr><td>Robustness</td><td>pushes, friction ×0.5, 5 kg payload, 20 ms delay, 0.6 m/s</td><td>qualification suite, one condition at a time</td></tr>
+      <tr><td>Deployment sensor</td><td>same result with the head camera as with true terrain</td><td><code>strict_camera</code>, a required condition</td></tr>
+      <tr><td>Robot safety</td><td>torque and joints within limits</td><td>share of time torque-saturated or at a joint limit</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">"Qualified" means that a policy passed these simulation tests. It is our internal release gate. It is not evidence of conformity to ISO 10218 or to the humanoid standard ISO 25785-1, which ISO still lists as a committee draft.</p>
+</section>
+
+<!-- ============================ 2 ============================ -->
+<section id="methods">
+  <h2><span class="n">§2</span>Learning methods compared against industrial requirements</h2>
+  <p class="lede">No single method wins across locomotion, manipulation and full workflows. The scores below are a team assessment (1–5, higher is better for an industrial user). The locomotion column is backed by our own measurements; manipulation and workflow scores are judgement informed by published results. The same matrix, with the same adjustable weights, is a page in the Skill Studio app.</p>
+
+  <div class="fig">
+    <p class="ft">Weighted method ranking</p>
+    <p class="fs">Change the domain and the weights. By default safety counts most (5), then repeatability and deployment maturity (4).</p>
+    <div class="seg" role="group" aria-label="Domain">
+      <button type="button" data-dom="locomotion" aria-pressed="true">Locomotion</button>
+      <button type="button" data-dom="manipulation" aria-pressed="false">Manipulation</button>
+      <button type="button" data-dom="workflow" aria-pressed="false">Full workflows</button>
+    </div>
+    <div class="weights" id="weights"></div>
+    <div class="tw" style="margin:0"><table id="mtable"></table></div>
+    <p class="cap">Score = weighted mean of the eight requirement scores. Dots show each score out of 5. Hover a row for the rationale.</p>
+  </div>
+
+  <div class="callout"><b class="k">Layers, not rivals</b><p>The seven rows are not all alternatives to each other. Teleoperation is a way to <i>collect data</i>. Imitation learning <i>learns from</i> that data, and RL learns from a reward. Sim-to-real randomisation is a <i>transfer strategy</i> wrapped around either one. Human feedback is a <i>correction channel</i>, and VLA models are a <i>model class</i> that can play several of these roles. A working pipeline takes one choice from each layer, for example teleoperated demonstrations, then imitation learning, then an RL fine-tune with randomisation in simulation. The matrix puts them side by side only to show where each is strongest.</p></div>
+
+  <h3>2.1 What the comparison says</h3>
+  <div class="two">
+    <div class="card"><h4>Locomotion → RL with sim-to-real hardening</h4><p>It needs no demonstrations, trains in hours, and is the only method in this project that got the G1 onto stairs. Its weak points are explainability and the reward engineering effort, which this report addresses with evaluation and gates rather than hope.</p></div>
+    <div class="card"><h4>Manipulation → demonstrations first</h4><p>Where parts and fixtures are fixed, manual programming is still the answer. Where they vary, teleoperation and imitation learning (ACT or diffusion policies) are the fastest route to a working skill. RL comes in afterwards to fine-tune robustness in simulation.</p></div>
+    <div class="card"><h4>Workflows → classical sequencing of gated skills</h4><p>End-to-end learning of a multi-step job has sparse rewards and compounding errors. A state machine or behaviour tree that calls gated, released skills is auditable and matches how plants already run.</p></div>
+    <div class="card"><h4>Foundation models → optional, above the controller</h4><p>Our supervisor is a <i>language</i> model that picks a gait mode, and its latency (0.39 s median, 0.59 s p95 in the benchmark, up to 2 s under load) describes only that system. VLA models such as OpenVLA are a different family that predicts robot actions directly, and we did not measure one. In our tests the language supervisor did not measurably change the fall count (§5.8). For a fixed task we keep deterministic logic as the baseline, and language-based mission interpretation stays an experiment.</p></div>
+  </div>
+
+  <div class="callout"><b class="k">Where hybrids win</b><p>Our own system is already a hybrid, because each layer does what its method is best at. A learned 50 Hz gait handles balance. A classical P-controller holds heading. Code enforces limits: above 25° of tilt it commands zero speed. That is not yet a safe stop, because no balancing or recovery response is defined or tested for it. An optional language-level supervisor reads the mission and picks the gait at 2 Hz. §5.8 shows that, so far, it adds mission awareness but no measurable safety.</p></div>
+</section>
+
+<!-- ============================ 3 ============================ -->
+<section id="approach">
+  <h2><span class="n">§3</span>Our approach</h2>
+  <p class="thesis">Thesis: an industrial humanoid skill is a released artefact with evidence, not a trained network. Training is cheap. What makes it easier and more efficient is a loop that finds failures fast, fixes their causes in simulation, and releases only what passes a statistical gate on terrain and sensors the policy has never seen.</p>
+
+  <h3>3.1 The pipeline</h3>
+  <div class="flow" aria-label="Pipeline stages">
+    <div class="st"><b>Specify</b>command, success criteria, envelope<span class="t">skill.yaml</span></div><span class="ar">→</span>
+    <div class="st"><b>Simulate</b>G1 + terrain curriculum + camera model<span class="t">stairs_env.py</span></div><span class="ar">→</span>
+    <div class="st"><b>Preflight</b>engine parity, throughput, warm-start identity<span class="t">preflight.py</span></div><span class="ar">→</span>
+    <div class="st"><b>Train</b>PPO, 8192 envs, warm start<span class="t">train.py · GPU</span></div><span class="ar">→</span>
+    <div class="st"><b>Screen</b>every checkpoint × 2048 crossings<span class="t">gpu_eval.py</span></div><span class="ar">→</span>
+    <div class="st"><b>Qualify</b>8 conditions in a second physics engine<span class="t">certify.py</span></div><span class="ar">→</span>
+    <div class="st"><b>Final test</b>frozen policy, untouched suite<span class="t">planned (§12)</span></div><span class="ar">→</span>
+    <div class="st gate"><b>Gate + review</b>thresholds, then a safety reviewer signs<span class="t">Skill Studio</span></div>
+  </div>
+  <p class="note">Every stage up to Qualify exists because a run failed without it. The rule each one enforces is listed in §6. The final-test stage does not exist yet: every result in this report comes from suites that also guided development.</p>
+
+  <h3>3.2 Five design decisions</h3>
+  <ol>
+    <li><b>Reinforcement learning in simulation, no demonstrations.</b> Locomotion is where RL is strongest and data is hardest to collect. Thousands of parallel robots produce about 100k steps per second on one GPU.</li>
+    <li><b>Start from the closest existing skill.</b> The stairs policy starts from the flat walking policy. New height-scan inputs get zero weights in the first layer, so at step 0 it walks exactly like its parent (checked: maximum action difference 0.0). Each new version starts from the best previous checkpoint, which made iterations take about an hour instead of days.</li>
+    <li><b>Curriculum over terrain, not reward hacking.</b> An 8 × 8 grid of staircases from 2 to 16 cm. Each robot moves up a level after it crosses and down after a fall, and most graduates are sent back to the tallest rows, where the falls are.</li>
+    <li><b>Train in one engine, test in another.</b> Training runs in MuJoCo Warp/MJX on the GPU. Qualification runs in plain MuJoCo (C) on a CPU, a different contact implementation, which catches policies that exploit one solver. Both engines share the same robot model, collision set and actuator model, so agreement between them says nothing about the hardware (§4.6).</li>
+    <li><b>Judge with statistics, release by role.</b> Rank checkpoints on thousands of episodes with 95 % Wilson intervals, qualify finalists on 96+ crossings, and have a person other than the author approve the release.</li>
+  </ol>
+
+  <h3>3.3 Why this should work: the argument</h3>
+  <p>PPO with massive parallelism reliably finds a gait when three conditions hold: the task is <i>reachable</i> (the action space and physics allow the motion), the reward cannot be satisfied by a <i>shortcut</i>, and the training distribution <i>covers</i> what the evaluation asks for. The early stair versions failed on each of these conditions in turn:</p>
+  <ul>
+    <li><b>Reachability.</b> v1–v8 had one contact point per foot and a ±0.5 rad joint-target range, which capped knee torque near 75 Nm when the motor gives 139 Nm.</li>
+    <li><b>Shortcuts.</b> v3 learned to turn away from hard stairs.</li>
+    <li><b>Coverage.</b> v5 fitted its stride to one tread depth, and no version before v14 had seen actuation latency.</li>
+  </ul>
+  <p>Our pipeline makes each condition checkable before and after training, so a failure points to its cause instead of just a lower score.</p>
+</section>
+
+<!-- ============================ 4 ============================ -->
+<section id="impl">
+  <h2><span class="n">§4</span>Detailed technical implementation</h2>
+
+  <h3 id="dataflow">4.1 Inputs, processing and outputs</h3>
+  <p>The system works at three time scales. Each has its own inputs, processing and outputs, and the output of one feeds the next: a training run produces a policy, the policy drives the robot, and the robot's evaluation data decides whether the policy is released.</p>
+
+  <h4>A · Pipeline level: one training job (about an hour)</h4>
+  <div class="ipo">
+    <div class="col"><b class="h">Inputs</b><ul>
+      <li><b>Skill manifest</b> (<code>skill.yaml</code>): task, parameters, stages, gate thresholds</li>
+      <li><b>Robot model</b>: G1 MJCF (29 joints, masses, joint limits, motor torque limits)</li>
+      <li><b>Terrain spec</b>: 8 × 8 curriculum grid (2–16 cm rises; 25/29/33 cm treads) and the validation layout (named <code>test</code> in code)</li>
+      <li><b>Site measurements</b>: friction range, actuation latency, payload, pushes (as randomisation ranges)</li>
+      <li><b>Parent checkpoint</b> for the warm start (<code>--init-from</code>)</li>
+      <li><b>Compute target</b> and budget (GPU-hour cap, daily ledger)</li>
+    </ul></div>
+    <div class="col"><b class="h">Processing</b><ol>
+      <li><b>Preflight</b>: engine parity on 5 stair poses, throughput, warm-start identity (max action difference = 0)</li>
+      <li><b>Rollout</b>: 8192 simulated G1s step in parallel on the GPU, 20 steps each per iteration, with domain randomisation and sensor noise</li>
+      <li><b>Learn</b>: rewards → advantages → PPO update (4 epochs × 32 minibatches); observation normaliser updated from running statistics</li>
+      <li><b>Curriculum</b>: each robot promoted or demoted a level at the end of its episode</li>
+      <li><b>Checkpoint</b> 20 times per run (every 5–15M steps); evaluation metrics to <code>progress.csv</code></li>
+      <li><b>Screen</b>: every checkpoint × 2048 validation crossings, ranked by falls with Wilson intervals</li>
+    </ol></div>
+    <div class="col"><b class="h">Outputs</b><ul>
+      <li><code>params.pkl</code> + 20 <code>ckpt_*.pkl</code>: network weights and observation normaliser</li>
+      <li><code>progress.csv</code>: reward terms, crossing rate, terrain level, episode length per evaluation</li>
+      <li><code>rank_true.json</code>, <code>rank_camera.json</code>: per-checkpoint fall rate by step height</li>
+      <li><code>config.json</code>: the exact environment and PPO settings (lineage)</li>
+      <li>Box stopped; GPU-hours and cost written to the ledger</li>
+    </ul></div>
+  </div>
+
+  <h4>B · Policy level: the controller on the robot (every 20 ms)</h4>
+  <div class="ipo">
+    <div class="col"><b class="h">Inputs · 160 values</b>
+      <div class="tw" style="margin:6px 0 0"><table>
+        <tbody>
+          <tr><td>Base linear velocity (exact, from the simulator: no estimator yet), gyro, gravity vector</td><td class="num">9</td></tr>
+          <tr><td>Command: v<sub>x</sub>, v<sub>y</sub>, yaw rate</td><td class="num">3</td></tr>
+          <tr><td>Joint positions (− default), joint velocities</td><td class="num">58</td></tr>
+          <tr><td>Previous action</td><td class="num">29</td></tr>
+          <tr><td>Gait phase clock (sin, cos per foot)</td><td class="num">4</td></tr>
+          <tr><td>Step length, cadence</td><td class="num">2</td></tr>
+          <tr><td>Height scan, 11 × 5 points</td><td class="num">55</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="col"><b class="h">Processing</b><ol>
+      <li>Add sensor noise in training (joint velocity ±1.5 rad/s, gyro ±0.2, joint position ±0.03, scan ±2 cm)</li>
+      <li>Normalise each input with the running mean and variance saved in the checkpoint</li>
+      <li>MLP actor 160 → 512 → 256 → 128 → 29 (the critic, used only in training, sees 273 privileged values: true scan, contact forces, velocities)</li>
+      <li>Scale: target = default pose + scale × action (0.5 rad; 1.0 rad for hip pitch, knee, ankle pitch)</li>
+    </ol></div>
+    <div class="col"><b class="h">Outputs · 29 values</b><ul>
+      <li>PD joint-position targets for all 29 joints at 50 Hz</li>
+      <li>The robot's joint PD loop turns them into motor torques, within the motor limits</li>
+      <li>Logged per step: tilt, pelvis height, torque saturation, joint-limit contact, foot touchdowns</li>
+    </ul></div>
+  </div>
+
+  <h4>C · Perception: from depth pixels to the 55-point scan</h4>
+  <div class="flow">
+    <div class="st"><b>Depth image</b>212 × 120, head camera 45° down, 0.3–3 m<span class="t">input</span></div><span class="ar">→</span>
+    <div class="st"><b>Clean</b>remove the robot's own body pixels; noise ∝ distance², 3 % dropout</div><span class="ar">→</span>
+    <div class="st"><b>Project</b>pixels to world-frame 3D points with the head pose</div><span class="ar">→</span>
+    <div class="st"><b>Fuse</b>5 cm elevation map: per-cell mean, smoothed over frames</div><span class="ar">→</span>
+    <div class="st"><b>Sample</b>55 heights relative to the pelvis, 0.3 m behind to 1.2 m ahead<span class="t">output → policy</span></div>
+  </div>
+  <p class="note">During training the full camera is replaced by its measured error model (noise and per-row blind-spot probabilities) so 8192 robots can run at GPU speed. In qualification the rendered camera is used (<code>--scan camera</code>). The head pose used in the projection step, and the base pose used to sample the map, are exact simulator values. §5.7 lists every such signal.</p>
+
+  <h4>D · Evaluation level: from episodes to a release decision</h4>
+  <div class="ipo">
+    <div class="col"><b class="h">Inputs</b><ul>
+      <li>Candidate checkpoint (the best-ranked from A)</li>
+      <li>Validation stairs (never trained on, but used for development decisions): 8 heights 3.0–15.0 cm, 27 cm tread</li>
+      <li>8 conditions: strict, camera, 0.6 m/s, 30 cm treads, pushes, friction ×0.5, 5 kg, 20 ms delay</li>
+      <li>Gate thresholds from the skill manifest</li>
+    </ul></div>
+    <div class="col"><b class="h">Processing</b><ol>
+      <li>Run every crossing in the second engine (plain MuJoCo), 3 start poses per staircase</li>
+      <li>Label each episode: <b>crossed</b>; <b>fell</b> (torso tilt above about 72° or pelvis below 0.4 m, a physical fall); <b>stalled</b> (neither within 16 s); plus the maximum heading deviation, tilt, pelvis height and torque use</li>
+      <li>Aggregate per condition and per height; Wilson 95 % intervals</li>
+      <li>Qualified height = tallest height with every run at it and below clean (crossed, tilt &lt; 25°, pelvis &gt; 0.55 m)</li>
+      <li>Compare each metric (or its upper bound) with the gate</li>
+    </ol></div>
+    <div class="col"><b class="h">Outputs</b><ul>
+      <li><b>Policy card</b> (<code>card_*.md</code> / <code>.json</code>): envelope, fall rates with intervals, per-height table</li>
+      <li>Per-episode JSON for audit and failure analysis</li>
+      <li>Videos of the crossings</li>
+      <li><b>Gate verdict</b>: <code>awaiting_review</code> (all pass) or <code>gate_failed</code></li>
+      <li>After review: <code>approved</code> or <code>rejected</code> with a written reason</li>
+    </ul></div>
+  </div>
+
+  <h3>4.2 Stack</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Layer</th><th>Choice</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Robot model</td><td>Unitree G1, 29-DoF MuJoCo Menagerie model (Playground); 12-DoF Unitree model for the vendor baseline</td><td>Open model, same kinematics as the hardware</td></tr>
+      <tr><td>Physics (train)</td><td>MuJoCo Warp via MuJoCo Playground 0.2.0, <code>mujoco 3.14.0</code></td><td>Thousands of robots in parallel on one GPU</td></tr>
+      <tr><td>Physics (test)</td><td>Plain MuJoCo (C engine), CPU</td><td>Independent contact solver: a sim-to-sim gap check</td></tr>
+      <tr><td>Learning</td><td>Brax PPO 0.14.2 on JAX 0.7.2 (pinned; JAX ≥ 0.8 breaks Brax 0.14)</td><td>Playground's tuned G1 recipe as a known-good baseline</td></tr>
+      <tr><td>Compute</td><td>Apple M4 laptop (dev, eval), Kaggle T4 (free), AWS g6e.xlarge / 2xlarge (NVIDIA L40S 48 GB)</td><td>No GPU needed except for training and batched screening</td></tr>
+      <tr><td>Platform</td><td>FastAPI + arq worker, Next.js 16, Postgres 17, Redis 7, S3</td><td>§9</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>4.3 Policy and learning algorithm</h3>
+  <p>An asymmetric actor-critic: the actor sees what the robot can sense (IMU, joint positions and velocities, previous action, gait phase, commands, height scan, all with noise). The critic additionally sees privileged state from the simulator. Both are MLPs with 512-256-128 hidden units. PPO hyperparameters are Playground's G1 values: 8192 parallel environments, unroll 20, batch 256 × 32 minibatches, 4 updates per batch, discount 0.97, clip 0.2, entropy 0.005, learning rate 3e-4 from scratch and <b>1e-4 for fine-tunes</b> (v10 onwards). The control rate is 50 Hz (<code>ctrl_dt = 0.02</code>), and the policy outputs PD joint targets around the default pose.</p>
+
+  <h3>4.4 Step-length task</h3>
+  <p>The command is <code>(v, ℓ)</code>: forward speed in [0.3, 0.9] m/s and step length in [0.15, 0.35] m. Cadence follows from them, <code>f = v / 2ℓ</code>, limited to 0.9–1.8 Hz. The policy gets <code>ℓ</code> and <code>f</code> in its observation and a gait-phase clock running at <code>f</code>. One reward term is added to Playground's G1 locomotion terms. At each touchdown, with <code>Δx</code> the distance of the landing foot ahead of the stance foot:</p>
+  <p style="font-family:var(--mono);font-size:15px;background:var(--paper);border:1px solid var(--rule);padding:10px 14px;display:inline-block">r<sub>step</sub> = exp( −(Δx − ℓ)² / 0.05² )</p>
+  <p>The touchdown detector needs at least 0.1 s of air time, so contact flicker does not produce fake steps.</p>
+
+  <h3>4.5 Stairs task</h3>
+  <div class="two">
+    <div class="card"><h4>Terrain and curriculum</h4><ul>
+      <li>8 × 8 grid. Each row is a level (2, 4, … 16 cm rise); columns alternate pyramids (walk down from the centre) and pits (climb out).</li>
+      <li>Tread depth per staircase is 25, 29 or 33 cm (v7+), so the stride cannot fit one staircase.</li>
+      <li>A robot is promoted after crossing (more than 1.9 m of progress along its heading) and demoted after a fall or when it covers less than half its commanded distance.</li>
+      <li>Past the top level, 70 % of robots replay the 12–16 cm rows (v12).</li>
+    </ul></div>
+    <div class="card"><h4>Perception</h4><ul>
+      <li>55-point height scan (an 11 × 5 patch from 0.3 m behind to 1.2 m ahead) with ±2 cm noise.</li>
+      <li>Camera scan model (v5-cam, v13+): the error model of a head depth camera (D435i-like, 45° down, 212 × 120 depth, noise growing with distance², 3 % dropout, body pixels removed), fused into a 5 cm elevation map. It includes per-row blind-spot probabilities.</li>
+      <li>Measured camera error against simulator truth on 8 cm stairs: 0.57 cm mean on the walking line and 0.18 cm on the policy's scan patch.</li>
+    </ul></div>
+    <div class="card"><h4>Rewards and terminations</h4><ul>
+      <li>Playground G1 terms (velocity tracking, orientation, torques, action rate, feet slip, air time, pose…).</li>
+      <li>Added: a relative base-height cost, lookahead foot clearance, and a <code>feet_edge</code> cost at touchdown only (v4). The per-tick version dominated the return in v3.</li>
+      <li>A fall is tilt above 60° or the pelvis less than 0.45 m above the ground. Turning more than 60° off the target heading also ends the episode as a fall (v5), which closed the "turn away" loophole.</li>
+    </ul></div>
+    <div class="card"><h4>Commands and action space</h4><ul>
+      <li>Stairs gait sampled at 1.25–1.6 Hz (v11): short steps of about one per tread.</li>
+      <li>Heading command, converted to a yaw rate from the heading error.</li>
+      <li>Leg action scale 1.0 rad for hip pitch, knee and ankle pitch (v8). The warm start rescales those output weights so the parent's behaviour is preserved.</li>
+    </ul></div>
+  </div>
+
+  <h3>4.6 Contact fidelity: the fix that mattered most</h3>
+  <p>MuJoCo Warp makes at most one contact between a box-shaped sole and the stairs heightfield. Plain MuJoCo makes 3 to 20. So v1–v8 trained standing on one point per foot and were tested flat-footed. We replaced the sole contact with <b>six spheres per foot</b> (one contact each in both engines), widened friction randomisation to all foot–floor pairs, and enlarged the contact buffers. The next version, v9, went from a qualified height of 3 cm to 9.9 cm on its final single-start test. v9 also trained for 500M steps, so the gain is not attributable to the contact change alone. The preflight now checks parity on five stair poses before every run. Feet across a step edge agree to 0.1 cm between engines. One known gap is left and reported, not gated: a sole lying lengthwise on an edge slides in Warp and holds in MuJoCo C.</p>
+  <div class="callout risk"><b class="k">What engine agreement does not show</b><p>Parity means two implementations of the <i>same model</i> agree. Six spheres per sole made them agree, but whether six spheres represent the real G1 foot is unverified. Warp and native MuJoCo differ in documented ways, and both share the model's assumptions. The biggest gap is that the Playground G1 scene collides <b>only the feet</b> with the terrain: a shin or knee that would strike a real stair nosing passes through it here, so a policy can succeed with motions that would fail on real stairs. Before any claim of hardware potential beyond a research hypothesis, we need full leg–terrain collisions, realistic stair-edge geometry and dynamic contact checks (§12).</p></div>
+
+  <h3>4.7 Robustness randomisation (v14)</h3>
+  <p>The first qualification suite showed that every policy since v1, flat walking included, fell within seconds under what we labelled a 20 ms actuation delay. We later found that the CPU evaluator already applies one control step of delay in every condition, so that condition was really 40 ms (§5.5). Playground's recipe applies each action in the same control step. v14 samples a delay of 0 or 1 control steps per episode (50 % of episodes) and floor friction from 0.25–1.0, down from Playground's 0.4–1.0. The changes planned for v15 (70 % delayed episodes, 0–4 kg of torso payload) are now separate one-change arms in the improvement campaign (§8.2). None has been trained yet.</p>
+
+  <h3>4.8 Evaluation tooling</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Tool</th><th>What it does</th><th>Scale</th></tr></thead>
+    <tbody>
+      <tr><td><code>g1pipe.preflight</code></td><td>MJX-vs-MuJoCo parity on stair poses (0.25 s holds), throughput check, warm-start identity</td><td>minutes, before training</td></tr>
+      <tr><td><code>g1pipe.gpu_eval</code></td><td>Batched validation crossings in MJX; ranks every checkpoint with Wilson intervals</td><td>2048 episodes per checkpoint, 20 checkpoints per run</td></tr>
+      <tr><td><code>g1pipe.bench</code></td><td>7 fixed conditions × 2048 episodes, the same start states for every policy</td><td>about 20 min on GPU</td></tr>
+      <tr><td><code>g1pipe.stairs_eval</code></td><td>Plain-MuJoCo crossings on the validation layout (heights 3.0–15.0 cm, 27 cm tread); disturbances; tilt, pelvis height, heading, torque saturation</td><td>96 runs in the strict test</td></tr>
+      <tr><td><code>scripts/certify.py</code></td><td>Runs the 8-condition qualification suite and writes a policy card</td><td>about 20 min on a laptop</td></tr>
+      <tr><td><code>g1pipe.improve</code></td><td>Campaign runner: one-change arms against a control trained for the same number of steps; code decides and an advisor only proposes. Built and dry-run tested, not yet run for real</td><td>web app API</td></tr>
+      <tr><td><code>scripts/g1job.py</code></td><td>One command: get a GPU box (any zone), preflight, train, rank, stop the box. Daily budget ledger and a shutdown timer on the box itself</td><td>AWS</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============================ 5 ============================ -->
+<section id="results">
+  <h2><span class="n">§5</span>Results</h2>
+  <p class="lede">All numbers below come from result files in the repository and were produced by the tools in §4.8. Where the sample is small, we say so.</p>
+  <div class="callout risk"><b class="k">Two caveats that apply to all of §5</b>
+    <p><b>Validation, not test.</b> The stair suites were never trained on, but we used their results to pick checkpoints, diagnose failures and decide the next reward, curriculum and physics changes. Repeated adaptation makes them a validation benchmark. Their heights and tread depths also lie <i>inside</i> the training range, so they measure interpolation, not transfer to arbitrary factory staircases.</p>
+    <p><b>Evaluator latency.</b> The CPU evaluator's action queue starts one entry too long, so every action is applied one control step (20 ms) late in every condition. "Strict" therefore ran at 20 ms and "delay_20ms" at 40 ms. A GPU re-run with a correct 20 ms delay reproduced the strict results (v14: 2/96 against 1/96; v12: 9/96 against 5/96). The fix changes every historical result and the platform's strict stage, so it is pending. This report relabels the affected results rather than re-running them.</p>
+  </div>
+
+  <h3>5.1 Baseline first: do we need learning at all? (E5)</h3>
+  <p>Unitree's pretrained G1 policy (an LSTM) takes a speed command and an internal gait clock trained at 0.8 s. We swept 7 commanded speeds (0 to 1.2 m/s, including standing still) × 5 gait periods × 3 seeds with light pushes and sensor noise: 105 runs in 15 s on a laptop CPU, with <b>no falls</b>. Achieved step length for the six moving speeds (cm):</p>
+  <div class="tw"><table class="heat" id="e5"></table></div>
+  <p>Step lengths from 7 to 40 cm are reachable at <b>zero training cost</b> by re-timing the clock, but speed and step length are coupled. Off the trained period, speed tracking degrades: at 0.4 m/s the achieved speed ranges from 0.36 to 0.48 m/s. At 1.2 m/s with a 1.0 s period the gait breaks down. Precise, independent step-length control needs step length in the task definition. That is what training adds, and E5 is the baseline it must beat.</p>
+
+  <h3>5.2 Step-length policy (v1): learned, and where it transfers</h3>
+  <p>200M environment steps in <b>95 minutes</b> on a free T4. Reward rose from −6.0 to +15.8, and mean episode length from 46 to 815 of 1000 steps.</p>
+  <p><b>Not every command is feasible.</b> Cadence follows from the command (<code>f = v / 2ℓ</code>) and is clipped to 0.9–1.8 Hz, so some speed and step-length pairs cannot both be met. The policy is then given a <i>feasible</i> step length, <code>v / 2f</code> at the clipped cadence. We report error against the original request and against the feasible target separately. Training engine, fixed commands, no noise (cm):</p>
+  <div class="tw"><table>
+    <thead><tr><th>speed</th><th class="num">requested</th><th class="num">feasible target</th><th class="num">achieved</th><th class="num">off request</th><th class="num">error vs feasible (per step)</th><th>≤ 3 cm?</th></tr></thead>
+    <tbody>
+      <tr><td>0.5 m/s</td><td class="num">15</td><td class="num">15</td><td class="num">11.9</td><td class="num">3.1</td><td class="num">3.1</td><td><span class="pill crit">no</span></td></tr>
+      <tr><td>0.5 m/s</td><td class="num">25</td><td class="num">25</td><td class="num">18.6</td><td class="num">6.4</td><td class="num">6.8</td><td><span class="pill crit">no</span> erratic</td></tr>
+      <tr><td>0.5 m/s</td><td class="num">35</td><td class="num">27.8 (clipped)</td><td class="num">20.1</td><td class="num">14.9</td><td class="num">7.8</td><td><span class="pill crit">no</span> erratic</td></tr>
+      <tr><td>0.7 m/s</td><td class="num">15</td><td class="num">19.4 (clipped)</td><td class="num">18.0</td><td class="num">3.0</td><td class="num">2.3</td><td><span class="pill warn">feasible only</span></td></tr>
+      <tr><td>0.7 m/s</td><td class="num">25</td><td class="num">25</td><td class="num">23.3</td><td class="num">1.7</td><td class="num">1.9</td><td><span class="pill good">yes</span></td></tr>
+      <tr><td>0.7 m/s</td><td class="num">35</td><td class="num">35</td><td class="num">10.5</td><td class="num">24.5</td><td class="num">25.0</td><td><span class="pill crit">no</span> breaks down</td></tr>
+      <tr><td>0.9 m/s</td><td class="num">15</td><td class="num">25 (clipped)</td><td class="num">23.8</td><td class="num">8.8</td><td class="num">1.6</td><td><span class="pill warn">feasible only</span></td></tr>
+      <tr><td>0.9 m/s</td><td class="num">25</td><td class="num">25</td><td class="num">23.8</td><td class="num">1.2</td><td class="num">1.6</td><td><span class="pill good">yes</span></td></tr>
+      <tr><td>0.9 m/s</td><td class="num">35</td><td class="num">35</td><td class="num">31.8</td><td class="num">3.2</td><td class="num">3.2</td><td><span class="pill crit">no</span> (just)</td></tr>
+    </tbody>
+  </table></div>
+  <p>In the training engine, only 2 of 9 commands meet the 3 cm requirement against the original request, and 4 of 9 against the feasible target. All run without falls and with about 0.03 m/s speed error. Slow, long steps (≤ 1.0 Hz) were not learned in the budget. In the <b>second engine</b> (plain MuJoCo) the policy still walks without falling on the whole 20-command grid, but the mean step error is <b>10.7 cm</b>. Only 6 of 20 commands come within 3 cm of the feasible target, and 3 of those 6 targets had been changed by the cadence clip. <b>The step-length policy does not meet its 3 cm requirement in the second engine.</b> A lock-step comparison from an identical state shows joint velocities diverging by about 3 rad/s after one control step, so the policy is sensitive to how each engine resolves foot contact. The evaluator's extra 20 ms of latency (§5 caveat) may also contribute. Without steering the robot drifts 50–130° over 10 s, because the policy tracks a yaw <i>rate</i>. A classical heading-hold loop fixes this, which is how such policies are deployed.</p>
+
+  <h3>5.3 What domain randomisation buys, and costs (E3)</h3>
+  <p>Same task and budget (202M steps, about 97 min each), trained with and without randomisation of friction, masses, joint properties, pushes and sensor noise.</p>
+  <div class="fig">
+    <p class="ft">Randomisation trades precision for robustness</p>
+    <p class="fs">Left: step-length error (lower is better). Right: share of evaluation runs that fell.</p>
+    <div class="legend"><span><i style="background:var(--s1)"></i>with randomisation (v1)</span><span><i style="background:var(--s2)"></i>without randomisation</span></div>
+    <div class="two">
+      <div class="chart" id="e3a"></div>
+      <div class="chart" id="e3b"></div>
+    </div>
+    <p class="cap">Stress cases use 3 evaluation seeds each; one training seed per variant, so this is one controlled comparison, not a replicated one. Neither policy handles friction ×0.3 or the cases labelled 20–40 ms delay (100 % falls for both); neither was trained on them. With the evaluator's own step of delay, those cases were really 40–60 ms, and every case, "nominal" included, ran at 20 ms or more.</p>
+  </div>
+  <p>Randomisation made the policy about <b>4× less precise</b> in the training engine and 2.5× less in the unseen engine, and it bought <b>push recovery</b>, the one disturbance it trained on. The lesson for industry is to randomise what the site will actually see (measured floor friction, the robot's real latency, expected pushes) and budget the extra training for it. Randomising everything "just in case" is paid for in precision.</p>
+
+  <h3>5.4 Stair climbing: fourteen versions</h3>
+  <p>Each version responded to a measured failure. Most versions changed more than one thing, and from v2 on each one inherits the previous version's training, so the table records what changed, not a controlled attribution. The early versions were judged on 32 validation crossings at a single start pose. From v9 onwards we used the strict 96-run test (§1.3), because 32 runs could not separate the policies.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Ver.</th><th>What changed</th><th>Validation result</th><th>Verdict · lesson</th></tr></thead>
+    <tbody>
+      <tr><td>v1</td><td>PPO from scratch, all heights mixed, height scan</td><td class="num">1/32 crossed, 28 fell</td><td><span class="pill crit">fail</span> no curriculum; worse than the blind vendor policy</td></tr>
+      <tr><td>v2</td><td>Terrain curriculum, warm start from flat v1, held-out layout</td><td class="num">4/32, 13 fell</td><td><span class="pill warn">partial</span> walks down, stalls at the first riser</td></tr>
+      <tr><td>v3</td><td>Square spawns, fall = tilt/pelvis height, edge + height costs</td><td class="num">1–7/32, 12–21 fell</td><td><span class="pill crit">fail</span> reward loophole: turns away from climbs</td></tr>
+      <tr><td>v4</td><td>Heading command, promotion by progress along the heading</td><td class="num">10/32, 10 fell</td><td><span class="pill warn">partial</span> still turns round at pit exits</td></tr>
+      <tr><td>v5</td><td>Turning &gt; 60° ends the episode as a fall</td><td class="num">12–18/32, 10–17 fell</td><td><span class="pill warn">partial</span> falls at ≥ 8 cm are pelvis collapses</td></tr>
+      <tr><td>v6</td><td>Camera scan model, curriculum capped at 12 cm</td><td class="num">11–12/32, 13–15 fell</td><td><span class="pill crit">fail</span> overfit to one tread depth (23/32 on its own stairs)</td></tr>
+      <tr><td>v7</td><td>Mixed tread depths 25/29/33 cm</td><td class="num">17/32, 14 fell</td><td><span class="pill warn">partial</span> knee target pinned at the ±0.5 rad limit</td></tr>
+      <tr><td>v8</td><td>Leg action scale 1.0 rad (hip pitch, knee, ankle)</td><td class="num">—</td><td>superseded by v9 before a full test</td></tr>
+      <tr class="hl"><td>v9</td><td><b>Six sole spheres per foot</b> (contact parity), 500M steps</td><td class="num">27/32, 5 fell · strict 81/96, 9 fell</td><td><span class="pill good">step change</span> qualified height 3 → 9.9 cm (single start)</td></tr>
+      <tr><td>v10</td><td>Fine-tune at lr 1e-4, 400M steps</td><td class="num">strict 82/96, 14 fell</td><td><span class="pill warn">partial</span> ankle at its limit on 13–15 cm</td></tr>
+      <tr><td>v11</td><td>Stairs cadence 1.25–1.6 Hz</td><td class="num">strict 88/96, 8 fell</td><td><span class="pill warn">partial</span> 15 cm: 1 fall in 3</td></tr>
+      <tr><td>v12</td><td>70 % of top graduates replay the 12–16 cm rows</td><td class="num">strict 91/96, 5 fell</td><td><span class="pill warn">partial</span> +1 step delay (40 ms): 32/32 fall</td></tr>
+      <tr><td>v13</td><td>Fine-tune on the camera error model</td><td class="num">strict 86/96, 8 fell · camera 83/96, 11 fell</td><td><span class="pill crit">no gain</span> camera gap needs distillation</td></tr>
+      <tr class="hl"><td>v14</td><td><b>Actuation delay 0/20 ms + friction 0.25–1.0</b>, 100M steps</td><td class="num">strict 95/96, 1 fell · camera 86/96, 8 fell</td><td><span class="pill warn">best, gate not passed</span> true scan 9.9 cm, camera 6.4 cm; 40 ms delay falls 100 → 53 %</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="fig">
+    <p class="ft">Strict 96-run test: fall rate by version</p>
+    <p class="fs">Best checkpoint of each version, 0.7 m/s, 1.4 Hz cadence. Whiskers are 95 % Wilson intervals.</p>
+    <div class="legend"><span><i style="background:var(--s1)"></i>true terrain scan</span><span><i style="background:var(--s3)"></i>head camera scan</span></div>
+    <div class="chart" id="ver"></div>
+    <p class="cap">Checkpoints: v9 369M, v10 254M, v11 191M, v12 254M, v13 final, v14 final. The camera test was run for v12–v14 only. The v9–v13 intervals overlap. v14 is the first version whose interval sits clearly below the v10 level. These are validation results, and checkpoints were chosen on similar suites, so the lowest points are optimistic.</p>
+  </div>
+
+  <h3>5.5 Qualification suite: v14 against v12</h3>
+  <p>The policy card runs eight conditions in plain MuJoCo on the validation stairs. The two required conditions (strict, strict camera) define the qualified envelope. The other six measure robustness one factor at a time.</p>
+  <div class="fig">
+    <p class="ft">Fall rate per qualification condition</p>
+    <p class="fs">Dots are measured fall rates; whiskers are 95 % Wilson intervals. Lower is better.</p>
+    <div class="legend"><span><i style="background:var(--s2)"></i>v12 (254M checkpoint)</span><span><i style="background:var(--s1)"></i>v14 (latency + low-friction training)</span></div>
+    <div class="chart" id="cert"></div>
+    <p class="cap">Runs per condition: 96 (strict, strict camera, 0.6 m/s) or 32 (others). Push: a 0.3 m/s shove in a random direction every 3 s. Low friction: half the nominal foot–floor friction. Payload: 5 kg on the torso. Delay: one control step on top of the evaluator's own step, so 40 ms in total; every other condition ran at 20 ms.</p>
+  </div>
+
+  <div class="tw"><table>
+    <thead><tr><th>Condition</th><th class="num">v12 fell</th><th class="num">v14 fell</th><th class="num">v12 qualified</th><th class="num">v14 qualified</th><th class="num">v14 torque-sat.</th><th class="num">v14 joint at limit</th></tr></thead>
+    <tbody id="certtab"></tbody>
+  </table></div>
+
+  <h4>Falls, stalls and heading violations are different outcomes</h4>
+  <p>Not crossing is not the same as falling. The CPU test counts a fall only when the torso tips past about 72° or the pelvis drops below 0.4 m. A run that neither crosses nor falls in 16 s is a <b>stall</b>, for example a refusal, a turn-away or running out of time. A heading deviation above 60° is tracked separately. (The GPU screening in §5.6 and the training terminations do count turning away as a fall. That is a harsher label that we will split the same way.)</p>
+  <div class="tw"><table>
+    <thead><tr><th>v14 condition</th><th class="num">runs</th><th class="num">crossed</th><th class="num">fell</th><th class="num">stalled</th><th class="num">heading &gt; 60°, no fall</th></tr></thead>
+    <tbody>
+      <tr class="hl"><td>Strict (true scan)</td><td class="num">96</td><td class="num">95</td><td class="num">1</td><td class="num">0</td><td class="num">1 (crossed)</td></tr>
+      <tr class="hl"><td>Strict, head camera</td><td class="num">96</td><td class="num">86</td><td class="num">8</td><td class="num">2</td><td class="num">1</td></tr>
+      <tr><td>Slower, 0.6 m/s</td><td class="num">96</td><td class="num">89</td><td class="num">0</td><td class="num">7</td><td class="num">0</td></tr>
+      <tr><td>30 cm treads</td><td class="num">32</td><td class="num">32</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr>
+      <tr><td>Pushes</td><td class="num">32</td><td class="num">30</td><td class="num">0</td><td class="num">2</td><td class="num">0</td></tr>
+      <tr><td>Friction ×0.5</td><td class="num">32</td><td class="num">30</td><td class="num">2</td><td class="num">0</td><td class="num">1</td></tr>
+      <tr><td>5 kg payload</td><td class="num">32</td><td class="num">25</td><td class="num">4</td><td class="num">3</td><td class="num">0</td></tr>
+      <tr><td>Delay +1 step (40 ms total)</td><td class="num">32</td><td class="num">8</td><td class="num">17</td><td class="num">7</td><td class="num">1</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Source: per-episode JSON in <code>runs/g1-stairs-v14/run/cert_params/</code>. Heading deviation includes the ±7° start-pose offsets. Stalls at 0.6 m/s are all on 13–15 cm steps.</p>
+
+  <h4>Where the remaining falls are</h4>
+  <p>Falls per step height in the two required conditions (4 staircases × 3 start poses = 12 runs per cell).</p>
+  <div class="tw"><table class="heat" id="perh"></table></div>
+  <p>With true terrain, v14's only fall is one of 12 runs at 11.6 cm. With the camera, falls cluster at 9.9 cm and 13.3 cm, which caps the camera-qualified envelope at 6.4 cm. Note what "0 of 12" means: at any single height its 95 % upper bound is 24 % (§8.1). The next bottleneck is <b>perception</b>, and §5.7 shows that the camera condition still leaves out much of it.</p>
+
+  <h3>5.6 Why we rank every checkpoint</h3>
+  <div class="fig">
+    <p class="ft">v14 GPU screening: fall rate across training</p>
+    <p class="fs">2048 validation episodes per checkpoint in MJX, 10 s each, falls counted anywhere in the episode. Shaded bands are 95 % Wilson intervals.</p>
+    <div class="legend"><span><i style="background:var(--s1)"></i>true terrain scan</span><span><i style="background:var(--s3)"></i>head camera scan</span></div>
+    <div class="chart" id="ckpt"></div>
+    <p class="cap">The screening metric is stricter than the qualification test: it keeps walking past the staircase for the full 10 s and counts turning away as a fall. Use it to rank checkpoints, not as an absolute rate. Step 0 is the v12 parent evaluated under v14's conditions.</p>
+  </div>
+  <p>Under latency and low friction, the parent (v12) screens at 26.8 %. Training brings this down to 18.6 % by 76–92M steps, and then it flattens. With 2048 episodes the intervals are about ±1.7 points, tight enough to rank. With 32 episodes they would be about ±15 points. In v10 and v11 the final checkpoint was worse than an earlier one (v11: 88/96 at 191M, 85/96 final). Picking by evaluation instead of by recency is worth several falls per 96. <b>The cost:</b> choosing the best of 20 checkpoints and then reporting it on related suites favours a lucky checkpoint, so the reported rates are optimistic. Only a test run once, after the checkpoint is frozen, removes that bias (§8.1).</p>
+
+  <h3>5.7 Perception: head camera against simulator truth</h3>
+  <div class="two">
+    <div>
+      <div class="tw" style="margin-top:0"><table>
+        <thead><tr><th>Stairs</th><th class="num">Line MAE</th><th class="num">Worst p95</th><th class="num">Patch MAE</th><th class="num">Coverage</th></tr></thead>
+        <tbody>
+          <tr><td>8 cm</td><td class="num">0.57 cm</td><td class="num">4.36 cm</td><td class="num">0.18 cm</td><td class="num">90–100 %</td></tr>
+          <tr><td>12 cm</td><td class="num">0.92 cm</td><td class="num">7.12 cm</td><td class="num">0.24 cm</td><td class="num">84–100 %</td></tr>
+        </tbody>
+      </table></div>
+      <p style="font-size:15px">30 frames each, from 2.5 m to 0.5 m before the stairs. The mean error is small, but the tail (p95 of 4–7 cm at step edges) is where the camera condition loses its falls. Occlusion and edge smearing hit exactly the heights where v14 still falls.</p>
+    </div>
+    <figure style="margin:0"><img src="media/camera_check_8cm.png" alt="Head depth camera elevation map against the simulator's true terrain on 8 cm stairs" style="border:1px solid var(--rule);background:var(--paper)"><figcaption class="note" style="margin-top:6px">Simulated D435i-like head camera, fused elevation map against the true terrain, 8 cm stairs.</figcaption></figure>
+  </div>
+
+  <h4>What the camera condition still takes from the simulator</h4>
+  <p>The camera condition replaces the terrain heights with rendered depth. Everything else the controller and the map need still comes straight from the simulator state. So it tests depth noise and occlusion, not perception as a whole:</p>
+  <div class="tw"><table>
+    <thead><tr><th>Signal</th><th>Source in evaluation</th><th>On a real robot</th><th>Tested?</th></tr></thead>
+    <tbody>
+      <tr><td>Depth pixels</td><td>Rendered, with distance² noise and 3 % dropout</td><td>Depth camera</td><td><span class="pill good">yes</span></td></tr>
+      <tr><td>Base linear velocity (policy input)</td><td>Exact simulator velocimeter</td><td>State estimator (IMU + leg kinematics), with bias and drift</td><td><span class="pill crit">no</span></td></tr>
+      <tr><td>Camera pose for projecting depth</td><td>Exact camera pose</td><td>Estimated head pose plus extrinsic calibration</td><td><span class="pill crit">no</span></td></tr>
+      <tr><td>Base position and yaw for sampling the map</td><td>Exact</td><td>Odometry or SLAM, which drifts</td><td><span class="pill crit">no</span></td></tr>
+      <tr><td>Pelvis height reference for the scan</td><td>Exact</td><td>Estimated</td><td><span class="pill crit">no</span></td></tr>
+      <tr><td>Map cells the camera never saw</td><td>Filled with the true sole height</td><td>Unknown</td><td><span class="pill crit">no</span></td></tr>
+      <tr><td>Timing</td><td>Depth at 25 Hz, used in the same step, no latency</td><td>Frame latency and clock skew between camera, IMU and joints</td><td><span class="pill crit">no</span></td></tr>
+      <tr><td>Heading-hold yaw</td><td>Exact</td><td>Estimated</td><td><span class="pill crit">no</span></td></tr>
+    </tbody>
+  </table></div>
+  <p>Next, we will add a state estimator in the loop and test calibration errors, stale and unsynchronised observations, map drift and missing terrain, and perception delay combined with actuation delay. Teacher–student distillation (§12) is still worth testing for the camera gap, but a student cannot recover information that the sensor never observes, such as occluded treads.</p>
+
+  <h3>5.8 An optional layer: a language-model supervisor</h3>
+  <p>Above the 50 Hz gait policy we tested an agent on flat ground with the step-length policy. Code turns sensors into calibrated words ("feet slipping", "strong wobble"). A language model (TypeSafe Jev, <code>jev-1.13.0</code>) answers six typed questions at 2 Hz: gait mode, stability score, slipping, disturbed, mission speed and mission care. Code decides: a safety filter (tilt above 25° or stability below 0.75 means stop), a confidence gate (slowing down is always allowed; speeding up is one level at a time and needs confidence ≥ 0.6), and a learner (a gait bandit per situation plus a logistic fall-risk model).</p>
+  <div class="layers">
+    <div class="layer"><span class="who">Mission and judgement</span><span>Language model: reads the operator's mission ("carry a fragile box carefully") and the verbalised sensors, returns probabilities</span><span class="rate">2 Hz · async</span></div>
+    <div class="layer"><span class="who">Safety and arithmetic</span><span>Code: tilt filter, confidence gating, stairs reflex (stop 0.7 m before an edge or commit from 1.4 m), offline fallback after 3 API errors</span><span class="rate">every tick / 10 Hz</span></div>
+    <div class="layer"><span class="who">Adaptation</span><span>Learner: experience bandit per (situation, gait) and a fall-risk model, persisted per robot</span><span class="rate">per episode</span></div>
+    <div class="layer"><span class="who">Balance</span><span>Learned PPO gait policy: speed and step length to joint targets</span><span class="rate">50 Hz</span></div>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Agent (18 episodes each)</th><th class="num">Falls</th><th class="num">Falls excl. delay</th><th class="num">Hurry distance</th><th class="num">Slippery falls</th><th class="num">Mean distance</th></tr></thead>
+    <tbody>
+      <tr><td>Fixed cautious gait</td><td class="num">5/18</td><td class="num">2/15</td><td class="num">2.70 m</td><td class="num">0/3</td><td class="num">2.71 m</td></tr>
+      <tr><td>Fixed normal gait</td><td class="num">9/18</td><td class="num">6/15</td><td class="num">3.38 m</td><td class="num">3/3</td><td class="num">3.43 m</td></tr>
+      <tr><td>Fixed stride gait</td><td class="num">8/18</td><td class="num">5/15</td><td class="num">6.40 m</td><td class="num">3/3</td><td class="num">6.13 m</td></tr>
+      <tr><td>Same agent, rule stub instead of the model</td><td class="num">7/18</td><td class="num">4/15</td><td class="num">2.34 m</td><td class="num">0/3</td><td class="num">2.79 m</td></tr>
+      <tr class="hl"><td>Language-model supervisor</td><td class="num">6/18</td><td class="num">3/15</td><td class="num">4.33 m</td><td class="num">0/3</td><td class="num">3.19 m</td></tr>
+    </tbody>
+  </table></div>
+  <p><b>Reading it.</b> The fixed cautious gait fell 5 of 18 times, the language-model supervisor 6 of 18 and the rule stub 7 of 18. Samples this small cannot tell these apart: they support further exploration, not a claim of equal or better safety. Outside the delay and "storm" scenarios, neither the cautious gait nor the supervisor fell (0/12 each). The one difference we measured is mission interpretation: on "hurry" missions the supervisor covered 1.6× the distance of the cautious gait. It made 327 decisions with 2 API errors, a median latency of 394 ms and a p95 of 585 ms.</p>
+  <p><b>Decision.</b> For a fixed task such as a five-step staircase, deterministic supervisory logic (a fixed gait plus code limits) is the baseline. The language layer stays an optional experiment, not a core dependency. The code-level stop (tilt above 25° or low stability sends a zero-speed command) also has to become a defined behaviour: a zero command is not evidence that the robot will come to a safe, balanced stop, and that response has not been tested.</p>
+  <p>In a stairs world, the same agent learned from its own outcomes that the vendor's blind policy crosses 4 cm steps and fails at 8 cm with every gait. It now stops in front of 8 cm stairs even when told to climb (reason: <code>learned_too_hard</code>). All nine regression runs (4, 5 and 8 cm; climb and wait missions; ray-cast and camera terrain) had the expected outcome with no falls.</p>
+
+  <h3>5.9 Simulation videos</h3>
+  <div class="vids">
+    <div class="vid big"><video controls muted playsinline preload="metadata" src="media/stairs_v14_annotated.mp4"></video><p class="vt">v14, annotated: one crossing per validation height, 3–15 cm</p><p class="vc">Plain MuJoCo, true terrain scan, 0.7 m/s at 1.4 Hz, the evaluator's 20 ms latency. The side panel shows the staircase geometry, the command and the measured step length at every touchdown. It shows eight runs, one per height, and is an illustration, not evidence: the numbers are in §5.5.</p></div>
+    <div class="vid"><video controls muted playsinline preload="metadata" src="media/stairs_v14.mp4"></video><p class="vt">v14: validation pyramids, head-height view</p><p class="vc">The same policy on staircases it never trained on, plain MuJoCo engine.</p></div>
+    <div class="vid"><video controls muted playsinline preload="metadata" src="media/stairs_v1.mp4"></video><p class="vt">v1: from scratch, no curriculum</p><p class="vc">Falls from 3 cm; 1 of 32 validation staircases crossed. The baseline failure.</p></div>
+    <div class="vid"><video controls muted playsinline preload="metadata" src="media/stairs_v2_vs_v3.mp4"></video><p class="vt">v2 against v3: a reward loophole</p><p class="vc">v3 learned that turning away from a climb scored better than climbing it.</p></div>
+    <div class="vid"><video controls muted playsinline preload="metadata" src="media/demo_step_change.mp4"></video><p class="vt">Step length changed on the fly</p><p class="vc">v1 step-length policy in the unseen engine: 18 cm tracked within about ±1 cm, then a switch to 30 cm at 1.0 Hz, where the gait breaks up.</p></div>
+    <div class="vid"><video controls muted playsinline preload="metadata" src="media/baseline_vx0.5.mp4"></video><p class="vt">Vendor baseline</p><p class="vc">Unitree's pretrained policy at 0.5 m/s, run headless in MuJoCo on a laptop CPU.</p></div>
+  </div>
+</section>
+
+<!-- ============================ 6 ============================ -->
+<section id="why">
+  <h2><span class="n">§6</span>Why it works, and where it doesn't yet</h2>
+
+  <h3>6.1 What we think drove the gains</h3>
+  <p>Ordered by the size of the observed change. Each row gives the proposed mechanism, the observation behind it, and the rule the pipeline now enforces. <b>These are hypotheses, not controlled results.</b> Versions changed several things at once and each inherited the previous version's training, so no row isolates one change. The one-change arms against a control in §8.2 are how we will test them.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Change</th><th>Proposed mechanism</th><th>Observation (uncontrolled)</th><th>Enforced by</th></tr></thead>
+    <tbody>
+      <tr><td>Contact parity (sole spheres)</td><td>The policy trained on the same foot contact it is tested on</td><td>qualified height 3 → 9.9 cm (v8 → v9, also 500M steps)</td><td>preflight parity check</td></tr>
+      <tr><td>Wider leg action range</td><td>Knee extension torque was capped near 75 Nm by the target range (the motor gives 139 Nm)</td><td>falls at ≥ 8 cm were pelvis collapses with the knee target pinned at its limit</td><td>failure report: share of time at joint limit</td></tr>
+      <tr><td>Terrain curriculum + warm start</td><td>Dense learning signal at the edge of ability; reuses a working gait</td><td>validation falls 28 → 13 of 32 (v1 → v2)</td><td><code>--init-from</code> + warm-start identity check</td></tr>
+      <tr><td>Closing reward loopholes</td><td>Turning away no longer pays</td><td>v3 → v5 crossings 1–7 → 12–18 of 32</td><td>heading deviation in every eval</td></tr>
+      <tr><td>Stairs cadence (1.4 Hz)</td><td>About one step per tread instead of lunging</td><td>1.4 Hz: 30–31/32 against 1.0 Hz: 14–15/32 (v10)</td><td>cadence in the skill command</td></tr>
+      <tr><td>Hard-case replay</td><td>Practice where the falls are</td><td>15 cm falls 1 in 3 → 1 in 12 (v11 → v12)</td><td>curriculum <code>top_replay_p</code></td></tr>
+      <tr><td>Latency + low-friction training</td><td>Covers the real actuator and oily floors</td><td>+1-step (40 ms) delay falls 100 % → 53 %; friction ×0.5 56 % → 6 %; pushes 12.5 % → 0 %</td><td>required stress conditions</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout"><b class="k">The pattern (a hypothesis)</b><p>The largest observed improvements followed changes that made the simulator and the action space physically right, while reward tuning mostly closed loopholes. If controlled comparisons confirm this, the scarce skill for an industrial team is physics and evaluation engineering, not ML research, and tooling can capture much of it.</p></div>
+
+  <h3>6.2 What does not work yet, and why</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Gap</th><th>Measured</th><th>Root cause</th><th>Planned fix</th></tr></thead>
+    <tbody>
+      <tr><td>Actuation delay beyond 20 ms</td><td class="num">17/32 fall at 40 ms</td><td>Only 50 % of v14 episodes had delay (0 or 20 ms), and only 100M steps of training. The margin above 20 ms is untested in training</td><td>Fix the evaluator; delay-share and 0–40 ms arms (§8.2); measure the real G1's latency</td></tr>
+      <tr><td>Head camera</td><td class="num">8/96 fall; envelope 6.4 cm</td><td>Edge smearing and occlusion in the tail of the depth error; a fine-tune on the error model did not help (v13)</td><td>Teacher–student distillation: the privileged-scan teacher supervises a student that takes camera input</td></tr>
+      <tr><td>5 kg payload</td><td class="num">4/32 fall</td><td>Only ±1 kg torso mass in training</td><td>v15: 0–4 kg extra torso mass</td></tr>
+      <tr><td>Slow walking (0.5 m/s)</td><td class="num">70/96 crossed (v12)</td><td>Commands outside the stairs cadence band; heading drifts 20–35°</td><td>Command the trained cadence; heading loop tuned per speed</td></tr>
+      <tr><td>Turning on stairs</td><td>not tested</td><td>Warp slides a sole lying lengthwise on an edge; MuJoCo C holds it</td><td>Finer heightfield or box-geometry stairs</td></tr>
+      <tr><td><b>Shin/knee collisions</b></td><td>not modelled</td><td>The Playground G1 scene collides only the feet with the floor. A policy can succeed with motions that would strike a real stair nosing, so simulated stairs are easier than real ones</td><td><b>First priority</b>: full leg–terrain collisions, realistic nosing geometry, dynamic contact checks</td></tr>
+      <tr><td>Privileged state in evaluation</td><td>not tested</td><td>Base velocity, camera pose, map pose and pelvis height come from the simulator (§5.7)</td><td>State estimator in the loop; calibration, sync, drift and missing-terrain conditions</td></tr>
+      <tr><td>Untouched final test</td><td>none yet</td><td>All suites guided development; a staircase family outside the training ranges has never been tested</td><td>Frozen policy and checkpoint; a new test suite opened once (§12)</td></tr>
+      <tr><td>Step-length accuracy (second engine)</td><td class="num">10.7 cm mean error</td><td>Contact sensitivity between engines; possibly the evaluator's extra 20 ms</td><td>Re-test after the evaluator fix; contact parity for flat ground</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout risk"><b class="k">Honest status</b><p>With the simulator's true terrain heights, v14 meets the crossing and fall targets on the validation suite (95/96 crossed, 1 fall, 9.9 cm clean). It does not pass the release gate we set: the camera condition misses the crossing target (86/96, 8 falls), the camera-qualified envelope is 6.4 cm against 10 cm, 17 of 32 runs fall at 40 ms of delay, and 4 of 32 fall with 5 kg. The pipeline reports <b>NOT YET</b>, which is the intended behaviour. Even a pass would mean "passed the specified simulation tests", with privileged state, feet-only collisions and a validation suite. Nothing here has run on hardware.</p></div>
+</section>
+
+<!-- ============================ 7 ============================ -->
+<section id="tradeoffs">
+  <h2><span class="n">§7</span>Trade-offs</h2>
+  <div class="tw"><table>
+    <thead><tr><th>Decision</th><th>We chose</th><th>What it costs</th><th>What it buys</th></tr></thead>
+    <tbody>
+      <tr><td>Robustness vs precision</td><td>Randomise targeted factors (delay, friction, pushes)</td><td>About 4× worse step-length precision in E3; more training</td><td>Push recovery; 40 ms delay falls 100 → 53 %</td></tr>
+      <tr><td>Simulator speed vs fidelity</td><td>GPU Warp for training, C MuJoCo for qualification; feet-only collisions</td><td>A contact gap to manage (preflight, sole spheres); stairs easier than real ones</td><td>About 100k steps/s, and a second contact implementation (same model)</td></tr>
+      <tr><td>Sample size vs eval cost</td><td>2048 GPU episodes to rank, 96–288 CPU runs to qualify</td><td>About 20 min per candidate on a laptop</td><td>Decisions not driven by noise: ±1.7 points instead of ±15</td></tr>
+      <tr><td>Warm start vs from scratch</td><td>Always warm start from the closest skill</td><td>Inherits parent quirks; lineage must be tracked</td><td>About 1 h per iteration instead of days; v1 from scratch failed</td></tr>
+      <tr><td>Blind vs perceptive</td><td>Height scan from a head camera</td><td>Perception error doubles falls (v12: 5 → 10/96)</td><td>Stairs at all: the blind vendor policy tops out near 4 cm</td></tr>
+      <tr><td>End-to-end vs hybrid</td><td>Learned gait + classical heading + code safety + language supervisor</td><td>More interfaces to test</td><td>Explainable decisions, veto points, mission awareness</td></tr>
+      <tr><td>Language model in the loop</td><td>Optional; asynchronous, 2 Hz, never touches joints</td><td>0.4 s median, up to 2 s p95 under load; an external dependency</td><td>Reads free-text missions; no measured safety benefit (§5.8)</td></tr>
+      <tr><td>Free vs paid compute</td><td>Kaggle T4 for early runs, AWS L40S later</td><td>T4: 30 GPU-h/week quota, 3–5× slower. AWS: capacity gaps, US$1.86/h</td><td>A 55-min 300M-step run; one-command jobs with budget caps</td></tr>
+      <tr><td>Open stack vs Isaac</td><td>MuJoCo / JAX / Brax</td><td>Fewer ready-made humanoid tasks</td><td>Runs on a laptop CPU for everything except training; no RTX lock-in</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="fig">
+    <p class="ft">Training throughput by compute target</p>
+    <p class="fs">Environment steps per second, measured over whole runs (G1, 8192 envs unless noted).</p>
+    <div class="chart" id="thr"></div>
+    <p class="cap">The first L40S runs were host-bound (4 vCPUs) or slowed by the Warp solver printing a note from the GPU kernel on every step (a 30 GB log in 40 min). Setting <code>warn_overflow = 0</code> gave about 5× the T4. Stairs runs on the T4 were slower than flat runs because of the larger contact buffers and height scan.</p>
+  </div>
+</section>
+
+<!-- ============================ 8 ============================ -->
+<section id="eval">
+  <h2><span class="n">§8</span>How to evaluate this pipeline</h2>
+  <p class="lede">A pipeline should be judged on whether its verdicts are right, not on a single policy's score. We evaluate at three levels.</p>
+
+  <h3>8.1 Policy level: the qualification protocol</h3>
+  <ul>
+    <li><b>Validation terrain.</b> Heights (3.0, 4.7, … 15.0 cm) sit between the training levels. Tread depth is 27 cm against 25/29/33 cm in training. No policy is scored on its own training stairs. Because these results steered development, they measure validation performance, and interpolation inside the training range.</li>
+    <li><b>Final test (to add).</b> A separate suite that stays sealed until the policy and checkpoint are frozen, including staircase families outside the training ranges (nosings, open risers, other tread depths). It is run once and reported whatever the outcome.</li>
+    <li><b>Several start poses</b> per staircase (3), because single-start results are near-chaotic.</li>
+    <li><b>Qualified height</b> is the tallest height at which every run at that height and below crossed with no fall, tilt below 25° and pelvis above 0.55 m. It is a floor, not an average.</li>
+    <li><b>Separate outcome labels</b>: falls, stalls (refusals and timeouts) and heading violations are counted separately (§5.5).</li>
+    <li><b>Wilson 95 % intervals</b> on every rate. The gate compares the interval's <i>upper</i> bound to the threshold, so a lucky small sample cannot pass.</li>
+    <li><b>The deployment sensor is required.</b> The camera condition counts toward the envelope.</li>
+    <li><b>Robot-safety numbers</b>: share of time torque-saturated (v14: 4.6 %, v12: 13 %) and at joint limits.</li>
+  </ul>
+
+  <h4>What the intervals establish, and what they do not</h4>
+  <p>Intervals make small samples honest, but they are not a safety guarantee. v14's 1 fall in 96 has a 95 % upper bound of about <b>5.7 %</b>, which does not establish a fall probability below 1 %. With the same two-sided Wilson method:</p>
+  <div class="tw"><table>
+    <thead><tr><th>Zero-fall runs</th><th class="num">95 % upper bound</th><th>Where it appears here</th></tr></thead>
+    <tbody>
+      <tr><td class="num">12</td><td class="num">24 %</td><td>one height in the strict test</td></tr>
+      <tr><td class="num">32</td><td class="num">10.7 %</td><td>a stress condition</td></tr>
+      <tr><td class="num">73</td><td class="num">&lt; 5 %</td><td></td></tr>
+      <tr><td class="num">189</td><td class="num">&lt; 2 %</td><td></td></tr>
+      <tr class="hl"><td class="num"><b>381</b></td><td class="num"><b>&lt; 1 %</b></td><td>the KPI target in §10.4</td></tr>
+    </tbody>
+  </table></div>
+  <p>These bounds hold only for the tested distribution. The strict test is 96 fixed scenarios (8 heights × 4 staircases × 3 start poses) in a deterministic simulator. Repeating nearly identical scenarios adds runs, not independent evidence, and says nothing about factory-wide reliability. Choosing the best of many checkpoints, and looking at many conditions, also raises the chance that a good number is luck (§5.6). The final test is how we will protect against that.</p>
+
+  <h3>8.2 Comparison level: is a change really better?</h3>
+  <p>The improvement campaign (<code>g1pipe.improve</code>, built but not yet run for real) trains one-change arms against a control that is warm-started from the same checkpoint and trained for the same number of steps. The benchmark gives every policy the same 2048 start states per condition. As implemented today, the decision uses a <b>two-proportion z-test per condition</b> on the aggregate fall counts, widened by the seed-to-seed noise measured between two control runs. An arm counts as a win only if an off-target condition improves at z ≥ 2.5, no condition gets worse at z ≥ 2.5, and the gap to the targets shrinks. Using 2.5 rather than 2 accounts for testing seven conditions. Language-model advisors may <i>propose</i> the next experiments, but code checks every knob against a whitelist and makes the keep-or-drop call.</p>
+  <p><b>To change:</b> because start states are shared, the benchmark should store per-episode outcomes and compare arms with a paired test (McNemar's test on discordant episodes), which is both correct and more sensitive. Repeated rounds against the same benchmark also need a correction for multiple looks, and any champion should be confirmed on the untouched final test.</p>
+
+  <h3>8.3 Pipeline level: did the tools catch real problems?</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Check</th><th>Problem it caught</th><th>Cost if missed</th></tr></thead>
+    <tbody>
+      <tr><td>Preflight parity</td><td>One-point feet in Warp (v1–v8); a 14.8 cm edge-pose discrepancy before v14</td><td>Eight versions trained on the wrong contact</td></tr>
+      <tr><td>Preflight throughput</td><td>GPU printf flood: 3–5× slower training, 30 GB of logs</td><td>Hours of paid GPU at a fraction of the speed</td></tr>
+      <tr><td>Validation layout (never trained on)</td><td>v5 qualified 8 cm on its own stairs but 0–4.7 cm on unseen ones</td><td>An overfit policy released as "8 cm"</td></tr>
+      <tr><td>Stress suite</td><td>Every policy since v1 fell under the "20 ms" (really 40 ms) delay condition</td><td>A fall on the first hardware test</td></tr>
+      <tr><td>Checkpoint ranking</td><td>The last checkpoint was rarely the best</td><td>Several extra falls per 96</td></tr>
+      <tr><td>Evaluator timing check</td><td>An off-by-one observation made 20 ms latency look fatal to the step-length policy</td><td>A wrong conclusion about latency</td></tr>
+      <tr><td>Cross-check against the GPU bench</td><td>The CPU evaluator's action queue adds one control step: every "nominal" result ran at 20 ms and the "20 ms" condition at 40 ms (found 2026-09-25, fix pending)</td><td>Mislabelled robustness results</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>8.4 From simulation to the floor</h3>
+  <div class="flow">
+    <div class="st"><b>Sim qualification</b>gate PASS in the second engine, camera and state estimation in the loop, leg collisions on, untouched final test</div><span class="ar">→</span>
+    <div class="st"><b>Hardware in the loop</b>measure the G1's real latency and friction; re-run the suite with them</div><span class="ar">→</span>
+    <div class="st"><b>Gantry</b>harnessed robot on a test staircase, the same heights as the strict test</div><span class="ar">→</span>
+    <div class="st"><b>Supervised trials</b>spotter, e-stop, logged falls against the sim prediction</div><span class="ar">→</span>
+    <div class="st gate"><b>Shadow operation</b>real routes; interventions per shift tracked</div>
+  </div>
+  <p class="note">Release criteria before hardware: pass §1.3 in the second engine with randomisation on, full leg–terrain collisions and estimated (not simulator) state; no fall under friction ≥ 0.5, payload ≤ 3 kg, pushes ≤ 0.5 m/s and the robot's measured latency plus margin; torque and joint velocity within 90 % of limits across the suite; a frozen policy that passes the untouched final test. A pass is evidence for a risk assessment, not conformity to a safety standard.</p>
+</section>
+
+<!-- ============================ 9 ============================ -->
+<section id="studio">
+  <h2><span class="n">§9</span>SKF Skill Studio: the platform around the pipeline</h2>
+  <p class="lede">A team cannot run this from one engineer's terminal. Skill Studio turns the pipeline into a product: define a skill once, launch it on any compute target, watch it live, gate it automatically and approve it by role.</p>
+
+  <h3>9.1 Architecture</h3>
+  <div class="flow">
+    <div class="st"><b>Web</b>Next.js 16, React 19, Better Auth; server-side calls only</div><span class="ar">→</span>
+    <div class="st"><b>API</b>FastAPI; Ed25519 JWTs (15 min) verified via JWKS</div><span class="ar">→</span>
+    <div class="st"><b>Worker</b>arq on Redis 7; state machine, reconciler every 20 s</div><span class="ar">→</span>
+    <div class="st"><b>Backends</b>local CPU · Kaggle T4 · AWS EC2 (L40S)</div><span class="ar">→</span>
+    <div class="st"><b>Reporter</b>in-job, stdlib only: logs, progress CSV, heartbeats</div>
+  </div>
+  <p>State lives in Postgres 17: skills, compute targets, runs with parent run and checkpoint lineage, stages, log lines, metric points, artifacts in S3, evaluations, gate decisions and an audit log of every change. Logs and metrics stream to the browser over server-sent events. The reporter batches every 2 s or 500 lines and drops known noise lines at the source.</p>
+
+  <h3>9.2 Skills as declarative manifests</h3>
+  <p>A skill is a validated YAML manifest with typed parameters, presets, a pipeline of stages, and a gate. Stages run as argument lists (never shell strings), and gate metrics are dot paths into each stage's summary. <b>For a supported task type</b>, a new skill variant (another gate, other presets, a different benchmark) is a new file. A genuinely new task is not. The ring pick-and-drop skill needed a new environment, observation, reward and evaluator: about 450 lines in <code>ring_env.py</code> and <code>ring_eval.py</code>, plus changes to <code>train.py</code>, before its 64-line manifest could run.</p>
+  <pre style="font-family:var(--mono);font-size:12.5px;line-height:1.5;background:var(--paper);border:1px solid var(--rule);padding:14px 16px;overflow-x:auto;margin:14px 0 18px"><code style="background:none;padding:0">id: g1-stairs-bench
+robot: unitree-g1
+params:   timesteps (150M) · lr (1e-4) · leg_action_scale (1.0) · overrides (JSON) · init_from (checkpoint)
+presets:  smoke · v14-control
+pipeline:
+  - train     g1pipe.train --task stairs          runs_on: target (GPU)
+  - bench     g1pipe.bench  (7 conditions × 2048)  suite: bench-v1   ~20 min
+  - evaluate  g1pipe.stairs_eval --starts 3        suite: strict-96  (local CPU)
+  - gate
+gate:     # Wilson 95 % upper bound of the fall rate on steps ≤ 10 cm
+  bench.strict.rate_hi        &lt;= 0.01    bench.camera.rate_hi      &lt;= 0.02
+  bench.delay_20ms.rate_hi    &lt;= 0.02    bench.low_friction.rate_hi &lt;= 0.05
+  bench.payload_5kg.rate_hi   &lt;= 0.02    bench.push.rate_hi        &lt;= 0.02
+  bench.speed_06.rate_hi      &lt;= 0.02
+  evaluate.crossed_rate &gt;= 0.9 · evaluate.fell &lt;= 5 · evaluate.certified_cm &gt;= 10</code></pre>
+  <div class="tw"><table>
+    <thead><tr><th>Skill</th><th>Stages</th><th>Gate</th></tr></thead>
+    <tbody>
+      <tr><td><code>g1-step-length</code></td><td>train → eval suite → gate</td><td>grid fall rate = 0 · step error &lt; 3 cm · 0.5 m/s push falls = 0 · 20 ms latency falls = 0</td></tr>
+      <tr><td><code>g1-stairs</code></td><td>train → strict 96 → gate</td><td>crossed ≥ 90 % · falls ≤ 5 · qualified height ≥ 10 cm</td></tr>
+      <tr><td><code>g1-stairs-bench</code></td><td>train → bench → strict 96 → gate</td><td>10 criteria above; the headline is the "gap to targets"</td></tr>
+      <tr><td><code>ring-pick-drop</code></td><td>train → 1024 episodes (GPU) → gate</td><td>success ≥ 99.5 % (95 % lower bound) · no finger inside the bore · no ring dropped. Stand-in: Playground's Franka arm; first training runs started, no results yet</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>9.3 Compute setups</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Target</th><th class="num">Steps/s (est.)</th><th class="num">$/GPU-h</th><th>Limits</th><th>How a job runs</th></tr></thead>
+    <tbody>
+      <tr><td>Local CPU</td><td class="num">250</td><td class="num">0</td><td>smoke runs only; 2 concurrent</td><td>Detached subprocess with an allow-listed environment</td></tr>
+      <tr><td>Kaggle T4</td><td class="num">36,000</td><td class="num">0</td><td>30 GPU-h/week quota; 2 concurrent</td><td>Private kernel with the reporter embedded; stops itself when revoked</td></tr>
+      <tr><td>AWS g6e.xlarge (L40S)</td><td class="num">100,000</td><td class="num">1.86</td><td>1 concurrent; zone fallback boxes</td><td>Starts an existing tagged box (the IAM policy has no RunInstances), rsync, tmux, stop when idle; box-side shutdown after 60 idle min</td></tr>
+    </tbody>
+  </table></div>
+  <p>Before launch, the wizard estimates time and cost from the target's measured throughput. It blocks invalid launches (a disabled target, missing credentials, a full run on the CPU) and routes large jobs by operators to approval.</p>
+
+  <h3>9.4 Release governance</h3>
+  <div class="two">
+    <div class="card"><h4>Run lifecycle</h4><p><code>pending_approval → queued → running → awaiting_review → approved | rejected</code>, or <code>gate_failed</code>, <code>failed</code>, <code>cancelled</code>. The gate is evaluated automatically; a missing metric counts as a fail.</p></div>
+    <div class="card"><h4>Roles</h4><p><b>admin</b>, <b>ml_engineer</b>, <b>operator</b> (launch presets only), <b>safety_reviewer</b> (reviews releases), <b>viewer</b>. Nobody can approve a launch or a release on their own run, and a rejection needs a written reason.</p></div>
+  </div>
+
+  <h3>9.5 Features</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Page</th><th>What it gives the team</th></tr></thead>
+    <tbody>
+      <tr><td>Dashboard</td><td>Active runs, GPU-hours and cost over 7 days, items awaiting approval or review, target quotas</td></tr>
+      <tr><td>Skills</td><td>Pipeline, gate criteria, presets, parameters and the lineage tree of every run</td></tr>
+      <tr><td>New run wizard</td><td>Skill → preset or schema-driven form → target with live estimate → review</td></tr>
+      <tr><td>Run detail</td><td>Live logs, metrics, checkpoints (evaluate one, or warm-start a new run from it), evaluation heatmaps and per-height tables, videos, gate review, config</td></tr>
+      <tr><td>Compare</td><td>2–4 runs side by side: headline metrics, gate table, overlaid curves</td></tr>
+      <tr><td>Methods</td><td>The §2 matrix with adjustable weights and linked evidence</td></tr>
+      <tr><td>Compute, admin</td><td>Target health and write-only secrets; users and the audit log</td></tr>
+    </tbody>
+  </table></div>
+  <p><b>Quality and security.</b> 162 API tests (real Postgres and Redis, AWS mocked with moto), 33 web unit tests and 16 Playwright end-to-end tests. Target secrets are Fernet-encrypted and write-only; per-stage ingest tokens are HMAC-signed and expire; there is no sign-up and passwords are at least 12 characters. The production edge (Caddy) hides internal routes and sets HSTS and frame denial.</p>
+</section>
+
+<!-- ============================ 10 ============================ -->
+<section id="value">
+  <h2><span class="n">§10</span>Business value and KPIs</h2>
+  <p class="lede">The value is not one stair-climbing policy. It is a lower and more predictable cost for every skill after it, plus the evidence a safety case needs.</p>
+
+  <h3>10.1 Measured unit economics</h3>
+  <div class="tw"><table>
+    <thead><tr><th>KPI</th><th>Measured</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td>Wall time per training iteration</td><td class="num">2.6–2.7 h → 0.9 h (300M steps) → 41 min end to end (v14)</td><td>effort log, progress CSVs</td></tr>
+      <tr><td>GPU cost per iteration (AWS)</td><td class="num">0.7–1.4 GPU-h ≈ US$1.3–2.6</td><td>effort log × US$1.86/h</td></tr>
+      <tr><td>Compute for the whole stairs programme</td><td class="num">≈33 GPU-h logged; ≈9 h paid (≈US$17)</td><td>effort log (v7 and v9 not logged)</td></tr>
+      <tr><td>Calendar time, zero to 9.9 cm with true scan (camera: 6.4 cm)</td><td class="num">3 days, 14 versions</td><td>git history</td></tr>
+      <tr><td>Evaluation throughput</td><td class="num">32 → 2048 crossings per checkpoint</td><td><code>gpu_eval</code></td></tr>
+      <tr><td>Fall rate, strict validation test, true scan</td><td class="num">87.5 % (v1, 32 runs) → 1.0 % (v14, 96 runs)</td><td>result JSONs</td></tr>
+      <tr><td>Torque saturation</td><td class="num">13 % → 4.6 % of the time</td><td>policy cards v12 → v14</td></tr>
+      <tr><td>Baseline-first saving</td><td class="num">Coarse step length at 0 GPU-h (E5)</td><td>E5 sweep</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>10.2 Where the value lands for a manufacturer</h3>
+  <div class="two">
+    <div class="card"><h4>Brownfield access</h4><p>A humanoid that climbs qualified stairs reaches mezzanines, platforms and inspection walkways without ramps or lifts. That is capital avoided for every route the robot can use as built.</p></div>
+    <div class="card"><h4>Skill cost curve</h4><p>Warm starts, manifests and automatic gates aim to make each new variant of a supported skill mostly configuration and compute. The measured compute cost is a few dollars per iteration. The dominant cost is engineering hours, which the lessons-as-checks design is meant to reduce. That reduction is <b>not measured yet</b> (§10.4).</p></div>
+    <div class="card"><h4>Safety evidence</h4><p>Each release carries a policy card: conditions, intervals, envelope, torque use, lineage, and who approved it. That is input to a risk assessment under ISO 10218, or later under the humanoid standard ISO 25785-1, which is still a draft. Passing our internal gate is not evidence of conformity to either.</p></div>
+    <div class="card"><h4>Vendor independence</h4><p>An open stack (MuJoCo, JAX, Brax) running on commodity GPUs, with everything but training on a laptop. The same pipeline can target other humanoids by swapping the model and the manifest.</p></div>
+  </div>
+
+  <h3>10.3 Skill cost model</h3>
+  <p>Defaults are this project's measurements. Engineer hours per iteration is an assumption; change it to your own figures.</p>
+  <div class="fig">
+    <div class="calc">
+      <label for="c-skills">New skills per year<input id="c-skills" type="number" min="1" value="6"></label>
+      <label for="c-iters">Iterations per skill<input id="c-iters" type="number" min="1" value="14"></label>
+      <label for="c-gpuh">GPU-h per iteration<input id="c-gpuh" type="number" min="0" step="0.1" value="1.0"></label>
+      <label for="c-rate">US$ per GPU-h<input id="c-rate" type="number" min="0" step="0.01" value="1.86"></label>
+      <label for="c-eng">Engineer hours per iteration (assumed)<input id="c-eng" type="number" min="0" step="0.5" value="3"></label>
+      <label for="c-engrate">US$ per engineer hour (assumed)<input id="c-engrate" type="number" min="0" step="5" value="90"></label>
+    </div>
+    <div class="calc-out">
+      <div><b id="o-gpu">–</b><span>GPU cost per year</span></div>
+      <div><b id="o-eng">–</b><span>Engineering cost per year</span></div>
+      <div><b id="o-skill">–</b><span>Cost per released skill</span></div>
+    </div>
+    <p class="cap">Compute is under 1 % of the cost of a skill at these rates. The engineer-hour inputs are assumptions, not measurements, so the output is only as good as them. Reducing iterations and hours per skill is the lever, which is why the pipeline turns every past failure into an automatic check. Whether it actually saves hours is what §10.4 sets out to measure.</p>
+  </div>
+
+  <h3>10.4 Not yet measured: engineering effort</h3>
+  <p>Faster training runs and cheap GPU time are measured. Lower <i>engineering effort</i>, the benefit that matters most, is not. We will measure it by doing the same task twice, once with the existing scripts and once through Skill Studio, and by having a second engineer reproduce a run:</p>
+  <div class="tw"><table>
+    <thead><tr><th>Metric</th><th>What it establishes</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>Active engineer hours to a reproducible result</td><td>Whether the framework saves labour</td><td><span class="pill warn">not measured</span></td></tr>
+      <tr><td>Time for a second engineer to reproduce a run</td><td>Whether knowledge transfers</td><td><span class="pill warn">not measured</span></td></tr>
+      <tr><td>Manual interventions per experiment</td><td>Whether automation works</td><td><span class="pill warn">not measured</span></td></tr>
+      <tr><td>Time to diagnose an injected failure</td><td>Whether the checks improve troubleshooting</td><td><span class="pill warn">not measured</span></td></tr>
+      <tr><td>Effort to add a genuinely different task</td><td>Whether the framework is reusable</td><td><span class="pill info">in progress</span> ring pick-and-drop (§9.2)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>10.5 KPIs to run the programme on</h3>
+  <div class="tw"><table>
+    <thead><tr><th>KPI</th><th>Definition</th><th>Now (sim)</th><th>Target before hardware</th></tr></thead>
+    <tbody>
+      <tr><td>Camera-qualified envelope</td><td>Tallest clean step height, camera required</td><td class="num">6.4 cm</td><td class="num">≥ 10 cm (site stairs: measured)</td></tr>
+      <tr><td>Fall-rate upper bound</td><td>Wilson 95 % upper bound, final test</td><td class="num">5.7 % (validation, true scan)</td><td class="num">≤ 1 % (≥ 381 representative zero-fall runs)</td></tr>
+      <tr><td>Stress pass rate</td><td>Share of stress conditions with rate_hi under threshold</td><td class="num">2 / 6</td><td class="num">6 / 6</td></tr>
+      <tr><td>Iterations to release</td><td>Versions from first run to gate PASS</td><td class="num">14+ (open)</td><td class="num">≤ 5 for the next locomotion skill</td></tr>
+      <tr><td>Hours per iteration</td><td>Launch to ranked checkpoints</td><td class="num">0.7–1 h</td><td class="num">≤ 1 h</td></tr>
+      <tr><td>Engineer hours per reproducible result</td><td>Active hours from task definition to a result a second engineer reproduces</td><td>not measured</td><td>baseline first, then a reduction against scripts</td></tr>
+      <tr><td>Interventions per shift</td><td>Operator e-stops or assists in shadow operation</td><td>n/a</td><td>trend to 0</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============================ 11 ============================ -->
+<section id="usecase">
+  <h2><span class="n">§11</span>Proposed learning pipeline for an SKF use case</h2>
+  <p class="lede">Use case: <b>bearing-component transfer and cleanliness check across a mezzanine</b>. A humanoid carries a tray of rings from a washing line up a staircase to a cleanliness inspection station, places the parts, and wipes the inspection surface between batches. It combines the three domains of §2: locomotion (stairs, with payload), manipulation (pick and put, wiping) and a workflow.</p>
+
+  <h3>11.1 Skill decomposition and method per skill</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Skill</th><th>Method</th><th>Data</th><th>Success measure</th></tr></thead>
+    <tbody>
+      <tr><td>Walk and climb site stairs with 0–5 kg</td><td>This pipeline: RL + curriculum + targeted randomisation; warm start from the best qualified policy</td><td>Site survey: rise, tread and nosing of each staircase; floor friction (dry and oily); the robot's measured latency</td><td>Camera-qualified envelope ≥ site max rise with leg collisions and estimated state; fall rate_hi ≤ 1 % with payload on an untouched test</td></tr>
+      <tr><td>Pick and put rings (tray ↔ fixture)</td><td>Teleoperated demonstrations → imitation learning (ACT or diffusion policy), with sim augmentation; RL fine-tune for grasp robustness. An RL-only stand-in (Franka arm, <code>ring-pick-drop</code>) is coded and has started training</td><td>50–200 teleop demos per part family (VR teleop of G1 with dexterous hands), plus randomised poses in sim</td><td>Pick success ≥ 99.5 % over 1000 attempts; no contact with the ring raceway</td></tr>
+      <tr><td>Wipe the inspection surface</td><td>Demonstrated wiping trajectory + impedance control for contact force (a hybrid, not pure learning)</td><td>10–30 demos; a force-sensing mock-up</td><td>Coverage ≥ 98 % of the area; contact force within band; residue test passes</td></tr>
+      <tr><td>Sequence the job</td><td>State machine or behaviour tree calling gated skills; a language supervisor for exceptions</td><td>Process description from the process specialist</td><td>Cycle time; interventions per shift</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>11.2 Pipeline per skill</h3>
+  <div class="flow">
+    <div class="st"><b>1 · Collect</b>site survey, teleop demos, latency and friction measurements</div><span class="ar">→</span>
+    <div class="st"><b>2 · Model</b>digital twin of the stairs and stations in MuJoCo; part CAD</div><span class="ar">→</span>
+    <div class="st"><b>3 · Train</b>Skill Studio run with a manifest per skill</div><span class="ar">→</span>
+    <div class="st"><b>4 · Gate</b>policy card in the unseen engine; safety reviewer signs</div><span class="ar">→</span>
+    <div class="st"><b>5 · Test</b>gantry → supervised → shadow on the real line</div><span class="ar">→</span>
+    <div class="st gate"><b>6 · Monitor</b>falls, interventions and near misses fed back as new test conditions</div>
+  </div>
+
+  <h3>11.3 Feasibility of the manipulation part</h3>
+  <p><b>Pick and put</b> is feasible now with demonstrations. Rings on trays and fixtures are rigid parts with known geometry, which is where imitation learning performs best. The risks are part-to-part variation and occlusion by the hand; sim augmentation and a pose check before release address both. <b>Wiping</b> is contact-rich and partly deformable (the cloth). A learned trajectory with a classical force controller is more realistic than end-to-end RL, and coverage can be measured directly. Both are harder for a humanoid than for an arm because the base is not fixed: the locomotion policy must hold a stable stance while the arms work. That is a whole-body control problem we would address with a standing-balance skill trained through this pipeline, with arm motion as a disturbance.</p>
+
+  <div class="callout"><b class="k">Benefits, limits and readiness</b><p><b>Benefits:</b> no plant changes; one robot type across stairs, handling and cleaning; every skill carries evidence. <b>Limits:</b> humanoid payload and hand dexterity are below an industrial arm's; cycle times will be slower. <b>Safety:</b> fenceless operation near people needs speed and separation monitoring and a certified stop; learned skills sit inside that envelope and never replace it. <b>Readiness:</b> locomotion has passed simulation tests with the true terrain scan but not its release gate; manipulation is at design level, with an arm stand-in in first training.</p></div>
+</section>
+
+<!-- ============================ 12 ============================ -->
+<section id="roadmap">
+  <h2><span class="n">§12</span>Roadmap and conclusion</h2>
+  <p>We keep the existing training stack and <b>pause platform expansion</b> until one tightly defined milestone is complete:</p>
+  <p class="thesis">Reproduce and evaluate camera-based ascent of a fixed five-step staircase, with realistic body collisions and latency, using a frozen policy and a previously untouched test set.</p>
+  <p>The deliverable is a package: source, the exact configuration, the checkpoint, the sensor assumptions, episode-level outcomes and the gate decision. A team member who did not build it then reproduces it, and we record their effort. That answers both questions this project poses: whether the robot learned the skill, and whether the framework makes that work easier.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Step toward the milestone</th><th>Expected effect</th><th>How we will know</th></tr></thead>
+    <tbody>
+      <tr><td>Fix the evaluator latency offset; re-run the v12 and v14 cards</td><td>Correctly labelled nominal and delay results</td><td>CPU card agrees with the GPU bench at 0, 20 and 40 ms</td></tr>
+      <tr><td>Leg–terrain collisions, realistic stair nosings, dynamic contact checks</td><td>Simulated stairs as hard as real ones; turning on stairs</td><td>Preflight parity on edge poses; shin-contact counts per episode</td></tr>
+      <tr><td>State estimator, calibration error, sync and drift in the loop</td><td>No simulator state in the actor's inputs at evaluation</td><td>Camera condition re-run without privileged signals (§5.7)</td></tr>
+      <tr><td>Measure the real G1's latency and friction; test perception and actuation delay together</td><td>Randomisation ranges from data, not guesses</td><td>Suite re-run with measured values plus margin</td></tr>
+      <tr><td>One-change arms: delay share, 0–40 ms delay, 0–4 kg payload (formerly v15)</td><td>40 ms delay falls well under 53 %; payload falls under 4/32</td><td>Paired test on per-episode outcomes against a same-length control</td></tr>
+      <tr><td>Teacher–student distillation onto camera input</td><td>Closes the part of the camera gap caused by noise, not by occlusion</td><td><code>strict_camera</code> qualified height</td></tr>
+      <tr><td>Freeze the policy; open the final test once</td><td>An unbiased estimate on unseen staircases</td><td>Reported whatever the outcome</td></tr>
+      <tr><td>Engineering-effort study (§10.4)</td><td>Evidence for or against the framework's main benefit</td><td>Second engineer's reproduction time and active hours</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Conclusion</h3>
+  <p>In simulation, stair climbing on a humanoid is learnable in hours of GPU time with open tools. We took it from 28 falls in 32 to 1 in 96 on staircases kept out of training, with the simulator's true terrain heights. With the head camera the policy still fell 8 times in 96, and with one extra step of delay it fell in half the runs, so the release gate withheld it. That verdict is the achievement we can defend. The framework found the failures, named their likely causes and refused to release on incomplete evidence. What made the progress possible was not a better algorithm but treating the skill as an engineering artefact: a simulator checked against a second engine, a curriculum, a warm start, targeted randomisation, statistical evaluation and a release gate. Whether this also saves engineering effort is the next thing to measure. Our answer to how to make industrial humanoid training easier and more efficient: <b>make every lesson a check, make every check automatic, and let people approve what the checks cannot see.</b></p>
+</section>
+
+<!-- ============================ A ============================ -->
+<section id="appendix">
+  <h2><span class="n">Appendix</span>Reproduce and references</h2>
+  <details>
+    <summary>Commands</summary>
+<pre style="font-family:var(--mono);font-size:12.5px;line-height:1.55;overflow-x:auto;margin:0"><code style="background:none;padding:0">uv sync --extra train &amp;&amp; export PYTHONPATH=.
+uv run python scripts/e5_sweep.py                                   # E5 vendor baseline, ~15 s
+uv run python -m g1pipe.train --smoke --out runs/smoke              # pipeline smoke test, ~90 s
+uv run python scripts/g1job.py --run g1-stairs-v15 \
+  --init-from runs/g1-stairs-v14/run/params.pkl --budget-min 90 -- \
+  --task stairs --leg-action-scale 1.0 --lr 1e-4 --timesteps 300000000
+uv run python -m g1pipe.gpu_eval runs/&lt;run&gt;/run/ckpt_*.pkl --scan camera   # rank checkpoints
+uv run python scripts/certify.py runs/&lt;run&gt;/run/&lt;ckpt&gt;.pkl --target-cm 10  # policy card
+uv run python -m jev_agent.run runs/g1-steplength-v1/run/params.pkl --episodes 18</code></pre>
+  </details>
+  <details>
+    <summary>Result files behind each figure</summary>
+    <ul class="refs">
+      <li>E5: <code>results/e5/e5_runs.csv</code>; E3: <code>results/e3_comparison.md</code>, <code>results/eval_v1/summary.json</code>, <code>results/eval_nodr/summary.json</code></li>
+      <li>Stairs strict tests: <code>results/stairs/strict_v*.json</code>; held-out v1/v2: <code>results/stairs/eval_v*_heldout.json</code></li>
+      <li>Policy cards: <code>results/stairs/card_v12_254M.md</code>, <code>results/stairs/card_v14.md</code>; v14 per-episode outcomes: <code>runs/g1-stairs-v14/run/cert_params/*.json</code></li>
+      <li>Checkpoint screening: <code>runs/g1-stairs-v14/run/rank_true.json</code>, <code>rank_camera.json</code></li>
+      <li>Camera: <code>results/vision/camera_check_{8,12}cm.json</code>; supervisor: <code>results/bench/agent_vs_fixed.md</code></li>
+      <li>Step length: <code>results/eval_v1/mjx_grid.csv</code> (training engine), <code>results/eval_v1/grid.csv</code> (second engine); annotated v14 video: <code>results/videos/stairs_v14_annotated.{mp4,json}</code> (<code>scripts/stairs_video.py</code>)</li>
+      <li>Effort and GPU hours: <code>docs/effort_log.csv</code>; rules: <code>docs/lessons.md</code></li>
+    </ul>
+  </details>
+  <details>
+    <summary>Background references</summary>
+    <ul class="refs">
+      <li>Schulman et al., Proximal Policy Optimization Algorithms, 2017.</li>
+      <li>Rudin et al., Learning to Walk in Minutes Using Massively Parallel Deep RL (legged_gym terrain curriculum), CoRL 2021.</li>
+      <li>Zakka et al., MuJoCo Playground, 2025; Freeman et al., Brax, 2021; Todorov et al., MuJoCo, 2012.</li>
+      <li>Tobin et al., Domain Randomization for Transferring Deep Neural Networks from Simulation to the Real World, 2017.</li>
+      <li>Lee et al., Learning Quadrupedal Locomotion over Challenging Terrain (teacher–student), Science Robotics 2020.</li>
+      <li>Zhao et al., ACT: Learning Fine-Grained Bimanual Manipulation, 2023; Chi et al., Diffusion Policy, 2023.</li>
+      <li>Wilson, Probable Inference, the Law of Succession, and Statistical Inference, JASA 1927.</li>
+      <li>McNemar, Note on the Sampling Error of the Difference Between Correlated Proportions or Percentages, Psychometrika 1947.</li>
+      <li>Kim et al., OpenVLA: An Open-Source Vision-Language-Action Model, 2024.</li>
+      <li>ISO 10218-1/-2:2025, Robotics: safety requirements for industrial robots; ISO 25785-1 (committee draft), safety requirements for industrial mobile robots with actively controlled stability.</li>
+    </ul>
+  </details>
+  <p class="note" style="margin-top:18px">Team: Lahiru, Ahmed, Roth. All results are from simulation. Source, configurations, checkpoints and per-episode outcomes are in the team repository at the commits named on each policy card. A self-contained reproduction package is part of the §12 milestone.</p>
+</section>
+</main>
+</div>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const tip = $('#tip');
+  document.addEventListener('mousemove', e => {
+    const t = e.target.closest && e.target.closest('[data-tip]');
+    if (!t) { tip.style.opacity = 0; return; }
+    tip.innerHTML = t.getAttribute('data-tip');
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    let x = e.clientX + 14, y = e.clientY + 14;
+    if (x + w > innerWidth - 8) x = e.clientX - w - 14;
+    if (y + h > innerHeight - 8) y = e.clientY - h - 14;
+    tip.style.left = x + 'px'; tip.style.top = y + 'px'; tip.style.opacity = 1;
+  });
+
+  function wilson(k, n, z = 1.96) {
+    if (!n) return [0, 1];
+    const p = k / n, d = 1 + z*z/n, c = (p + z*z/(2*n)) / d, h = z*Math.sqrt(p*(1-p)/n + z*z/(4*n*n)) / d;
+    return [Math.max(0, c - h), Math.min(1, c + h)];
+  }
+  const NS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+  function svgFor(host, h) { host.innerHTML = ''; const w = Math.max(280, host.clientWidth); const s = el('svg', {viewBox: `0 0 ${w} ${h}`, width: w, height: h, role: 'img'}, host); return [s, w]; }
+  function text(s, x, y, str, o = {}) { const t = el('text', Object.assign({x, y, 'font-size': 12}, o), s); t.textContent = str; return t; }
+  const pct = v => (v*100).toFixed(1).replace(/\.0$/, '') + ' %';
+
+  /* ---------- forest plot: certification ---------- */
+  const CERT = [
+    ['strict', 'Strict (required)', [96,5], [96,1]],
+    ['strict_camera', 'Strict, head camera (required)', [96,10], [96,8]],
+    ['speed_0.6', 'Slower, 0.6 m/s', [96,11], [96,0]],
+    ['tread_30cm', '30 cm treads', [32,2], [32,0]],
+    ['push', 'Pushes', [32,4], [32,0]],
+    ['low_friction', 'Friction ×0.5', [32,18], [32,2]],
+    ['payload_5kg', '5 kg payload', [32,4], [32,4]],
+    ['delay_20ms', 'Delay +1 step (40 ms total)', [32,32], [32,17]],
+  ];
+  const CERT_EXTRA = { // certified cm v12, v14, v14 torque-sat, v14 at limit
+    strict:['6.4','9.9','4.6 %','11.3 %'], strict_camera:['6.4','6.4','4.8 %','13.4 %'], 'speed_0.6':['4.7','11.6','3.6 %','10.9 %'],
+    tread_30cm:['12.0','16.0','5.0 %','8.6 %'], push:['9.9','11.6','4.5 %','10.9 %'], low_friction:['0.0','8.1','5.5 %','8.9 %'],
+    payload_5kg:['9.9','4.7','2.6 %','9.0 %'], delay_20ms:['0.0','3.0','8.2 %','23.9 %']};
+  function drawForest(host, rows, series, opts) {
+    const narrow = host.clientWidth < 560;
+    const labW = narrow ? 0 : 190, rowH = narrow ? 50 : 34, top = 8, bot = 30;
+    const [s, w] = svgFor(host, top + rows.length*rowH + bot);
+    const x0 = labW + 8, x1 = w - 14, X = v => x0 + (x1 - x0) * v / opts.max;
+    for (let t = 0; t <= opts.max + 1e-9; t += opts.step) {
+      el('line', {x1: X(t), x2: X(t), y1: top, y2: top + rows.length*rowH, stroke: css('--grid'), 'stroke-width': 1}, s);
+      text(s, X(t), top + rows.length*rowH + 18, Math.round(t*100) + ' %', {'text-anchor': 'middle', 'font-size': 11});
+    }
+    rows.forEach((r, i) => {
+      const yb = top + i*rowH;
+      if (i % 2 === 0) el('rect', {x: 0, y: yb, width: w, height: rowH, fill: css('--rule-2'), opacity: .5}, s);
+      if (narrow) text(s, 4, yb + 13, r.label, {'font-size': 11.5, 'font-weight': 600, fill: css('--ink')});
+      else text(s, 0, yb + rowH/2 + 4, r.label, {'font-size': 12.5, fill: css('--ink')});
+      series.forEach((se, j) => {
+        const [n, k] = r.vals[j]; const [lo, hi] = wilson(k, n); const p = k / n;
+        const yy = narrow ? yb + 26 + j*12 : yb + rowH/2 + (j - (series.length-1)/2) * 10;
+        el('line', {x1: X(lo), x2: X(hi), y1: yy, y2: yy, stroke: se.color, 'stroke-width': 2, 'stroke-linecap': 'round'}, s);
+        el('circle', {cx: X(p), cy: yy, r: 4.5, fill: se.color, stroke: css('--paper'), 'stroke-width': 2}, s);
+        el('rect', {x: X(lo) - 6, y: yy - 6, width: Math.max(12, X(hi) - X(lo) + 12), height: 12, fill: 'transparent',
+          'data-tip': `<b>${se.name}</b> · ${r.label}<br>${k} of ${n} fell · ${pct(p)}<br>95 % CI ${pct(lo)}–${pct(hi)}`}, s);
+      });
+    });
+  }
+  function renderCert() {
+    drawForest($('#cert'), CERT.map(c => ({label: c[1], vals: [c[2], c[3]]})),
+      [{name: 'v12', color: css('--s2')}, {name: 'v14', color: css('--s1')}], {max: 1, step: .25});
+  }
+  $('#certtab').innerHTML = CERT.map(c => {
+    const e = CERT_EXTRA[c[0]];
+    return `<tr${c[0].startsWith('strict')?' class="hl"':''}><td>${c[1]}</td><td class="num">${c[2][1]}/${c[2][0]}</td><td class="num"><b>${c[3][1]}/${c[3][0]}</b></td><td class="num">${e[0]} cm</td><td class="num"><b>${e[1]} cm</b></td><td class="num">${e[2]}</td><td class="num">${e[3]}</td></tr>`;
+  }).join('');
+
+  /* ---------- version chart ---------- */
+  const VER = [
+    ['v9', [96,9], null], ['v10', [96,14], null], ['v11', [96,8], null], ['v12', [96,5], [96,10]], ['v13', [96,8], [96,11]], ['v14', [96,1], [96,8]],
+  ];
+  function renderVer() {
+    const host = $('#ver'); const H = 250, top = 10, bot = 30, left = 40;
+    const [s, w] = svgFor(host, H); const max = .3;
+    const Y = v => top + (H - top - bot) * (1 - v / max);
+    const bw = (w - left - 10) / VER.length, X = i => left + bw * (i + .5);
+    for (let t = 0; t <= max + 1e-9; t += .05) {
+      el('line', {x1: left, x2: w - 6, y1: Y(t), y2: Y(t), stroke: css('--grid')}, s);
+      text(s, left - 6, Y(t) + 4, Math.round(t*100) + ' %', {'text-anchor': 'end', 'font-size': 11});
+    }
+    const sers = [{i: 1, name: 'true terrain', c: css('--s1'), dx: -7}, {i: 2, name: 'head camera', c: css('--s3'), dx: 7}];
+    VER.forEach((v, i) => {
+      text(s, X(i), H - 10, v[0], {'text-anchor': 'middle', 'font-size': 12, 'font-weight': v[0]==='v14'?700:400, fill: css('--ink')});
+      sers.forEach(se => {
+        const d = v[se.i]; if (!d) return; const [n, k] = d; const [lo, hi] = wilson(k, n); const x = X(i) + se.dx;
+        el('line', {x1: x, x2: x, y1: Y(lo), y2: Y(hi), stroke: se.c, 'stroke-width': 2, 'stroke-linecap': 'round'}, s);
+        el('circle', {cx: x, cy: Y(k/n), r: 4.5, fill: se.c, stroke: css('--paper'), 'stroke-width': 2}, s);
+        el('rect', {x: x - 8, y: Y(hi) - 4, width: 16, height: Y(lo) - Y(hi) + 8, fill: 'transparent',
+          'data-tip': `<b>${v[0]}</b> · ${se.name}<br>${k} of ${n} fell · ${pct(k/n)}<br>95 % CI ${pct(lo)}–${pct(hi)}`}, s);
+      });
+    });
+    const last = VER[VER.length-1]; text(s, X(VER.length-1) - 12, Y(last[1][1]/96) + 4, '1/96', {'text-anchor': 'end', 'font-size': 11.5, 'font-weight': 700, fill: css('--ink')});
+  }
+
+  /* ---------- checkpoint line ---------- */
+  const CK_T = [[0,26.8,24.9,28.8],[5.4,22.3,20.6,24.2],[10.8,22.6,20.8,24.4],[16.2,21.1,19.4,23.0],[21.6,21.3,19.6,23.1],[27.0,20.6,18.9,22.4],[32.4,21.7,20.0,23.6],[37.8,21.6,19.9,23.4],[43.3,20.6,18.9,22.4],[48.7,21.8,20.0,23.6],[54.1,20.4,18.7,22.2],[59.5,20.8,19.1,22.7],[64.9,21.3,19.6,23.2],[70.3,20.8,19.1,22.6],[75.7,18.6,17.0,20.3],[81.1,18.9,17.3,20.7],[86.5,19.5,17.9,21.3],[91.9,18.6,16.9,20.3],[97.3,19.5,17.9,21.3],[102.7,18.9,17.3,20.6]];
+  const CK_C = [[0,28.2,26.3,30.2],[5.4,25.0,23.1,26.9],[10.8,24.4,22.6,26.3],[16.2,23.7,21.9,25.6],[21.6,23.8,22.0,25.7],[27.0,21.8,20.0,23.6],[32.4,22.8,21.0,24.7],[37.8,21.9,20.1,23.7],[43.3,21.9,20.2,23.8],[48.7,22.1,20.3,23.9],[54.1,22.2,20.4,24.0],[59.5,22.0,20.3,23.9],[64.9,21.3,19.6,23.1],[70.3,21.8,20.0,23.6],[75.7,20.3,18.6,22.1],[81.1,20.8,19.1,22.7],[86.5,20.5,18.8,22.3],[91.9,19.4,17.8,21.2],[97.3,20.5,18.8,22.3],[102.7,22.0,20.3,23.9]];
+  function renderCk() {
+    const host = $('#ckpt'); const H = 250, top = 10, bot = 34, left = 40, right = 12;
+    const [s, w] = svgFor(host, H); const ymin = 15, ymax = 31, xmax = 105;
+    const X = v => left + (w - left - right) * v / xmax, Y = v => top + (H - top - bot) * (1 - (v - ymin) / (ymax - ymin));
+    for (let t = 16; t <= 30; t += 2) { el('line', {x1: left, x2: w - right, y1: Y(t), y2: Y(t), stroke: css('--grid')}, s); text(s, left - 6, Y(t) + 4, t + ' %', {'text-anchor': 'end', 'font-size': 11}); }
+    for (let t = 0; t <= 100; t += 20) text(s, X(t), H - 16, t + 'M', {'text-anchor': 'middle', 'font-size': 11});
+    text(s, (left + w - right)/2, H - 2, 'environment steps', {'text-anchor': 'middle', 'font-size': 11, fill: css('--muted')});
+    [[CK_C, css('--s3'), 'head camera'], [CK_T, css('--s1'), 'true terrain']].forEach(([d, c, name]) => {
+      const band = d.map(p => `${X(p[0])},${Y(p[3])}`).concat(d.slice().reverse().map(p => `${X(p[0])},${Y(p[2])}`)).join(' ');
+      el('polygon', {points: band, fill: c, opacity: .12}, s);
+      el('polyline', {points: d.map(p => `${X(p[0])},${Y(p[1])}`).join(' '), fill: 'none', stroke: c, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round'}, s);
+      const e = d[d.length-1]; el('circle', {cx: X(e[0]), cy: Y(e[1]), r: 4, fill: c, stroke: css('--paper'), 'stroke-width': 2}, s);
+      d.forEach(p => el('circle', {cx: X(p[0]), cy: Y(p[1]), r: 8, fill: 'transparent', 'data-tip': `<b>${name}</b> · ${p[0]}M steps<br>fall ${p[1]} % (CI ${p[2]}–${p[3]} %)`}, s));
+    });
+    text(s, X(0) + 6, Y(28.2) - 6, 'v12 parent', {'font-size': 11, fill: css('--ink-2')});
+  }
+
+  /* ---------- E3 bars ---------- */
+  function hbars(host, rows, colors, names, unit, max) {
+    const labW = 118, rowH = 40, top = 4, bot = 18;
+    const [s, w] = svgFor(host, top + rows.length*rowH + bot);
+    const x0 = labW, x1 = w - 46, X = v => x0 + (x1 - x0) * v / max;
+    el('line', {x1: x0, x2: x0, y1: top, y2: top + rows.length*rowH, stroke: css('--axis')}, s);
+    rows.forEach((r, i) => {
+      const yb = top + i*rowH;
+      text(s, 0, yb + rowH/2 + 4, r[0], {'font-size': 12, fill: css('--ink')});
+      r[1].forEach((v, j) => {
+        const y = yb + 8 + j*13, bw = Math.max(1.5, X(v) - x0);
+        el('path', {d: `M${x0},${y} h${Math.max(0,bw-4)} a4,4 0 0 1 4,4 v3 a4,4 0 0 1 -4,4 h-${Math.max(0,bw-4)} z`, fill: colors[j], 'data-tip': `<b>${names[j]}</b> · ${r[0]}<br>${v}${unit}`}, s);
+        text(s, x0 + bw + 5, y + 9, v + unit, {'font-size': 11});
+      });
+    });
+  }
+  function renderE3() {
+    const c = [css('--s1'), css('--s2')], n = ['with randomisation', 'without randomisation'];
+    hbars($('#e3a'), [['Training engine', [5.9, 1.6]], ['Unseen engine', [10.7, 4.4]]], c, n, ' cm', 12);
+    hbars($('#e3b'), [['Push 0.5 m/s', [0, 33]], ['Push 1.0 m/s', [67, 100]], ['Friction ×0.5, payload', [0, 0]]], c, n, ' %', 100);
+  }
+
+  /* ---------- throughput ---------- */
+  const THR = [['Laptop CPU (Apple M4, smoke run)', 0.25], ['AWS g6e.xlarge, 4 vCPU, host-bound', 8.3], ['Kaggle T4, stairs', 21], ['Kaggle T4, flat walking', 35.5], ['AWS g6e.xlarge L40S, v14 (with delay)', 75.4], ['AWS g6e.xlarge L40S, v12', 95.1], ['AWS g6e.2xlarge L40S, v9', 98.8]];
+  function renderThr() {
+    const host = $('#thr'); const narrow = host.clientWidth < 560;
+    const labW = narrow ? 0 : 250, rowH = narrow ? 40 : 28, top = 4, bot = 22;
+    const [s, w] = svgFor(host, top + THR.length*rowH + bot);
+    const x0 = labW + 4, x1 = w - 60, X = v => x0 + (x1 - x0) * v / 100;
+    for (let t = 0; t <= 100; t += 25) { el('line', {x1: X(t), x2: X(t), y1: top, y2: top + THR.length*rowH, stroke: css('--grid')}, s); text(s, X(t), top + THR.length*rowH + 15, t + 'k', {'text-anchor': 'middle', 'font-size': 11}); }
+    THR.forEach((r, i) => {
+      const yb = top + i*rowH;
+      const by = narrow ? yb + 20 : yb + 7;
+      if (narrow) text(s, x0, yb + 13, r[0], {'font-size': 11.5, fill: css('--ink')});
+      else text(s, 0, yb + rowH/2 + 4, r[0], {'font-size': 12, fill: css('--ink')});
+      const bw = Math.max(2, X(r[1]) - x0);
+      el('path', {d: `M${x0},${by} h${Math.max(0,bw-4)} a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-${Math.max(0,bw-4)} z`, fill: css('--s1'), 'data-tip': `<b>${r[0]}</b><br>${r[1] >= 1 ? r[1].toFixed(1) + 'k' : Math.round(r[1]*1000)} steps/s`}, s);
+      text(s, x0 + bw + 6, by + 11, r[1] >= 1 ? r[1].toFixed(r[1] < 10 ? 1 : 0) + 'k' : '250', {'font-size': 11.5, 'font-weight': 600});
+    });
+  }
+
+  /* ---------- E5 heat table ---------- */
+  const E5 = {speeds: ['0.2', '0.4', '0.6', '0.8', '1.0', '1.2'], rows: [['0.6', [7.2,14.1,20.1,25.8,30.8,35.2]], ['0.7', [7.2,14.2,21.2,27.6,33.4,37.9]], ['0.8 (trained)', [7.7,15.4,22.9,29.5,35.0,38.6]], ['0.9', [8.0,16.3,24.3,31.1,36.0,39.9]], ['1.0', [8.6,17.6,26.0,32.6,33.8,33.6]]]};
+  function seq(v) { const st = ['--seq0','--seq1','--seq2','--seq3','--seq4','--seq5']; const i = Math.min(5, Math.floor((v - 5) / 7)); return css(st[Math.max(0,i)]); }
+  function inkOn(v) { return v >= 26 ? '#ffffff' : css('--ink'); }
+  function renderE5() {
+    $('#e5').innerHTML = `<thead><tr><th>gait period (s) ↓ · speed (m/s) →</th>${E5.speeds.map(s => `<th class="num">${s}</th>`).join('')}</tr></thead><tbody>` +
+      E5.rows.map(r => `<tr><td${r[0].includes('trained')?' style="font-weight:700"':''}>${r[0]}</td>${r[1].map((v, j) => `<td class="c" style="background:${seq(v)};color:${inkOn(v)}" data-tip="period ${r[0]} s, ${E5.speeds[j]} m/s<br><b>${v} cm</b> step">${v}</td>`).join('')}</tr>`).join('') + '</tbody>';
+  }
+
+  /* ---------- per-height table ---------- */
+  const H = ['3.0','4.7','6.4','8.1','9.9','11.6','13.3','15.0'];
+  const PH = [['v12 strict', [0,0,0,1,1,0,2,1]], ['v14 strict', [0,0,0,0,0,1,0,0]], ['v12 camera', [0,0,0,1,4,0,3,2]], ['v14 camera', [0,0,0,0,2,1,4,1]]];
+  function renderPH() {
+    const tint = f => f === 0 ? css('--good-soft') : f === 1 ? css('--warn-soft') : css('--crit-soft');
+    const ink = f => f === 0 ? css('--good') : f === 1 ? css('--warn') : css('--crit');
+    $('#perh').innerHTML = `<thead><tr><th>falls of 12 · step height (cm) →</th>${H.map(h => `<th class="num">${h}</th>`).join('')}</tr></thead><tbody>` +
+      PH.map(r => `<tr${r[0].startsWith('v14')?' style="font-weight:700"':''}><td>${r[0]}</td>${r[1].map((f, j) => `<td class="c" style="background:${tint(f)};color:${ink(f)}" data-tip="${r[0]}, ${H[j]} cm<br><b>${f} of 12 fell</b>">${f}</td>`).join('')}</tr>`).join('') + '</tbody>';
+  }
+
+  /* ---------- methods matrix ---------- */
+  const REQ = [['data','Data effort'],['time','Training time'],['safety','Safety'],['repeatability','Repeatability'],['adaptability','Adaptability'],['compute','Compute'],['explainability','Explainability'],['maturity','Deployment maturity']];
+  const W0 = {data:3,time:3,safety:5,repeatability:4,adaptability:3,compute:2,explainability:3,maturity:4};
+  const M = [
+    ['Manual programming', {locomotion:[5,2,3,5,2,5,5,2,'Model-based humanoid gaits are analysable but take months of expert tuning and stay brittle on uneven ground. Unitree itself ships a learned policy for the G1.'], manipulation:[5,2,5,5,1,5,5,5,'How industrial arms are programmed today: certified and exact, but every new part or fixture means new programming.'], workflow:[5,2,5,5,1,5,5,5,'PLC-style sequencing is the proven way to chain steps, and the right glue between learned skills.']}],
+    ['Teleoperation / demonstration', {locomotion:[2,3,2,3,2,4,2,2,'Whole-body balance is hard to teleoperate; demonstrations do not teach recovery from pushes or slips.'], manipulation:[3,4,3,3,3,4,2,3,'Tens to hundreds of demonstrations per task suffice for many pick-and-place skills, and process experts can provide them.'], workflow:[2,3,3,2,2,4,2,2,'Long demonstrations are costly and every workflow variation needs new recordings.']}],
+    ['Imitation learning', {locomotion:[2,3,2,3,2,3,2,2,'Useful for natural motion styles (mocap priors), but no balance recovery without an RL stage on top.'], manipulation:[2,3,3,3,3,3,2,3,'The strongest learned approach for contact-rich manipulation today, given a demonstration pipeline.'], workflow:[2,2,2,2,2,3,2,2,'Errors compound over long horizons; best when each step is a separate, gated skill.']}],
+    ['Reinforcement learning', {locomotion:[5,4,3,3,4,3,2,4,'Measured here: step-length control in 95 GPU-minutes, no demonstrations. Stairs took 14 versions, so reward and physics design is the real cost.'], manipulation:[4,2,2,3,3,2,2,2,'Contact-rich simulation and reward shaping are slow to get right; exploration can find unsafe shortcuts.'], workflow:[4,1,2,2,3,1,1,1,'Rewards for long multi-step tasks are sparse; end-to-end training is impractical at industrial reliability.']}],
+    ['Sim-to-real with randomisation', {locomotion:[5,3,4,4,4,3,2,4,'Measured here (E3): randomisation cut 0.5 m/s push falls from 33 % to 0 % but made step length about 4× less precise.'], manipulation:[4,2,3,3,3,2,2,2,'Works in research for in-hand manipulation, but contact and deformable parts are hard to randomise faithfully.'], workflow:[4,1,2,2,3,1,1,1,'Adds robustness per skill, not sequencing; more compute for every skill in the chain.']}],
+    ['Human feedback', {locomotion:[3,2,3,3,3,3,2,1,'Rarely used for gaits; physical metrics (falls, tracking error) are cheaper judges than people.'], manipulation:[3,3,3,3,4,3,2,2,'Operator corrections fix cases demonstrations missed; needs tooling on the floor.'], workflow:[3,2,3,3,4,3,3,2,'Approvals and corrections at step boundaries are explicit and auditable.']}],
+    ['Vision-language-action models', {locomotion:[2,2,1,2,3,1,1,1,'Not where these models are strong; low-level balance still comes from a separate RL controller.'], manipulation:[3,3,2,2,5,1,1,2,'Best generalisation to new objects and instructions, but latency, GPU cost and hard-to-bound failures keep them in pilots.'], workflow:[3,3,2,2,5,1,2,2,'Promising as a high-level planner that sequences gated skills; its plans can be reviewed before execution.']}],
+  ];
+  let dom = 'locomotion'; const W = Object.assign({}, W0);
+  $('#weights').innerHTML = REQ.map(([k, l]) => `<label for="w-${k}"><span>${l}<b id="wv-${k}">${W[k]}</b></span><input id="w-${k}" type="range" min="0" max="5" step="1" value="${W[k]}" data-k="${k}"></label>`).join('');
+  document.querySelectorAll('#weights input').forEach(i => i.addEventListener('input', () => { W[i.dataset.k] = +i.value; $('#wv-' + i.dataset.k).textContent = i.value; renderM(); }));
+  document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => { dom = b.dataset.dom; document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); renderM(); }));
+  function renderM() {
+    const tw = REQ.reduce((a, [k]) => a + W[k], 0) || 1;
+    const rows = M.map(([name, a]) => { const sc = a[dom]; const score = REQ.reduce((acc, [k], i) => acc + W[k] * sc[i], 0) / tw; return {name, sc, score}; }).sort((a, b) => b.score - a.score);
+    const best = rows[0].score;
+    $('#mtable').innerHTML = `<thead><tr><th>Method</th><th class="num">Score</th>${REQ.map(r => `<th>${r[1]}</th>`).join('')}</tr></thead><tbody>` +
+      rows.map((r, i) => `<tr${i===0?' class="hl"':''} data-tip="<b>${r.name}</b><br>${r.sc[8]}"><td style="font-weight:${i===0?700:500}">${r.name}</td><td class="num"><b>${r.score.toFixed(2)}</b></td>${REQ.map((_, j) => `<td><span class="dots" aria-label="${r.sc[j]} of 5">${[1,2,3,4,5].map(d => `<i class="${d <= r.sc[j] ? 'on' : ''}"></i>`).join('')}</span></td>`).join('')}</tr>`).join('') + '</tbody>';
+  }
+
+  /* ---------- cost model ---------- */
+  const money = v => v >= 1e6 ? 'US$' + (v/1e6).toFixed(2) + 'M' : v >= 1e4 ? 'US$' + Math.round(v/1e3) + 'k' : 'US$' + Math.round(v).toLocaleString('en-US');
+  function calc() {
+    const g = id => Math.max(0, parseFloat($(id).value) || 0);
+    const skills = g('#c-skills'), iters = g('#c-iters'), gpuh = g('#c-gpuh'), rate = g('#c-rate'), eng = g('#c-eng'), er = g('#c-engrate');
+    const gpu = skills * iters * gpuh * rate, engc = skills * iters * eng * er;
+    $('#o-gpu').textContent = money(gpu); $('#o-eng').textContent = money(engc);
+    $('#o-skill').textContent = skills ? money((gpu + engc) / skills) : '–';
+  }
+  document.querySelectorAll('.calc input').forEach(i => i.addEventListener('input', calc));
+
+  function renderAll() { renderCert(); renderVer(); renderCk(); renderE3(); renderThr(); renderE5(); renderPH(); renderM(); calc(); }
+  renderAll();
+  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(renderAll, 120); });
+  if (matchMedia) matchMedia('(prefers-color-scheme: dark)').addEventListener('change', renderAll);
+  new MutationObserver(renderAll).observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
+})();
+</script>

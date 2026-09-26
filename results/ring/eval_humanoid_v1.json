@@ -1,0 +1,177 @@
+[
+ {
+  "params": "runs/g1-ring-humanoid-v1/params.pkl",
+  "episodes": 1024,
+  "success": 985,
+  "success_rate": 0.9619140625,
+  "success_ci95": [
+   0.9483594177817788,
+   0.9720158618332903
+  ],
+  "lifted": 1015,
+  "lifted_rate": 0.9912109375,
+  "lifted_ci95": [
+   0.9833807384309262,
+   0.9953692946481009
+  ],
+  "placed": 987,
+  "placed_rate": 0.9638671875,
+  "placed_ci95": [
+   0.9505933609927014,
+   0.9736735688532981
+  ],
+  "raceway": 0,
+  "raceway_rate": 0.0,
+  "raceway_ci95": [
+   0.0,
+   0.003737540881785676
+  ],
+  "dropped": 0,
+  "dropped_rate": 0.0,
+  "dropped_ci95": [
+   0.0,
+   0.003737540881785676
+  ],
+  "xy_err_median_mm": 6.370410442352295
+ },
+ {
+  "params": "runs/g1-ring-humanoid-v1/ckpt_00152371200.pkl",
+  "episodes": 1024,
+  "success": 979,
+  "success_rate": 0.9560546875,
+  "success_ci95": [
+   0.9417036274880376,
+   0.9669967014342399
+  ],
+  "lifted": 1012,
+  "lifted_rate": 0.98828125,
+  "lifted_ci95": [
+   0.9796286472333218,
+   0.9932839104993094
+  ],
+  "placed": 981,
+  "placed_rate": 0.9580078125,
+  "placed_ci95": [
+   0.943915065312417,
+   0.968676913840791
+  ],
+  "raceway": 0,
+  "raceway_rate": 0.0,
+  "raceway_ci95": [
+   0.0,
+   0.003737540881785676
+  ],
+  "dropped": 1,
+  "dropped_rate": 0.0009765625,
+  "dropped_ci95": [
+   0.00017240363051574184,
+   0.005510962366735196
+  ],
+  "xy_err_median_mm": 6.363022327423096
+ },
+ {
+  "params": "runs/g1-ring-humanoid-v1/ckpt_00101580800.pkl",
+  "episodes": 1024,
+  "success": 709,
+  "success_rate": 0.6923828125,
+  "success_ci95": [
+   0.66344017446259,
+   0.7198873732840667
+  ],
+  "lifted": 726,
+  "lifted_rate": 0.708984375,
+  "lifted_ci95": [
+   0.6804227149164757,
+   0.7359838597930906
+  ],
+  "placed": 720,
+  "placed_rate": 0.703125,
+  "placed_ci95": [
+   0.674423880685433,
+   0.7303077433313416
+  ],
+  "raceway": 0,
+  "raceway_rate": 0.0,
+  "raceway_ci95": [
+   0.0,
+   0.003737540881785676
+  ],
+  "dropped": 0,
+  "dropped_rate": 0.0,
+  "dropped_ci95": [
+   0.0,
+   0.003737540881785676
+  ],
+  "xy_err_median_mm": 7.465135097503662
+ },
+ {
+  "params": "runs/g1-ring-humanoid-v1/ckpt_00050790400.pkl",
+  "episodes": 1024,
+  "success": 581,
+  "success_rate": 0.5673828125,
+  "success_ci95": [
+   0.5368410580327622,
+   0.5974208749343409
+  ],
+  "lifted": 666,
+  "lifted_rate": 0.650390625,
+  "lifted_ci95": [
+   0.6206708945205728,
+   0.6789861732610776
+  ],
+  "placed": 598,
+  "placed_rate": 0.583984375,
+  "placed_ci95": [
+   0.5535354260873399,
+   0.6138055338426728
+  ],
+  "raceway": 1,
+  "raceway_rate": 0.0009765625,
+  "raceway_ci95": [
+   0.00017240363051574184,
+   0.005510962366735196
+  ],
+  "dropped": 9,
+  "dropped_rate": 0.0087890625,
+  "dropped_ci95": [
+   0.004630705351899172,
+   0.016619261569073864
+  ],
+  "xy_err_median_mm": 11.985310554504395
+ },
+ {
+  "params": "runs/g1-ring-humanoid-v1/ckpt_00000000000.pkl",
+  "episodes": 1024,
+  "success": 0,
+  "success_rate": 0.0,
+  "success_ci95": [
+   0.0,
+   0.003737540881785676
+  ],
+  "lifted": 0,
+  "lifted_rate": 0.0,
+  "lifted_ci95": [
+   0.0,
+   0.003737540881785676
+  ],
+  "placed": 0,
+  "placed_rate": 0.0,
+  "placed_ci95": [
+   0.0,
+   0.003737540881785676
+  ],
+  "raceway": 0,
+  "raceway_rate": 0.0,
+  "raceway_ci95": [
+   0.0,
+   0.003737540881785676
+  ],
+  "dropped": 0,
+  "dropped_rate": 0.0,
+  "dropped_ci95": [
+   0.0,
+   0.003737540881785676
+  ],
+  "xy_err_median_mm": 254.86868286132812
+ }
+]

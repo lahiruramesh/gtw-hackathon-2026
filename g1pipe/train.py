@@ -118,7 +118,7 @@ def apply_overrides(env_cfg, rl, overrides):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="runs/steplength")
-    ap.add_argument("--task", choices=["flat", "stairs", "ring"], default="flat",
+    ap.add_argument("--task", choices=["flat", "stairs", "ring", "g1ring"], default="flat",
                     help="stairs: g1pipe.stairs_env (stair terrain + height scan observation)")
     ap.add_argument("--timesteps", type=int, default=150_000_000)
     ap.add_argument("--num-envs", type=int, default=None)
@@ -152,6 +152,9 @@ def main():
     elif a.task == "ring":
         from g1pipe.ring_env import RingPickDrop as Env, default_config as env_default_config
         stairs_randomize = None
+    elif a.task == "g1ring":
+        from g1pipe.g1_ring_env import G1RingPickDrop as Env, default_config as env_default_config
+        stairs_randomize = None
     else:
         Env, env_default_config = StepLength, default_config
         stairs_randomize = None
@@ -163,11 +166,11 @@ def main():
         env_cfg.scan_model = a.scan_model
     if a.leg_action_scale:
         env_cfg.leg_action_scale = a.leg_action_scale
-    if a.no_dr and a.task != "ring":
+    if a.no_dr and a.task not in ("ring", "g1ring"):
         env_cfg.push_config.enable = False
         env_cfg.noise_config.level = 0.0
 
-    if a.task == "ring":   # Playground's tuned recipe for its Panda pick task, our episode length
+    if a.task in ("ring", "g1ring"):   # Playground's tuned recipe for its Panda pick task, our episode length
         rl = manipulation_params.brax_ppo_config("PandaPickCube")
         rl.episode_length = env_cfg.episode_length
     else:
@@ -201,7 +204,7 @@ def main():
         src.leg_action_scale = json.loads(src_cfg.read_text())["env"].get("leg_action_scale", 0.0) if src_cfg.exists() else 0.0
         if src.leg_action_scale != env_cfg.leg_action_scale:
             gain = action_scales(env.mj_model, src) / np.asarray(env._config.action_scale)
-    if a.task == "ring":   # same observations and actions: restore the parameters as they are
+    if a.task in ("ring", "g1ring"):   # same observations and actions: restore the parameters as they are
         restore = pickle.load(open(a.init_from, "rb"))["params"] if a.init_from else None
     else:
         restore = warm_start(a.init_from, env.observation_size, gain) if a.init_from else None
@@ -242,7 +245,7 @@ def main():
 
     train_fn = functools.partial(
         ppo.train, **train_kwargs, network_factory=network_factory, seed=a.seed,
-        randomization_fn=None if a.no_dr or a.task == "ring" else (
+        randomization_fn=None if a.no_dr or a.task in ("ring", "g1ring") else (
             stairs_randomize if a.task == "stairs" else g1_randomize.domain_randomize),
         progress_fn=progress, policy_params_fn=save_ckpt, restore_params=restore,
     )
