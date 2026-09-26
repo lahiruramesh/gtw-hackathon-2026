@@ -16,10 +16,17 @@ import math
 from pathlib import Path
 from typing import Any
 
-TARGET_CM = 10.0   # benchmark rates count step heights up to this (the release target)
+TARGET_CM = 10.0  # benchmark rates count step heights up to this (the release target)
 # gated thresholds, as in skill.yaml's gate (kept in step by tests/test_improve.py)
-THRESHOLDS = {"strict": 0.01, "camera": 0.02, "delay_20ms": 0.02, "low_friction": 0.05,
-              "payload_5kg": 0.02, "push": 0.02, "speed_06": 0.02}
+THRESHOLDS = {
+    "strict": 0.01,
+    "camera": 0.02,
+    "delay_20ms": 0.02,
+    "low_friction": 0.05,
+    "payload_5kg": 0.02,
+    "push": 0.02,
+    "speed_06": 0.02,
+}
 
 
 def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
@@ -39,18 +46,28 @@ def bench_condition(result: dict[str, Any], target_cm: float = TARGET_CM) -> dic
     n, fell = sum(r["n"] for r in low), sum(r["fell"] for r in low)
     n_all, fell_all = sum(r["n"] for r in rows), sum(r["fell"] for r in rows)
     return {
-        "n": n, "fell": fell, "rate": fell / n if n else None, "rate_hi": wilson(fell, n)[1],
-        "n_all": n_all, "fell_all": fell_all, "rate_all": fell_all / n_all if n_all else None,
+        "n": n,
+        "fell": fell,
+        "rate": fell / n if n else None,
+        "rate_hi": wilson(fell, n)[1],
+        "n_all": n_all,
+        "fell_all": fell_all,
+        "rate_all": fell_all / n_all if n_all else None,
         "crossed_all": sum(r["crossed"] for r in rows),
-        "by_height": [{"rise_cm": r["rise_cm"], "n": r["n"], "fell": r["fell"], "crossed": r["crossed"]} for r in rows],
+        "by_height": [
+            {"rise_cm": r["rise_cm"], "n": r["n"], "fell": r["fell"], "crossed": r["crossed"]} for r in rows
+        ],
     }
 
 
 def summarize_bench(bench: dict[str, Any]) -> dict[str, Any]:
-    (entry,) = bench.values()   # one policy per stage
+    (entry,) = bench.values()  # one policy per stage
     out: dict[str, Any] = {name: bench_condition(r) for name, r in entry["conditions"].items()}
-    out["gap"] = sum(max(0.0, out[k]["rate"] - thr) for k, thr in THRESHOLDS.items()
-                     if k in out and out[k]["rate"] is not None)
+    out["gap"] = sum(
+        max(0.0, out[k]["rate"] - thr)
+        for k, thr in THRESHOLDS.items()
+        if k in out and out[k]["rate"] is not None
+    )
     out["bench_key"] = entry["key"]
     out["target_cm"] = TARGET_CM
     return out

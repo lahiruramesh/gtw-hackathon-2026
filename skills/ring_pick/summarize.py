@@ -10,7 +10,18 @@ from typing import Any
 
 def summarize(out_dir: Path) -> dict[str, Any]:
     row = json.loads((out_dir / "eval.json").read_text())[0]
-    out = {k: row[k] for k in ("episodes", "success", "success_rate", "lifted", "placed", "raceway", "dropped",
-                               "xy_err_median_mm")}
+    out = {
+        k: row[k]
+        for k in (
+            "episodes",
+            "success",
+            "success_rate",
+            "lifted",
+            "placed",
+            "raceway",
+            "dropped",
+            "xy_err_median_mm",
+        )
+    }
     out["success_ci_lo"], out["success_ci_hi"] = row["success_ci95"]
     return out

@@ -229,7 +229,9 @@ async def test_dashboard_compare_and_audit(
     dashboard = (await client.get("/api/v1/dashboard", headers=auth("viewer"))).json()
     assert dashboard["active_runs"] == 1 and dashboard["gate_pass_rate_30d"] is None
     assert [s["name"] for s in dashboard["skills"]] == [
+        "Bearing ring pick and drop",
         "Stair climbing (height scan)",
+        "Stair climbing, benchmarked experiments",
         "Step-length adjustment",
     ]
     assert next(s for s in dashboard["skills"] if s["id"] == "g1-stairs")["runs"] == 2
@@ -265,11 +267,19 @@ async def test_dashboard_compare_and_audit(
 
 async def test_skills_catalog(client: httpx.AsyncClient, auth: Auth, skills: list[str]) -> None:
     listed = (await client.get("/api/v1/skills", headers=auth("viewer"))).json()
-    assert [s["id"] for s in listed["items"]] == ["g1-stairs", "g1-stairs-bench", "g1-step-length", "ring-pick-drop"]
+    assert [s["id"] for s in listed["items"]] == [
+        "g1-stairs",
+        "g1-stairs-bench",
+        "g1-step-length",
+        "ring-pick-drop",
+    ]
     detail = (await client.get("/api/v1/skills/g1-stairs", headers=auth("viewer"))).json()
     assert [p["id"] for p in detail["presets"]] == ["smoke", "v11-finetune"]
     assert detail["gate"][0]["label"] == "Crosses at least 90 % of held-out staircases"
     assert detail["params_schema"]["properties"]["scan_model"]["enum"] == ["uniform", "camera"]
     assert (await client.get("/api/v1/skills/nope", headers=auth("viewer"))).status_code == 404
     synced = await client.post("/api/v1/skills/sync", headers=auth("ml_engineer"))
-    assert synced.json() == {"synced": ["g1-stairs", "g1-stairs-bench", "g1-step-length", "ring-pick-drop"], "errors": []}
+    assert synced.json() == {
+        "synced": ["g1-stairs", "g1-stairs-bench", "g1-step-length", "ring-pick-drop"],
+        "errors": [],
+    }
