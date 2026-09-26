@@ -1,0 +1,108 @@
+# Stairs improvement campaign: python -m g1pipe.improve.campaign run experiments/stairs/campaign.yaml
+# Runbook: docs/improve.md. State, report and events go to experiments/stairs/campaign/.
+name: stairs-auto
+skill_id: g1-stairs-bench           # its release gate is the goal (skills/stairs_bench/skill.yaml)
+compute_target: AWS L40S            # compute target name (or id) in the web app
+run_prefix: stairs-auto
+
+champion:                           # the policy every round warm-starts from, until a better one is found
+  label: g1-stairs-v14
+  run_id: null                      # the v14 run in the web app, once imported (skf-api import-history)
+  checkpoint_id: SET-ME             # artifact id of v14's params.pkl in the web app
+
+recipe:                             # the champion's training recipe = the control arm
+  params: {timesteps: 150000000, leg_action_scale: 1.0, lr: 0.0001, scan_model: uniform}
+  overrides: {}                     # v14 = the code defaults (delay in half the episodes, friction 0.25-1.0)
+
+arms_per_round: 3
+calibrate_seed_noise: true          # round 1 trains the control twice (seeds 0 and 1) to measure seed noise
+poll_s: 120
+
+budget:
+  daily_gpu_hours: 10               # GPU hours per calendar day on the target, every run by anyone
+  on_daily_cap: stop                # stop (default) or wait (sleep until tomorrow, then go on)
+  campaign_gpu_hours: 40
+  max_rounds: 8
+  max_round_hours: 24               # includes waiting for launch approval in the web app
+
+advisor:
+  kind: bedrock                     # rules | bedrock | jev (bedrock and jev fall back to rules on failure)
+  bedrock:
+    model_id: us.amazon.nova-lite-v1:0    # a cheap model; any Converse model with tool use works
+    region: us-east-1
+    profile: null                   # AWS profile; null = default chain (env, instance role)
+    max_new_arms: 3
+  jev: {model: jev-1.13.0}
+
+notify:
+  webhook_url: null                 # or IMPROVE_WEBHOOK_URL: every event is POSTed as JSON
+
+notes:                              # given to the advisor with every request
+  - "v13: fine-tuning on the camera scan model did not close the camera gap (11/96 falls vs 10); teacher-student distillation is the likely fix, and it needs code, not a knob."
+  - "v14 added actuation delay (0 or 20 ms, half the episodes) and friction 0.25-1.0: 20 ms delay falls 100 % -> 53 %, friction x0.5 falls 56 % -> 6 %."
+  - "Joint targets at their limits caused the 8+ cm falls before v8 (leg_action_scale 1.0 fixed it)."
+  - "Stairs are crossed at 1.4 Hz cadence; long strides fail."
+
+# Changes the loop (and any advisor) may make, with their allowed values. Anything else is rejected.
+knobs:
+  env.action_delay_p:                    {type: float, min: 0.0, max: 1.0}
+  env.action_delay_max:                  {type: int, min: 1, max: 3}
+  env.friction_range:                    {type: range, min: 0.1, max: 1.5}
+  env.payload_kg:                        {type: range, min: 0.0, max: 8.0}
+  env.top_replay_p:                      {type: float, min: 0.0, max: 1.0}
+  env.scan_model:                        {type: choice, choices: [uniform, camera]}
+  env.noise_config.level:                {type: float, min: 0.0, max: 2.0}
+  env.push_config.magnitude_range:       {type: range, min: 0.0, max: 3.0}
+  env.push_config.interval_range:        {type: range, min: 1.0, max: 15.0}
+  env.gait_freq_range:                   {type: range, min: 1.0, max: 2.0}
+  env.reward_config.scales.action_rate:  {type: float, min: -1.0, max: 0.0}
+  env.reward_config.scales.torques:      {type: float, min: -0.001, max: 0.0}
+  env.reward_config.scales.orientation:  {type: float, min: -10.0, max: 0.0}
+  env.reward_config.scales.base_height_rel: {type: float, min: -60.0, max: 0.0}
+  env.reward_config.scales.feet_slip:    {type: float, min: -2.0, max: 0.0}
+  ppo.learning_rate:                     {type: float, min: 0.00001, max: 0.0005}
+  ppo.entropy_cost:                      {type: float, min: 0.0, max: 0.02}
+
+# Experiments to try, best guesses first (the advisor re-ranks them every round).
+queue:
+  - name: delay-share-70
+    hypothesis: "v14 halved the 20 ms delay falls by delaying half the episodes; delaying 70 % of them should cut them further."
+    set: {env.action_delay_p: 0.7}
+    aims: [delay_20ms]
+  - name: payload-0-4kg
+    hypothesis: "No payload in training; 0-4 kg of extra torso mass should cut the 5 kg payload falls (12.5 %)."
+    set: {env.payload_kg: [0.0, 4.0]}
+    aims: [payload_5kg]
+  - name: action-rate-cost
+    hypothesis: "Smoother actions tolerate actuation delay and pushes better; the recipe has no action-rate cost."
+    set: {env.reward_config.scales.action_rate: -0.05}
+    aims: [delay_20ms, push]
+  - name: delay-up-to-40ms
+    hypothesis: "Training with 0-40 ms delay gives margin at 20 ms."
+    set: {env.action_delay_max: 2}
+    aims: [delay_20ms]
+  - name: friction-from-02
+    hypothesis: "Friction x0.5 still falls 6 %; training down to 0.2 should close it."
+    set: {env.friction_range: [0.2, 1.0]}
+    aims: [low_friction]
+  - name: camera-scan
+    hypothesis: "Train on the camera's scan errors with the delay-robust recipe (v13 tried it without)."
+    set: {env.scan_model: camera}
+    aims: [camera]
+  - name: lr-2e-4
+    hypothesis: "A higher learning rate may move further from the champion in the same steps."
+    set: {ppo.learning_rate: 0.0002}
+    aims: []
+
+# --dry-run only: a simulated studio (made-up effects) to exercise the loop's logic, not results.
+dry_run:
+  targets: {strict: 0.01, camera: 0.02, delay_20ms: 0.02, low_friction: 0.05, payload_5kg: 0.02, push: 0.02, speed_06: 0.02}
+  base_rates: {strict: 0.008, camera: 0.07, delay_20ms: 0.45, low_friction: 0.05, payload_5kg: 0.11, push: 0.01, speed_06: 0.005}
+  effects:
+    _training: {camera: 0.97, delay_20ms: 0.97}
+    env.action_delay_p: {delay_20ms: 0.35}
+    env.payload_kg: {payload_5kg: 0.25}
+    env.reward_config.scales.action_rate: {delay_20ms: 0.8, push: 0.9}
+    env.action_delay_max: {delay_20ms: 0.6, strict: 1.3}
+    env.friction_range: {low_friction: 0.5}
+    env.scan_model: {camera: 0.3, strict: 1.2}

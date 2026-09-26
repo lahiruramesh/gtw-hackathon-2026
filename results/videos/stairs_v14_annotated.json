@@ -1,0 +1,82 @@
+[
+ {
+  "rise_cm": 3.0,
+  "kind": "pyramid",
+  "tread_cm": 27.0,
+  "steps_per_flight": 4,
+  "crossed": true,
+  "fell": false,
+  "step_len_mean_cm": 25.8,
+  "n_steps": 16
+ },
+ {
+  "rise_cm": 4.7,
+  "kind": "pit",
+  "tread_cm": 27.0,
+  "steps_per_flight": 4,
+  "crossed": true,
+  "fell": false,
+  "step_len_mean_cm": 23.7,
+  "n_steps": 18
+ },
+ {
+  "rise_cm": 6.4,
+  "kind": "pyramid",
+  "tread_cm": 27.0,
+  "steps_per_flight": 4,
+  "crossed": true,
+  "fell": false,
+  "step_len_mean_cm": 23.1,
+  "n_steps": 25
+ },
+ {
+  "rise_cm": 8.1,
+  "kind": "pit",
+  "tread_cm": 27.0,
+  "steps_per_flight": 4,
+  "crossed": true,
+  "fell": false,
+  "step_len_mean_cm": 25.1,
+  "n_steps": 17
+ },
+ {
+  "rise_cm": 9.9,
+  "kind": "pyramid",
+  "tread_cm": 27.0,
+  "steps_per_flight": 4,
+  "crossed": true,
+  "fell": false,
+  "step_len_mean_cm": 26.9,
+  "n_steps": 15
+ },
+ {
+  "rise_cm": 11.6,
+  "kind": "pit",
+  "tread_cm": 27.0,
+  "steps_per_flight": 4,
+  "crossed": true,
+  "fell": false,
+  "step_len_mean_cm": 25.2,
+  "n_steps": 18
+ },
+ {
+  "rise_cm": 13.3,
+  "kind": "pyramid",
+  "tread_cm": 27.0,
+  "steps_per_flight": 4,
+  "crossed": true,
+  "fell": false,
+  "step_len_mean_cm": 26.1,
+  "n_steps": 15
+ },
+ {
+  "rise_cm": 15.0,
+  "kind": "pit",
+  "tread_cm": 27.0,
+  "steps_per_flight": 4,
+  "crossed": true,
+  "fell": false,
+  "step_len_mean_cm": 21.2,
+  "n_steps": 20
+ }
+]

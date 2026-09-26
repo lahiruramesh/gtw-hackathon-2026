@@ -1,0 +1,89 @@
+# Stair climbing, benchmarked: the g1-stairs task with one config change per run and a fixed GPU
+# benchmark before the plain-MuJoCo strict test. The improvement loop (g1pipe/improve, docs/improve.md)
+# launches these runs: a control with the champion's recipe plus one arm per change, each warm-started
+# from the champion checkpoint (a g1-stairs or g1-stairs-bench run). The gate is the loop's goal.
+# Schema: docs/webapp/SPEC.md §7 (validated by skf_api.skills_registry.manifest).
+id: g1-stairs-bench
+name: Stair climbing, benchmarked experiments
+summary: One-change stairs experiments, scored on a fixed 7-condition GPU benchmark and the strict test.
+description: |
+  The same task as *Stair climbing (height scan)*: the G1 walks over held-out pyramids and pits with a
+  terrain height scan. Each run changes **one** thing in the training recipe (`overrides`, e.g. the share
+  of episodes with actuation delay) so its effect can be measured against a control run of the unchanged
+  recipe trained for the same number of steps.
+
+  **Fixed benchmark** (`g1pipe.bench`, on the training GPU): every policy meets the same 7 conditions
+  (nominal, head camera, 20 ms actuation delay, friction x0.5, 5 kg payload, 0.3 m/s pushes, 0.6 m/s),
+  2048 episodes each, the same start states for every policy, whatever it was trained with. The gate
+  checks the 95 % upper bound of the fall rate on step heights up to 10 cm.
+
+  **Strict test** (`g1pipe.stairs_eval`, plain MuJoCo on CPU): 96 crossings of the held-out stairs, the
+  final check in a second physics engine.
+robot: unitree-g1
+category: locomotion
+method: rl-ppo-curriculum
+status: active
+params:
+  timesteps:        {type: integer, title: Training steps, default: 150000000, minimum: 20000, maximum: 2000000000}
+  smoke:            {type: boolean, title: Smoke test (tiny CPU run), default: false}
+  scan_model:       {type: string, title: Height-scan noise model, enum: [uniform, camera], default: uniform}
+  leg_action_scale: {type: number, title: Leg action scale (rad), description: "Target range of hip pitch, knee and ankle pitch; empty keeps Playground's 0.5", default: 1.0, nullable: true, minimum: 0.1, maximum: 2}
+  lr:               {type: number, title: Learning rate, description: "PPO learning rate (Playground G1: 3e-4); lower to fine-tune", default: 0.0001, nullable: true, minimum: 0.000001, maximum: 0.01}
+  seed:             {type: integer, title: Seed, default: 0, minimum: 0}
+  overrides:        {type: string, title: Config overrides (JSON), description: "The experiment's change, e.g. {\"env.action_delay_p\": 0.7} or {\"env.payload_kg\": [0, 4]}; keys env.<config path> or ppo.<name> (g1pipe.train --overrides). Empty: the control.", default: null, nullable: true}
+  init_from:        {type: checkpoint, title: Warm start from (champion), nullable: true, default: null}
+presets:
+  - {id: smoke, name: Smoke test, description: "Tiny CPU training run; the benchmark and strict test still run", params: {smoke: true, timesteps: 20000}}
+  - id: v14-control
+    name: v14 recipe (control)
+    description: "Actuation delay in half the episodes, friction 0.25-1.0, lr 1e-4, wide leg range, 150M steps; warm start from the champion"
+    params: {timesteps: 150000000, leg_action_scale: 1.0, lr: 0.0001}
+pipeline:
+  - id: train
+    kind: train
+    title: Train (Brax PPO, stairs curriculum)
+    runs_on: target
+    argv: [python, -m, g1pipe.train, --task, stairs, --out, "{out_dir}", --timesteps, "{timesteps}", --seed, "{seed}"]
+    flags: {smoke: --smoke, scan_model: --scan-model, leg_action_scale: --leg-action-scale, lr: --lr, init_from: --init-from, overrides: --overrides}
+    progress_csv: progress.csv
+  - id: bench
+    kind: evaluate
+    title: Fixed benchmark (7 conditions x 2048 episodes, GPU)
+    runs_on: target
+    estimate_minutes: 20
+    argv: [python, -m, g1pipe.bench, "{input_dir}/train/params.pkl", --out, "{out_dir}/bench.json"]
+    inputs: [train/params.pkl, train/config.json]
+    suite: bench-v1
+  - id: evaluate
+    kind: evaluate
+    title: Strict test (96 crossings, held-out stairs, plain MuJoCo)
+    runs_on: local
+    estimate_minutes: 25
+    argv: [python, -m, g1pipe.stairs_eval, "{input_dir}/train/params.pkl", --starts, "3", --out, "{out_dir}/strict.json"]
+    inputs: [train/params.pkl, train/config.json]
+    suite: strict-96
+  - id: gate
+    kind: gate
+    title: Release gate
+gate:
+  # fixed benchmark (g1pipe.bench): 95 % upper bound of the fall rate on steps up to 10 cm
+  - {metric: bench.strict.rate_hi, op: "<=", value: 0.01, label: "Benchmark, nominal: falls <= 1 % (95 % bound, steps <= 10 cm)"}
+  - {metric: bench.camera.rate_hi, op: "<=", value: 0.02, label: "Benchmark, head camera: falls <= 2 %"}
+  - {metric: bench.delay_20ms.rate_hi, op: "<=", value: 0.02, label: "Benchmark, 20 ms actuation delay: falls <= 2 %"}
+  - {metric: bench.low_friction.rate_hi, op: "<=", value: 0.05, label: "Benchmark, friction x0.5: falls <= 5 %"}
+  - {metric: bench.payload_5kg.rate_hi, op: "<=", value: 0.02, label: "Benchmark, 5 kg payload: falls <= 2 %"}
+  - {metric: bench.push.rate_hi, op: "<=", value: 0.02, label: "Benchmark, 0.3 m/s pushes: falls <= 2 %"}
+  - {metric: bench.speed_06.rate_hi, op: "<=", value: 0.02, label: "Benchmark, 0.6 m/s: falls <= 2 %"}
+  # plain-MuJoCo strict test (the final check in the other engine)
+  - {metric: evaluate.crossed_rate, op: ">=", value: 0.9, label: Crosses at least 90 % of held-out staircases}
+  - {metric: evaluate.fell, op: "<=", value: 5, label: At most 5 falls in the strict test}
+  - {metric: evaluate.certified_cm, op: ">=", value: 10, label: Certified step height of at least 10 cm}
+headline:
+  - {label: Gap to targets, metric: bench.gap, digits: 3}
+  - {label: "Falls, nominal", metric: bench.strict.rate, unit: "%", scale: 100, digits: 1}
+  - {label: "Falls, 20 ms delay", metric: bench.delay_20ms.rate, unit: "%", scale: 100, digits: 1}
+  - {label: "Falls, camera", metric: bench.camera.rate, unit: "%", scale: 100, digits: 1}
+  - {label: Certified height, metric: evaluate.certified_cm, unit: cm, digits: 1}
+metrics:
+  keys: ["eval/episode_reward", "eval/episode_crossed", "eval/episode_terrain_level", "eval/avg_episode_length", "eval/sps"]
+  primary: eval/episode_crossed

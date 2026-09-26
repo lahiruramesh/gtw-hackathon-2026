@@ -184,23 +184,33 @@ def main():
             init_remote = str(src)
             train_args = ["--init-from", init_remote, *train_args]
 
-        # 3. preflight
-        leg = train_args[train_args.index("--leg-action-scale") + 1] if "--leg-action-scale" in train_args else None
-        pre_cmd = "cd gtw && PYTHONPATH=. .venv/bin/python -m g1pipe.preflight" + \
-            (f" --init-from {init_remote}" if init_remote else "") + (f" --leg-action-scale {leg}" if leg else "")
-        out = box.ssh(pre_cmd + " 2>&1 | grep -v -e Warning -e warnings.warn", check=False)
-        print(out, flush=True)
-        if "PREFLIGHT OK" not in out:
-            raise SystemExit("preflight failed; not training")
+        # 3. preflight (its checks are about stairs: engine parity on stair poses, the G1 warm start)
+        task = train_args[train_args.index("--task") + 1] if "--task" in train_args else "flat"
+        if task == "stairs":
+            leg = train_args[train_args.index("--leg-action-scale") + 1] if "--leg-action-scale" in train_args else None
+            pre_cmd = "cd gtw && PYTHONPATH=. .venv/bin/python -m g1pipe.preflight" + \
+                (f" --init-from {init_remote}" if init_remote else "") + (f" --leg-action-scale {leg}" if leg else "")
+            out = box.ssh(pre_cmd + " 2>&1 | grep -v -e Warning -e warnings.warn", check=False)
+            print(out, flush=True)
+            if "PREFLIGHT OK" not in out:
+                raise SystemExit("preflight failed; not training")
+        else:
+            log(f"preflight: its checks are stairs-specific; skipped for task {task} (the GPU-power watch still runs)")
 
         # 4. train, then rank every checkpoint on the GPU
         run = a.run
         grep = " ".join(f"-e {shlex.quote(n)}" for n in NOISE)
-        rank = (f"PYTHONPATH=. .venv/bin/python -m g1pipe.gpu_eval runs/{run}/ckpt_*.pkl runs/{run}/params.pkl "
-                f"--episodes 2048 --out runs/{run}/rank_true.json > ~/{run}.rank.log 2>&1; "
-                f"PYTHONPATH=. .venv/bin/python -m g1pipe.gpu_eval runs/{run}/ckpt_*.pkl runs/{run}/params.pkl "
-                f"--episodes 2048 --scan camera --out runs/{run}/rank_camera.json >> ~/{run}.rank.log 2>&1; "
-                f"touch ~/{run}.done")
+        if task == "ring":
+            rank = (f"PYTHONPATH=. .venv/bin/python -m g1pipe.ring_eval runs/{run}/ckpt_*.pkl runs/{run}/params.pkl "
+                    f"--episodes 1024 --out runs/{run}/rank_ring.json > ~/{run}.rank.log 2>&1; touch ~/{run}.done")
+            rank_files = ["rank_ring.json"]
+        else:
+            rank = (f"PYTHONPATH=. .venv/bin/python -m g1pipe.gpu_eval runs/{run}/ckpt_*.pkl runs/{run}/params.pkl "
+                    f"--episodes 2048 --out runs/{run}/rank_true.json > ~/{run}.rank.log 2>&1; "
+                    f"PYTHONPATH=. .venv/bin/python -m g1pipe.gpu_eval runs/{run}/ckpt_*.pkl runs/{run}/params.pkl "
+                    f"--episodes 2048 --scan camera --out runs/{run}/rank_camera.json >> ~/{run}.rank.log 2>&1; "
+                    f"touch ~/{run}.done")
+            rank_files = ["rank_true.json", "rank_camera.json"]
         job = (f"cd ~/gtw && PYTHONPATH=. .venv/bin/python -u -m g1pipe.train --out runs/{run} "
                f"{' '.join(map(shlex.quote, train_args))} 2>&1 | grep --line-buffered -v {grep} > ~/{run}.log; {rank}")
         box.ssh(f"rm -f ~/{run}.done; tmux new -d -s {run} {shlex.quote(job)}")
@@ -245,8 +255,16 @@ def main():
                 raise SystemExit("training session ended without finishing")
 
         # 7. pull and report
-        for f in ("params.pkl", "progress.csv", "rank_true.json", "rank_camera.json"):
+        for f in ("params.pkl", "progress.csv", *rank_files):
             box.get(f"gtw/runs/{run}/{f}", local / f)
+        if task == "ring":
+            log("ring pick-and-drop evaluation (1024 episodes each, best first):")
+            for x in json.loads((local / "rank_ring.json").read_text())[:5]:
+                lo, hi = x["success_ci95"]
+                print(f"    {Path(x['params']).name:24} success {x['success']}/{x['episodes']} ({x['success_rate']*100:.1f} %, "
+                      f"CI {lo*100:.1f}-{hi*100:.1f}) lifted {x['lifted']} placed {x['placed']} raceway {x['raceway']}",
+                      flush=True)
+            return
         for scan in ("true", "camera"):
             r = json.loads((local / f"rank_{scan}.json").read_text())
             log(f"GPU ranking, {scan} scan (2048 episodes each, best first):")
