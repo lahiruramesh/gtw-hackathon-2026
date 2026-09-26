@@ -63,7 +63,10 @@ class S3Storage:
             aws_secret_access_key=config.secret_access_key,
             config=Config(
                 signature_version="s3v4",
-                s3={"addressing_style": "path"},
+                # MinIO serves buckets as paths. Real S3 URLs must name the bucket in the host
+                # (https://<bucket>.s3.amazonaws.com/...): that is the origin the web app's CSP allows for
+                # videos and images, and path-style URLs are blocked by it.
+                s3={"addressing_style": "path" if endpoint_url else "virtual"},
                 request_checksum_calculation="when_required",
                 response_checksum_validation="when_required",
                 retries={"max_attempts": 5, "mode": "standard"},
