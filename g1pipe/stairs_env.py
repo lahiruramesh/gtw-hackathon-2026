@@ -72,9 +72,11 @@ v14 (the first certification suite: every policy since v1 falls with a 20 ms act
 half the crossings fall at friction 0.3): each episode draws an actuation delay of 0 or 1 control step
 (config action_delay_max), and the floor friction is sampled from FRICTION_RANGE (0.25-1.0).
 
-v15 (v14 certified 9.9 cm with 1/96 falls, but 17/32 falls with a constant 20 ms delay and 4/32 with
-a 5 kg payload): 70 % of episodes carry the delay (action_delay_p), and the torso gets 0-4 kg of extra
-mass (PAYLOAD_KG) on top of Playground's +-1 kg.
+From v15 on, changes are experiment arms of scripts/improve.py (a control arm with the champion's
+recipe plus one change per arm), not new defaults: the defaults below reproduce v14. The knobs arms
+change are config fields: action_delay_p (share of episodes with the delay), friction_range,
+payload_kg (extra torso mass on top of Playground's +-1 kg), top_replay_p, and any other config value
+through g1pipe.train --set.
 
 v12 (v11: 2 falls in 72 strict runs up to 11.6 cm, but 1 in 3 at 15 cm): TOP_REPLAY_P of the
 robots that beat the top level replay the tallest TOP_REPLAY_LEVELS (12-16 cm) instead of a random one.
@@ -154,7 +156,11 @@ def default_config():
     cfg.scan_model = "uniform"   # or "camera"
     cfg.gait_freq_range = list(STAIRS_GAIT_FREQ)
     cfg.action_delay_max = 1     # v14: actuation latency, control steps (20 ms each), sampled per episode
-    cfg.action_delay_p = 0.7     # v15: share of episodes with a delay (v14: uniform over 0..max, i.e. 0.5)
+    cfg.action_delay_p = 0.5     # share of episodes with a delay (v14: uniform over 0..max, i.e. 0.5)
+    cfg.friction_range = list(FRICTION_RANGE)   # floor friction, sampled per env (domain_randomize)
+    cfg.payload_kg = list(PAYLOAD_KG)           # extra torso mass, sampled per env (domain_randomize)
+    cfg.top_replay_p = TOP_REPLAY_P             # v12: share of top-level graduates sent to the tallest rows
+    cfg.spawn_mode = "train"                    # "strict": the strict test's start (g1pipe.bench), see _place
     cfg.leg_action_scale = 0.0   # >0: action scale of LEG_JOINTS (v8); 0 keeps Playground's 0.5 everywhere
     # contact buffers (Playground: 8 contacts per robot): a foot on the stairs now has up to 7
     cfg.naconmax = 20 * 8192
@@ -163,20 +169,26 @@ def default_config():
 
 
 FRICTION_RANGE = (0.25, 1.0)   # v14: floor friction; Playground samples 0.4-1.0
-PAYLOAD_KG = (0.0, 4.0)        # v15: extra torso mass on top of Playground's +-1 kg (carrying, a battery pack)
+PAYLOAD_KG = (0.0, 0.0)        # extra torso mass on top of Playground's +-1 kg (carrying, a battery pack)
 
 
-def domain_randomize(model, rng):
+def floor_pairs(model):
+    """Indices of the foot-floor contact pairs. The compiler orders pairs with the floor pairs
+    first, so pair 0 is one of them."""
+    return np.flatnonzero(np.asarray(model.pair_geom1) == int(np.asarray(model.pair_geom1)[0]))
+
+
+def domain_randomize(model, rng, friction_range=FRICTION_RANGE, payload_kg=PAYLOAD_KG):
     """Playground's G1 randomisation (masses, joint friction, armature, qpos0), with the floor
-    friction drawn from FRICTION_RANGE for every foot-floor pair (Playground sets pairs 0-1 only, its
-    two sole boxes). The compiler orders pairs with the floor pairs first, so pair 0 is one of them."""
-    floor = np.flatnonzero(np.asarray(model.pair_geom1) == int(np.asarray(model.pair_geom1)[0]))
+    friction drawn from friction_range for every foot-floor pair (Playground sets pairs 0-1 only, its
+    two sole boxes) and payload_kg of extra torso mass. g1pipe.train binds both from the env config."""
+    floor = floor_pairs(model)
     model, in_axes = g1_randomize.domain_randomize(model, rng)
-    mu = jax.vmap(lambda k: jax.random.uniform(jax.random.fold_in(k, 17), (), minval=FRICTION_RANGE[0],
-                                               maxval=FRICTION_RANGE[1]))(rng)
+    mu = jax.vmap(lambda k: jax.random.uniform(jax.random.fold_in(k, 17), (), minval=friction_range[0],
+                                               maxval=friction_range[1]))(rng)
     pf = model.pair_friction.at[:, floor, 0:2].set(mu[:, None, None])
-    load = jax.vmap(lambda k: jax.random.uniform(jax.random.fold_in(k, 29), (), minval=PAYLOAD_KG[0],
-                                                 maxval=PAYLOAD_KG[1]))(rng)
+    load = jax.vmap(lambda k: jax.random.uniform(jax.random.fold_in(k, 29), (), minval=payload_kg[0],
+                                                 maxval=payload_kg[1]))(rng)
     mass = model.body_mass.at[:, g1_randomize.TORSO_BODY_ID].add(load)
     model = model.tree_replace({"pair_friction": pf, "body_mass": mass})
     return model, in_axes
@@ -245,8 +257,11 @@ class StairsStepLength(StepLength):
         ix = jax.random.randint(k_ix, (), 0, T.GRID)
         ang = jax.random.randint(k_dir, (), 0, 4) * (jp.pi / 2)
         out = jp.array([jp.cos(ang), jp.sin(ang)])
-        edge = jax.random.bernoulli(k_edge, EDGE_SPAWN_P)
-        jitter = jax.random.uniform(k_xy, (2,), minval=-SPAWN_JITTER, maxval=SPAWN_JITTER)
+        # spawn_mode "strict" (g1pipe.bench): as the plain-MuJoCo strict test, always on the border,
+        # square to the steps, at the border's middle; only the sideways position varies
+        strict = self._config.spawn_mode == "strict"
+        edge = jax.random.bernoulli(k_edge, EDGE_SPAWN_P) | strict
+        jitter = jax.random.uniform(k_xy, (2,), minval=-SPAWN_JITTER, maxval=SPAWN_JITTER) * jp.array([1.0 - strict, 1.0])
         # on the border strip: along the axis stay on the strip, across it anywhere near the middle
         along = jp.where(edge, T.CELL / 2 - T.BORDER / 2 + jitter[0] / 3, jitter[0])
         across = jitter[1] * jp.where(edge, 1.5, 1.0)
@@ -254,7 +269,7 @@ class StairsStepLength(StepLength):
         # highest ground under the footprint, so a spawn near an edge never puts a foot inside a step
         ring = xy + jp.array([[0, 0], [0.2, 0], [-0.2, 0], [0, 0.2], [0, -0.2], [0.2, 0.2], [-0.2, -0.2], [0.2, -0.2], [-0.2, 0.2]])
         ground = jp.max(T.lookup(self._hgrid, ring, xp=jp))
-        yaw = ang + jp.where(edge, jp.pi, 0.0) + jax.random.uniform(k_yaw, (), minval=-YAW_JITTER, maxval=YAW_JITTER)
+        yaw = ang + jp.where(edge, jp.pi, 0.0) + jax.random.uniform(k_yaw, (), minval=-YAW_JITTER, maxval=YAW_JITTER) * (1.0 - strict)
         qpos = (self._init_q
                 .at[0:2].set(xy).at[2].set(ground + self._init_q[2] + 0.02)
                 .at[3:7].set(jp.array([jp.cos(yaw / 2), 0, 0, jp.sin(yaw / 2)]))
@@ -288,7 +303,7 @@ class StairsStepLength(StepLength):
         info["rng"], lvl_rng, top_rng, place_rng, drift_rng = jax.random.split(info["rng"], 5)
         # legged_gym sends a robot that beats the top level to a random level; since v12 most go
         # back to the tallest TOP_REPLAY_LEVELS, where the falls are, instead
-        lo = jp.where(jax.random.bernoulli(top_rng, TOP_REPLAY_P), TRAIN_LEVELS - TOP_REPLAY_LEVELS, 0)
+        lo = jp.where(jax.random.bernoulli(top_rng, self._config.top_replay_p), TRAIN_LEVELS - TOP_REPLAY_LEVELS, 0)
         level = jp.where(level >= TRAIN_LEVELS, jax.random.randint(lvl_rng, (), lo, TRAIN_LEVELS), jp.maximum(level, 0))
         data, xy, heading = self._place(state.data, place_rng, level)
         info["curriculum"] = {"level": level, "origin": xy, "heading": heading, "dist": jp.zeros(()), "cmd_dist": jp.zeros(()),

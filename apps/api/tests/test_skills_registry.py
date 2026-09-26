@@ -76,7 +76,7 @@ def manifest(**changes: Any) -> Manifest:
 def test_repo_skills_load() -> None:
     result = load_skills(REPO_ROOT / "skills")
     assert result.errors == []
-    assert set(result.skills) == {"g1-step-length", "g1-stairs"}
+    assert set(result.skills) == {"g1-step-length", "g1-stairs", "g1-stairs-bench", "ring-pick-drop"}
     stairs = result.skills["g1-stairs"].manifest
     assert [s.id for s in stairs.pipeline] == ["train", "evaluate", "gate"]
     assert stairs.params_schema()["properties"]["init_from"]["x-kind"] == "checkpoint"

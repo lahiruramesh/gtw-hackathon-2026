@@ -1,0 +1,64 @@
+# Bearing ring pick and drop (docs/report §11, "pick and put rings, tray <-> fixture"): g1pipe.ring_env,
+# evaluated with g1pipe.ring_eval. Schema: docs/webapp/SPEC.md §7.
+id: ring-pick-drop
+name: Bearing ring pick and drop
+summary: Pick a bearing outer ring from a tray and drop it on an inspection fixture.
+description: |
+  The manipulation part of the SKF use case: rings come off the washing line on a tray and are put on
+  the cleanliness-inspection fixture. The part is the outer ring of a 6206-class deep-groove ball
+  bearing (62 mm outside diameter, 48 mm bore, 16 mm wide, 0.15 kg), grasped across its outside
+  diameter so the fingers never touch the raceway. Each episode draws a new tray position, fixture
+  position (25-55 cm away) and ring orientation.
+
+  **Stand-in:** MuJoCo Playground's Franka arm and parallel gripper take the place of the G1's arm and
+  hand (the Playground G1 has no hands). The documented method for this skill is teleoperated
+  demonstrations and imitation learning, with RL to fine-tune grasp robustness; this skill is the
+  RL part, trained from scratch.
+
+  **Evaluation:** 1024 episodes in MJX per checkpoint: success (lifted, placed within 15 mm, resting,
+  upright, released), lifted, placed, raceway contact (a finger inside the bore) and dropped, with
+  95 % intervals.
+robot: franka-panda
+category: manipulation
+method: rl-ppo
+status: active
+params:
+  timesteps: {type: integer, title: Training steps, default: 60000000, minimum: 20000, maximum: 1000000000}
+  smoke:     {type: boolean, title: Smoke test (tiny CPU run), default: false}
+  lr:        {type: number, title: Learning rate, default: null, nullable: true, minimum: 0.000001, maximum: 0.01}
+  seed:      {type: integer, title: Seed, default: 0, minimum: 0}
+  overrides: {type: string, title: Config overrides (JSON), description: "e.g. {\"env.reward_config.scales.released\": 12}", default: null, nullable: true}
+  init_from: {type: checkpoint, title: Warm start from, nullable: true, default: null}
+presets:
+  - {id: smoke, name: Smoke test, description: "Tiny CPU training run", params: {smoke: true, timesteps: 20000}}
+  - {id: quick, name: Quick run (60M steps), description: "Playground's Panda pick recipe, 2048 envs", params: {timesteps: 60000000}}
+pipeline:
+  - id: train
+    kind: train
+    title: Train (Brax PPO, Playground Panda recipe)
+    runs_on: target
+    argv: [python, -m, g1pipe.train, --task, ring, --out, "{out_dir}", --timesteps, "{timesteps}", --seed, "{seed}"]
+    flags: {smoke: --smoke, lr: --lr, init_from: --init-from, overrides: --overrides}
+    progress_csv: progress.csv
+  - id: evaluate
+    kind: evaluate
+    title: Pick and drop, 1024 episodes (GPU)
+    runs_on: target
+    estimate_minutes: 10
+    argv: [python, -m, g1pipe.ring_eval, "{input_dir}/train/params.pkl", --episodes, "1024", --out, "{out_dir}/eval.json"]
+    inputs: [train/params.pkl, train/config.json]
+    suite: ring-1024
+  - id: gate
+    kind: gate
+    title: Release gate
+gate:
+  - {metric: evaluate.success_ci_lo, op: ">=", value: 0.995, label: "Pick-and-drop success >= 99.5 % (95 % lower bound)"}
+  - {metric: evaluate.raceway, op: "==", value: 0, label: No finger inside the bore (raceway contact)}
+  - {metric: evaluate.dropped, op: "==", value: 0, label: No ring leaves the table}
+headline:
+  - {label: Success, metric: evaluate.success_rate, unit: "%", scale: 100, digits: 1}
+  - {label: Raceway contact, metric: evaluate.raceway, digits: 0}
+  - {label: Placement error, metric: evaluate.xy_err_median_mm, unit: mm, digits: 1}
+metrics:
+  keys: ["eval/episode_reward", "eval/episode_success", "eval/episode_lifted", "eval/episode_placed", "eval/episode_raceway"]
+  primary: eval/episode_success

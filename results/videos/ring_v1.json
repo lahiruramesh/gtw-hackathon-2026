@@ -1,0 +1,29 @@
+[
+ {
+  "episode": 0,
+  "success": false,
+  "lifted": true,
+  "placed": true,
+  "raceway": false,
+  "xy_err_mm": 0.4,
+  "transfer_cm": 52.2
+ },
+ {
+  "episode": 1,
+  "success": false,
+  "lifted": true,
+  "placed": true,
+  "raceway": false,
+  "xy_err_mm": 0.0,
+  "transfer_cm": 54.7
+ },
+ {
+  "episode": 2,
+  "success": false,
+  "lifted": true,
+  "placed": true,
+  "raceway": false,
+  "xy_err_mm": 1.0,
+  "transfer_cm": 65.1
+ }
+]
