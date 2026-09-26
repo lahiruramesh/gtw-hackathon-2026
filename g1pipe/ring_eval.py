@@ -29,11 +29,23 @@ from g1pipe import ring_env as R
 from g1pipe.gpu_eval import load_params, wilson
 
 
-def make_env(impl=None, n=1):
-    cfg = R.default_config()
+def env_module(params_path):
+    """The ring task the policy was trained on: the Franka stand-in (ring) or the G1 humanoid (g1ring)."""
+    f = Path(params_path).with_name("config.json")
+    task = json.loads(f.read_text()).get("task", "ring") if f.exists() else "ring"
+    if task == "g1ring":
+        from g1pipe import g1_ring_env as G
+        return G, G.G1RingPickDrop
+    return R, R.RingPickDrop
+
+
+def make_env(impl=None, n=1, params_path=None):
+    mod, cls = env_module(params_path) if params_path else (R, R.RingPickDrop)
+    cfg = mod.default_config()
     cfg.impl = impl or ("warp" if jax.default_backend() == "gpu" else "jax")
-    cfg.naconmax, cfg.naccdmax = 96 * max(n, 1), 96 * max(n, 1)
-    return R.RingPickDrop(cfg)
+    per_env = cfg.naconmax // 2048
+    cfg.naconmax, cfg.naccdmax = per_env * max(n, 1), per_env * max(n, 1)
+    return cls(cfg)
 
 
 def make_policy_fn(ref):
@@ -44,7 +56,7 @@ def make_policy_fn(ref):
 
 
 def evaluate(paths, episodes=1024, seed=0, impl=None, log=print):
-    env = make_env(impl, episodes)
+    env = make_env(impl, episodes, paths[0])
     make_policy = make_policy_fn(load_params(paths[0]))
     n_steps = env._config.episode_length
 
@@ -107,7 +119,9 @@ def make_video(path, out, episodes=6, seed=1, label=None, fps=25):
     W, H, VIEW_W = 1280, 720, 880
     BG, FG, DIM, ACCENT, OK, BAD = (18, 20, 24), (236, 238, 241), (150, 156, 165), (86, 156, 255), (80, 200, 120), (235, 90, 80)
     fh, fb, fs, fbig = _font(19, True), _font(17), _font(14), _font(24, True)
-    env = make_env("jax", 1)
+    env = make_env("jax", 1, path)
+    humanoid = type(env).__name__ == "G1RingPickDrop"
+    bench_z = env_module(path)[0].BENCH_Z if humanoid else 0.0
     ref = load_params(path)
     policy = jax.jit(make_policy_fn(ref)(ref["params"], deterministic=True))
     reset, step = jax.jit(env.reset), jax.jit(env.step)
@@ -116,8 +130,12 @@ def make_video(path, out, episodes=6, seed=1, label=None, fps=25):
     renderer = mujoco.Renderer(m, H, VIEW_W)
     d = mujoco.MjData(m)
     cam = mujoco.MjvCamera()
-    cam.lookat[:] = (0.42, 0.0, 0.22)
-    cam.distance, cam.azimuth, cam.elevation = 1.75, 205, -24
+    if humanoid:
+        cam.lookat[:] = (0.25, -0.06, 0.88)
+        cam.distance, cam.azimuth, cam.elevation = 1.55, 145, -22
+    else:
+        cam.lookat[:] = (0.42, 0.0, 0.22)
+        cam.distance, cam.azimuth, cam.elevation = 1.75, 205, -24
     label = label or Path(path).parent.parent.name
     writer = imageio.get_writer(out, fps=fps, quality=8, macro_block_size=8)
     every = max(1, int(round(1 / (fps * env._config.ctrl_dt))))
@@ -128,14 +146,15 @@ def make_video(path, out, episodes=6, seed=1, label=None, fps=25):
         dr.rectangle([VIEW_W, 0, W, H], fill=BG)
         x, y = VIEW_W + 24, 20
         dr.text((x, y), f"Bearing ring pick and drop · {label}", font=fh, fill=FG); y += 26
-        dr.text((x, y), "Franka arm + parallel gripper (stand-in for G1 arm/hand)", font=fs, fill=DIM); y += 34
+        dr.text((x, y), "Unitree G1 humanoid, right arm + Dex3 hand" if humanoid else
+                "Franka arm + parallel gripper (stand-in for G1 arm/hand)", font=fs, fill=DIM); y += 34
         rows = [("PART", None), ("Outer ring, 6206 class", ""), ("Outside diameter", f"{R.RING_OD*1000:.0f} mm"),
                 ("Bore (raceway side)", f"{R.RING_ID*1000:.0f} mm"), ("Width", f"{R.RING_W*1000:.0f} mm"),
                 ("Mass", f"{R.RING_MASS:.2f} kg"), ("TASK", None),
                 ("Pick from", "tray (blue)"), ("Drop on", "fixture (orange)"),
                 ("Tray to fixture", f"{info['dist']*100:.0f} cm"), ("Place tolerance", f"{R.PLACE_TOL*1000:.0f} mm"),
                 ("LIVE", None), ("Episode", f"{ep + 1} / {episodes}"), ("Time", f"{t:.1f} s"),
-                ("Ring height", f"{info['z']*1000:.0f} mm"), ("Ring to fixture", f"{info['xy']*1000:.0f} mm"),
+                ("Ring above the table", f"{info['z']*1000:.0f} mm"), ("Ring to fixture", f"{info['xy']*1000:.0f} mm"),
                 ("Finger in bore", "yes" if info["bore"] else "no")]
         for k, v in rows:
             if v is None:
@@ -155,14 +174,15 @@ def make_video(path, out, episodes=6, seed=1, label=None, fps=25):
     for ep in range(episodes):
         s = reset(keys[ep])
         target = np.asarray(s.info["target_pos"])
-        start = np.asarray(s.data.xpos[env._obj_body])
+        body = env._ring if humanoid else env._obj_body
+        start = np.asarray(s.data.xpos[body])
         dist = float(np.linalg.norm(target[:2] - start[:2]))
         bore = False
         last = None
         for k in range(env._config.episode_length):
             act = policy(s.obs, jax.random.PRNGKey(0))[0]
             s = step(s, act)
-            ring = np.asarray(s.data.xpos[env._obj_body])
+            ring = np.asarray(s.data.xpos[body])
             bore = bore or bool(s.metrics["raceway"] > 0)
             out = {kk: bool(v) if v.dtype == bool else float(v) for kk, v in env.outcome(s.data, s.info).items()}
             lifted = float(s.info["lifted"]) > 0
@@ -175,7 +195,7 @@ def make_video(path, out, episodes=6, seed=1, label=None, fps=25):
                 renderer.update_scene(d, camera=cam)
                 img = Image.new("RGB", (W, H), BG)
                 img.paste(Image.fromarray(renderer.render()), (0, 0))
-                info = {"dist": dist, "z": ring[2], "xy": out["xy_err"], "bore": bore}
+                info = {"dist": dist, "z": ring[2] - bench_z - R.RING_W / 2, "xy": out["xy_err"], "bore": bore}
                 last = (img, (k + 1) * env._config.ctrl_dt, stage, info)
                 writer.append_data(np.asarray(panel(img.copy(), ep, *last[1:], "running")))
             if float(s.done) > 0:

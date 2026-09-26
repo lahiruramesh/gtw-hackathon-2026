@@ -200,7 +200,7 @@ def main():
         # 4. train, then rank every checkpoint on the GPU
         run = a.run
         grep = " ".join(f"-e {shlex.quote(n)}" for n in NOISE)
-        if task == "ring":
+        if task in ("ring", "g1ring"):
             rank = (f"PYTHONPATH=. .venv/bin/python -m g1pipe.ring_eval runs/{run}/ckpt_*.pkl runs/{run}/params.pkl "
                     f"--episodes 1024 --out runs/{run}/rank_ring.json > ~/{run}.rank.log 2>&1; touch ~/{run}.done")
             rank_files = ["rank_ring.json"]
@@ -257,7 +257,7 @@ def main():
         # 7. pull and report
         for f in ("params.pkl", "progress.csv", *rank_files):
             box.get(f"gtw/runs/{run}/{f}", local / f)
-        if task == "ring":
+        if task in ("ring", "g1ring"):
             log("ring pick-and-drop evaluation (1024 episodes each, best first):")
             for x in json.loads((local / "rank_ring.json").read_text())[:5]:
                 lo, hi = x["success_ci95"]
