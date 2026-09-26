@@ -3,6 +3,7 @@ from __future__ import annotations
 from pydantic import BaseModel
 
 from skf_api.modules.runs.schemas import RunDetail
+from skf_api.skills_registry.manifest import GateLevel
 
 
 class HeadlineRow(BaseModel):
@@ -13,6 +14,7 @@ class HeadlineRow(BaseModel):
 
 class GateRow(BaseModel):
     label: str
+    level: GateLevel
     values: list[bool | None]  # null: the run has no value for the criterion's metric (never measured)
 
 

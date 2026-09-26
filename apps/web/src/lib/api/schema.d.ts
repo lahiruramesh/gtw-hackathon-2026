@@ -985,6 +985,7 @@ export interface components {
       value: number;
       /** Label */
       label: string;
+      level: components["schemas"]["GateLevel"];
     };
     /** GateCriterionResult */
     GateCriterionResult: {
@@ -999,12 +1000,16 @@ export interface components {
       actual: number | null;
       /** Passed */
       passed: boolean;
+      /** @default release */
+      level: components["schemas"]["GateLevel"];
     };
     /** GateDecision */
     GateDecision: {
       verdict: components["schemas"]["GateVerdict"];
       /** Criteria */
       criteria: components["schemas"]["GateCriterionResult"][];
+      /** Levels */
+      levels: components["schemas"]["GateLevelResult"][];
       /**
        * Evaluated At
        * Format: date-time
@@ -1018,11 +1023,23 @@ export interface components {
       reviewed_at: string | null;
     };
     /** @enum {string} */
+    GateLevel: "simulation" | "release";
+    /** GateLevelResult */
+    GateLevelResult: {
+      level: components["schemas"]["GateLevel"];
+      verdict: components["schemas"]["GateVerdict"];
+      /** Passed */
+      passed: number;
+      /** Total */
+      total: number;
+    };
+    /** @enum {string} */
     GateOp: "<" | "<=" | ">" | ">=" | "==" | "!=";
     /** GateRow */
     GateRow: {
       /** Label */
       label: string;
+      level: components["schemas"]["GateLevel"];
       /** Values */
       values: (boolean | null)[];
     };
@@ -1267,6 +1284,7 @@ export interface components {
       finished_at: string | null;
       current_stage: components["schemas"]["CurrentStage"] | null;
       gate_verdict: components["schemas"]["GateVerdict"] | null;
+      simulation_verdict: components["schemas"]["GateVerdict"] | null;
       parent: components["schemas"]["RunParent"] | null;
       /** Imported */
       imported: boolean;
@@ -1376,6 +1394,7 @@ export interface components {
       finished_at: string | null;
       current_stage: components["schemas"]["CurrentStage"] | null;
       gate_verdict: components["schemas"]["GateVerdict"] | null;
+      simulation_verdict: components["schemas"]["GateVerdict"] | null;
       parent: components["schemas"]["RunParent"] | null;
       /** Imported */
       imported: boolean;

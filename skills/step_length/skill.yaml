@@ -46,11 +46,12 @@ pipeline:
     suite: e2e-stress
   - id: gate
     kind: gate
-    title: Release gate
+    title: Simulation and release gates
+# simulation: walks under nominal conditions in the unseen engine. release: the bar before hardware (docs/pipeline.md §6).
 gate:
-  - {metric: evaluate.grid_fall_rate, op: "==", value: 0, label: No falls on the command grid}
+  - {metric: evaluate.grid_fall_rate, op: "==", value: 0, label: No falls on the command grid, level: simulation}
+  - {metric: evaluate.stress.push_0.5mps.fall_rate, op: "==", value: 0, label: Survives 0.5 m/s pushes, level: simulation}
   - {metric: evaluate.grid_step_abs_err_cm, op: "<", value: 3, label: Step-length error < 3 cm (unseen engine)}
-  - {metric: evaluate.stress.push_0.5mps.fall_rate, op: "==", value: 0, label: Survives 0.5 m/s pushes}
   - {metric: evaluate.stress.latency_20ms.fall_rate, op: "==", value: 0, label: Survives 20 ms latency}
 headline:
   - {label: Step error, metric: evaluate.grid_step_abs_err_cm, unit: cm, digits: 1}

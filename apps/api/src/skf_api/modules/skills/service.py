@@ -153,7 +153,9 @@ async def skill_detail(session: AsyncSession, skill_id: str) -> schemas.SkillDet
             for s in manifest.pipeline
         ],
         gate=[
-            schemas.GateCriterion(metric=c.metric, op=c.op, value=c.value, label=c.display_label)
+            schemas.GateCriterion(
+                metric=c.metric, op=c.op, value=c.value, label=c.display_label, level=c.level
+            )
             for c in manifest.gate
         ],
         headline=[

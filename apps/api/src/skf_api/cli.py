@@ -1,4 +1,4 @@
-"""`skf-api` command line: migrate, sync-skills, seed-targets, import-history, openapi."""
+"""`skf-api` command line: migrate, sync-skills, seed-targets, import-history, regate, openapi."""
 
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ from alembic import command
 from skf_api.context import AppContext, build_context
 from skf_api.history.importer import HistoryImporter
 from skf_api.modules.compute.seeds import default_seeds, seed_targets
+from skf_api.modules.gates.service import regate
 from skf_api.modules.skills.service import sync_skills
 from skf_api.settings import get_settings
 
@@ -68,6 +69,16 @@ def _import_history(
     return run
 
 
+def _regate(run_names: list[str]) -> Callable[[AppContext], Awaitable[int]]:
+    async def run(ctx: AppContext) -> int:
+        async with ctx.db.session() as session:
+            for line in await regate(session, run_names):
+                print(line)
+        return 0
+
+    return run
+
+
 def _print_openapi() -> int:
     """The schema the web app's TypeScript types are generated from (`pnpm gen:api`); needs no services."""
     from skf_api.main import create_app
@@ -94,6 +105,10 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="upload every ckpt_*.pkl (default: only strict-tested ones)",
     )
+    again = commands.add_parser(
+        "regate", help="re-evaluate unreviewed gate decisions against the current skill manifests"
+    )
+    again.add_argument("runs", nargs="*", help="run names (default: every unreviewed run with a gate)")
     commands.add_parser("openapi", help="print the OpenAPI schema as JSON")
     args = parser.parse_args(argv)
 
@@ -106,6 +121,8 @@ def main(argv: list[str] | None = None) -> int:
         action = _sync_skills
     elif args.command == "seed-targets":
         action = _seed_targets(args.kaggle_username)
+    elif args.command == "regate":
+        action = _regate(args.runs)
     else:
         action = _import_history(args.results_dir.resolve(), args.runs_dir.resolve(), args.with_checkpoints)
     return asyncio.run(_with_context(action))

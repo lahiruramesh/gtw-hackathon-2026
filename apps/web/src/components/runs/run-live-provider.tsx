@@ -53,6 +53,7 @@ const LIVE_SUMMARY_FIELDS = [
   "status",
   "current_stage",
   "gate_verdict",
+  "simulation_verdict",
   "gpu_hours",
   "cost",
   "started_at",

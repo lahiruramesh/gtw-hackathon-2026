@@ -9,7 +9,7 @@ from skf_api.core.pagination import Page
 from skf_api.modules.refs import RunRef
 from skf_api.modules.runs.models import RunsOn, StageKind
 from skf_api.modules.skills.models import SkillCategory, SkillStatus
-from skf_api.skills_registry.manifest import GateOp
+from skf_api.skills_registry.manifest import GateLevel, GateOp
 
 
 class SkillSummary(BaseModel):
@@ -45,6 +45,7 @@ class GateCriterion(BaseModel):
     op: GateOp
     value: float
     label: str
+    level: GateLevel
 
 
 class Headline(BaseModel):

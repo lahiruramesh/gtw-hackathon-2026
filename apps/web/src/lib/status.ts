@@ -16,7 +16,7 @@ export const RUN_STATUS: Record<RunStatus, StatusStyle> = {
   awaiting_review: { label: "Awaiting review", tone: "warning" },
   approved: { label: "Approved", tone: "success" },
   rejected: { label: "Rejected", tone: "danger" },
-  gate_failed: { label: "Gate failed", tone: "danger" },
+  gate_failed: { label: "Release gate failed", tone: "danger" },
   failed: { label: "Failed", tone: "danger" },
   cancelled: { label: "Cancelled", tone: "neutral" },
 };

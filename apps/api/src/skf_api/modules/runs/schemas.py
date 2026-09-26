@@ -100,7 +100,8 @@ class RunSummary(BaseModel):
     started_at: datetime | None
     finished_at: datetime | None
     current_stage: CurrentStage | None
-    gate_verdict: GateVerdict | None
+    gate_verdict: GateVerdict | None  # release gate
+    simulation_verdict: GateVerdict | None  # None when the skill has no simulation-level criteria
     parent: RunParent | None  # warm-start source
     imported: bool
     gpu_hours: float

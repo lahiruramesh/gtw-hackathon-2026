@@ -36,7 +36,9 @@ async def compare(session: AsyncSession, principal: Principal, run_ids: list[uui
             )
             row.values[index] = h.value
         for c in run.gate.criteria if run.gate else []:
-            grow = gate.setdefault(c.label, GateRow(label=c.label, values=[None] * len(details)))
+            grow = gate.setdefault(
+                c.label, GateRow(label=c.label, level=c.level, values=[None] * len(details))
+            )
             grow.values[index] = None if c.actual is None else c.passed
 
     keys = await session.scalars(

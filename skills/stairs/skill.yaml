@@ -49,10 +49,11 @@ pipeline:
     suite: strict-96
   - id: gate
     kind: gate
-    title: Release gate
+    title: Simulation and release gates
+# simulation: crosses held-out stairs reliably. release: the bar before hardware (docs/pipeline.md §6).
 gate:
-  - {metric: evaluate.crossed_rate, op: ">=", value: 0.9, label: Crosses at least 90 % of held-out staircases}
-  - {metric: evaluate.fell, op: "<=", value: 5, label: At most 5 falls in the strict test}
+  - {metric: evaluate.crossed_rate, op: ">=", value: 0.9, label: Crosses at least 90 % of held-out staircases, level: simulation}
+  - {metric: evaluate.fell, op: "<=", value: 5, label: At most 5 falls in the strict test, level: simulation}
   - {metric: evaluate.certified_cm, op: ">=", value: 10, label: Certified step height of at least 10 cm}
 headline:
   - {label: Crossed, metric: evaluate.crossed_rate, unit: "%", scale: 100, digits: 0}

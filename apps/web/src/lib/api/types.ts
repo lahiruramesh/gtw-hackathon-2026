@@ -22,6 +22,8 @@ export type HealthStatus = Schemas["TargetHealth"]["status"];
 export type Decision = Schemas["Decision"]["decision"];
 export type ArtifactKind = Schemas["ArtifactKind"];
 export type GateOp = Schemas["GateOp"];
+export type GateLevel = Schemas["GateLevel"];
+export type GateLevelResult = Schemas["GateLevelResult"];
 export type RunStatus = Schemas["RunStatus"];
 export type StageStatus = Schemas["StageStatus"];
 

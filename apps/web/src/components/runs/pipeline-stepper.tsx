@@ -3,6 +3,7 @@
 import { CheckIcon, CircleIcon, ExternalLinkIcon, LoaderIcon, MinusIcon, XIcon, type LucideIcon } from "lucide-react";
 
 import { StatusBadge } from "@/components/common/status-badge";
+import { GateLevelBadges } from "@/components/runs/gate-level-badges";
 import { useRunLive } from "@/components/runs/run-live-provider";
 import { Progress } from "@/components/ui/progress";
 import { useNow } from "@/hooks/use-now";
@@ -30,7 +31,14 @@ const ICON_TONES: Partial<Record<StageStatus, string>> = {
   collecting: "bg-status-info/15 text-status-info",
 };
 
-function StageStep({ stage, gateVerdict, now }: { stage: Stage; gateVerdict: GateVerdict | null; now: number | null }) {
+interface StageStepProps {
+  stage: Stage;
+  gateVerdict: GateVerdict | null;
+  simulationVerdict: GateVerdict | null;
+  now: number | null;
+}
+
+function StageStep({ stage, gateVerdict, simulationVerdict, now }: StageStepProps) {
   const verdict = gateStageVerdict(stage, gateVerdict);
   const shownStatus: StageStatus = verdict === "fail" ? "failed" : stage.status;
   const Icon = STATUS_ICONS[shownStatus] ?? CircleIcon;
@@ -58,8 +66,8 @@ function StageStep({ stage, gateVerdict, now }: { stage: Stage; gateVerdict: Gat
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs">
           {verdict ? (
-            <span title="The gate check ran; this is its verdict">
-              <StatusBadge domain="gate" status={verdict} />
+            <span title="The gate check ran; these are its verdicts">
+              <GateLevelBadges simulation={simulationVerdict} release={verdict} />
             </span>
           ) : (
             <StatusBadge domain="stage" status={stage.status} />
@@ -105,7 +113,13 @@ export function PipelineStepper() {
   return (
     <ol className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3" aria-label="Pipeline stages">
       {run.stages.map((stage) => (
-        <StageStep key={stage.id} stage={stage} gateVerdict={run.gate_verdict} now={now} />
+        <StageStep
+          key={stage.id}
+          stage={stage}
+          gateVerdict={run.gate_verdict}
+          simulationVerdict={run.simulation_verdict}
+          now={now}
+        />
       ))}
     </ol>
   );

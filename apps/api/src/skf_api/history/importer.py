@@ -30,7 +30,7 @@ from skf_api.history.effort_log import EffortLog
 from skf_api.modules.artifacts.models import Artifact, artifact_key
 from skf_api.modules.audit import service as audit
 from skf_api.modules.compute.models import ComputeTarget
-from skf_api.modules.gates.service import evaluate_gate
+from skf_api.modules.gates.service import describe, evaluate_gate
 from skf_api.modules.ingest.progress_csv import read_progress_csv
 from skf_api.modules.ingest.service import IngestService, Point
 from skf_api.modules.runs import transitions
@@ -161,8 +161,7 @@ class HistoryImporter:
 
         run.status = RunStatus.RUNNING  # evaluate_gate sets the final status
         decision = await evaluate_gate(session, run, manifest)
-        passed = sum(c["passed"] for c in decision.criteria)
-        gate.message = f"{decision.verdict.value}: {passed}/{len(decision.criteria)} criteria met"
+        gate.message = describe(decision.criteria)
         await session.commit()
         self._echo(
             f"imported {exp.name}: {len(checkpoint_results)} checkpoint evaluations, "

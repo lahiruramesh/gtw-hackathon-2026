@@ -17,7 +17,7 @@ from skf_api.backends.base import BackendError, ExternalRef
 from skf_api.context import AppContext
 from skf_api.core.db import utcnow
 from skf_api.modules.compute.models import ComputeTarget
-from skf_api.modules.gates.service import evaluate_gate
+from skf_api.modules.gates.service import describe, evaluate_gate
 from skf_api.modules.runs import transitions
 from skf_api.modules.runs.models import (
     ACTIVE_STAGE_STATUSES,
@@ -70,8 +70,7 @@ async def advance_run(ctx: AppContext, run_id: uuid.UUID) -> None:
                 _, manifest = await get_skill(session, run.skill_id)
                 nxt.started_at = utcnow()
                 decision = await evaluate_gate(session, run, manifest)
-                passed = sum(c["passed"] for c in decision.criteria)
-                nxt.message = f"{decision.verdict.value}: {passed}/{len(decision.criteria)} criteria met"
+                nxt.message = describe(decision.criteria)
                 transitions.finish_stage(nxt, StageStatus.SUCCEEDED)
             else:
                 nxt.status = StageStatus.QUEUED

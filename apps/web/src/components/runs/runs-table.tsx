@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { DateTime } from "@/components/common/date-time";
-import { StatusBadge } from "@/components/common/status-badge";
+import { GateLevelBadges } from "@/components/runs/gate-level-badges";
 import { RunStatusCell } from "@/components/runs/run-status-cell";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -35,7 +35,7 @@ export function RunsTable({ runs, headlineColumns, compact = false }: RunsTableP
             <TableHead className={MEDIUM_UP}>Created</TableHead>
             <TableHead className={cn("text-right", SMALL_UP)}>GPU-h</TableHead>
             {!compact && <TableHead className={cn("text-right", LARGE_ONLY)}>Cost</TableHead>}
-            <TableHead>Gate</TableHead>
+            <TableHead>Gates</TableHead>
             {headlineColumns ? (
               headlineColumns.map((label) => (
                 <TableHead key={label} className={cn("text-right", MEDIUM_UP)}>
@@ -81,11 +81,7 @@ export function RunsTable({ runs, headlineColumns, compact = false }: RunsTableP
               <TableCell className={cn("text-right", SMALL_UP)}>{formatNumber(run.gpu_hours, 1)}</TableCell>
               {!compact && <TableCell className={cn("text-right", LARGE_ONLY)}>{formatCost(run.cost)}</TableCell>}
               <TableCell>
-                {run.gate_verdict ? (
-                  <StatusBadge domain="gate" status={run.gate_verdict} />
-                ) : (
-                  <span className="text-muted-foreground">—</span>
-                )}
+                <GateLevelBadges simulation={run.simulation_verdict} release={run.gate_verdict} />
               </TableCell>
               {headlineColumns ? (
                 headlineColumns.map((label) => {

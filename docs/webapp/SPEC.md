@@ -287,7 +287,15 @@ Stairs skill (`skills/stairs/skill.yaml`): `id: g1-stairs`, train argv `--task s
 (same rule as `g1pipe.stairs_eval.certified_height`: GATE_TILT_DEG 25, GATE_PELVIS_M 0.55), `by_height` list;
 gate: `crossed_rate >= 0.9`, `fell <= 5`, `certified_cm >= 10`. Headline: Crossed (%), Falls, Certified height (cm).
 
-## 8. Release gate
+## 8. Simulation and release gates
+
+Each manifest criterion has a `level`: `simulation` (the policy works in simulation under nominal conditions) or
+`release` (default; the bar before gantry and floor trials, docs/pipeline.md §6). The simulation gate passes when its
+criteria pass; the **release gate needs every criterion**, simulation ones included, and is the run's verdict.
+`GateDecision.levels` gives both verdicts with passed/total counts; `RunSummary.simulation_verdict` sits next to
+`gate_verdict` (the release verdict). Decisions stored before levels existed count as release only.
+`skf-api regate [RUN...]` re-evaluates unreviewed decisions (and the gate stage's title and message) after gate
+criteria change; approved or rejected decisions are left alone.
 
 `gates/service.py::evaluate_gate(run)`: for each criterion resolve the metric (latest evaluation of that stage key),
 compare with `op` (`< <= > >= == !=`, floats compared with 1e-9 tolerance for `==`). Missing metric → `passed=false,
@@ -313,7 +321,7 @@ SkillDetail   SkillSummary + {description, params_schema: JSONSchema (checkpoint
                gate: GateCriterion[], headline: Headline[], metrics: {keys: string[], primary: string}}
 Preset        {id, name, description|null, params: object}
 PipelineStageDef {id, kind, title, runs_on}
-GateCriterion {metric, op: "<"|"<="|">"|">="|"=="|"!=", value, label}
+GateCriterion {metric, op: "<"|"<="|">"|">="|"=="|"!=", value, label, level: "simulation"|"release"}
 Headline      {label, metric, unit|null, scale|null, digits|null}
 ComputeTarget {id, name, kind, description|null, enabled, config: object, has_secret: bool, gpu_label|null,
                steps_per_second, overhead_minutes, cost_per_gpu_hour, weekly_quota_gpu_hours|null,

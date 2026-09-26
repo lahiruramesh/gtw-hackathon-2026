@@ -89,6 +89,9 @@ class StageDef(_Strict):
 
 
 type GateOp = Literal["<", "<=", ">", ">=", "==", "!="]
+# simulation: the policy works in simulation under nominal conditions (first gate of docs/pipeline.md §6).
+# release: the hardware release bar; passing it needs every criterion, the simulation ones included.
+type GateLevel = Literal["simulation", "release"]
 
 
 class GateCriterion(_Strict):
@@ -96,6 +99,7 @@ class GateCriterion(_Strict):
     op: GateOp
     value: float
     label: str | None = None
+    level: GateLevel = "release"
 
     @property
     def display_label(self) -> str:

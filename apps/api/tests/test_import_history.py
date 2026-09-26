@@ -16,6 +16,7 @@ from skf_api.context import AppContext
 from skf_api.history.importer import HistoryImporter
 from skf_api.modules.artifacts.models import Artifact
 from skf_api.modules.compute.seeds import AWS_L40S_COST_PER_GPU_HOUR
+from skf_api.modules.gates.service import regate
 from skf_api.modules.runs.models import Evaluation, Run, Stage
 from skf_api.settings import REPO_ROOT
 
@@ -189,3 +190,13 @@ async def test_import_history_certified_run_keeps_its_card(
     artifacts = (await client.get(f"/api/v1/runs/{v14}/artifacts", headers=auth("viewer"))).json()
     names = {a["name"] for a in artifacts}
     assert {"policy_card.md", "crossing.mp4", "strict.json", "params.pkl"} <= names
+
+
+async def test_regate_reports_both_gate_levels(ctx: AppContext, targets: dict[str, uuid.UUID]) -> None:
+    await import_history(ctx)
+    async with ctx.db.session() as session:
+        lines = set(await regate(session))
+    assert "g1-steplength-v1: simulation pass (2/2), release fail (2/4)" in lines
+    assert "g1-steplength-nodr: simulation fail (1/2), release fail (1/4)" in lines
+    assert "g1-stairs-v14: simulation pass (2/2), release fail (2/3)" in lines
+    assert "g1-stairs-v9: simulation fail (0/2), release fail (0/3)" in lines  # final policy never tested

@@ -125,7 +125,7 @@ function Overview({ skill }: { skill: SkillDetail }) {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm">Release gate</CardTitle>
+          <CardTitle className="text-sm">Gates</CardTitle>
           <CardDescription>All criteria must pass before a safety reviewer can approve a release.</CardDescription>
         </CardHeader>
         <CardContent>

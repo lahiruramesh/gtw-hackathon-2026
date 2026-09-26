@@ -3,12 +3,14 @@ import { CheckIcon, ShieldCheckIcon, XIcon } from "lucide-react";
 import { DateTime } from "@/components/common/date-time";
 import { EmptyState } from "@/components/common/empty-state";
 import { StatusBadge } from "@/components/common/status-badge";
+import { GateLevelBadges } from "@/components/runs/gate-level-badges";
 import { ReleaseReview } from "@/components/runs/release-review";
-import { CriterionLabel, GateCriteriaTable } from "@/components/skills/gate-criteria-table";
+import { CriterionLabel, GateCriteriaTable, LevelHeaderRow } from "@/components/skills/gate-criteria-table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { GateCriterion, RunDetail } from "@/lib/api/types";
 import { formatMetric, formatValue } from "@/lib/format";
+import { groupByLevel } from "@/lib/gate-levels";
 
 interface GatePanelProps {
   run: RunDetail;
@@ -20,9 +22,7 @@ export function GatePanel({ run, criteria, viewerId }: GatePanelProps) {
   const gate = run.gate;
   if (!gate) {
     if (criteria.length === 0) {
-      return (
-        <EmptyState icon={ShieldCheckIcon} title="No release gate" description="This skill defines no gate criteria." />
-      );
+      return <EmptyState icon={ShieldCheckIcon} title="No gates" description="This skill defines no gate criteria." />;
     }
     return (
       <Card>
@@ -38,12 +38,17 @@ export function GatePanel({ run, criteria, viewerId }: GatePanelProps) {
   }
 
   const canReview = run.permissions.can_review && gate.review_status === "pending";
+  const levels = new Map(gate.levels.map((result) => [result.level, result]));
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2 text-sm">
-            Verdict <StatusBadge domain="gate" status={gate.verdict} />
+            <GateLevelBadges
+              long
+              simulation={levels.get("simulation")?.verdict ?? null}
+              release={levels.get("release")?.verdict ?? null}
+            />
             <StatusBadge domain="review" status={gate.review_status} />
           </CardTitle>
           <CardDescription>
@@ -64,30 +69,43 @@ export function GatePanel({ run, criteria, viewerId }: GatePanelProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {gate.criteria.map((criterion) => (
-                <TableRow key={criterion.metric}>
-                  <TableCell className="align-top">
-                    {criterion.passed ? (
-                      <CheckIcon className="size-4 text-status-success" aria-label="Passed" />
-                    ) : (
-                      <XIcon className="size-4 text-status-danger" aria-label="Failed" />
+              {groupByLevel(gate.criteria).map(({ level, items }) => {
+                const result = levels.get(level);
+                return [
+                  <LevelHeaderRow key={level} level={level} colSpan={4}>
+                    {result && (
+                      <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                        {result.passed} of {result.total} passed
+                        <StatusBadge domain="gate" status={result.verdict} />
+                      </span>
                     )}
-                  </TableCell>
-                  <TableCell>
-                    <CriterionLabel criterion={criterion} />
-                  </TableCell>
-                  <TableCell className="text-right align-top font-mono text-xs whitespace-nowrap">
-                    {criterion.actual === null ? (
-                      <span className="text-status-danger">not measured</span>
-                    ) : (
-                      formatMetric(criterion.actual)
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right align-top font-mono text-xs whitespace-nowrap">
-                    {criterion.op} {formatValue(criterion.value)}
-                  </TableCell>
-                </TableRow>
-              ))}
+                  </LevelHeaderRow>,
+                  ...items.map((criterion) => (
+                    <TableRow key={criterion.metric}>
+                      <TableCell className="align-top">
+                        {criterion.passed ? (
+                          <CheckIcon className="size-4 text-status-success" aria-label="Passed" />
+                        ) : (
+                          <XIcon className="size-4 text-status-danger" aria-label="Failed" />
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <CriterionLabel criterion={criterion} />
+                      </TableCell>
+                      <TableCell className="text-right align-top font-mono text-xs whitespace-nowrap">
+                        {criterion.actual === null ? (
+                          <span className="text-status-danger">not measured</span>
+                        ) : (
+                          formatMetric(criterion.actual)
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right align-top font-mono text-xs whitespace-nowrap">
+                        {criterion.op} {formatValue(criterion.value)}
+                      </TableCell>
+                    </TableRow>
+                  )),
+                ];
+              })}
             </TableBody>
           </Table>
         </CardContent>

@@ -70,7 +70,7 @@ EXPERIMENTS: tuple[Experiment, ...] = (
         target=AWS_L40S,
         preset_id=None,
         effort_match="AWS g1-stairs-v9",
-        results=StairsResults(9),
+        results=StairsResults(9, video="stairs_v9.mp4"),
         notes="Sole spheres (6 contacts per foot) and leg_action_scale 1.0; 500M steps in 85 min on an L40S.",
     ),
     Experiment(

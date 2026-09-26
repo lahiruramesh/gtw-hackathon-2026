@@ -18,7 +18,7 @@ from skf_api.modules.compute.models import ComputeTarget
 from skf_api.modules.gates import schemas as gate_schemas
 from skf_api.modules.gates.metrics import resolve_metric
 from skf_api.modules.gates.models import GateDecision
-from skf_api.modules.gates.service import Summaries, latest_summaries
+from skf_api.modules.gates.service import Summaries, latest_summaries, level_results, simulation_verdict
 from skf_api.modules.refs import RunRef, UserRef
 from skf_api.modules.runs import policy, schemas
 from skf_api.modules.runs.models import Run, Stage, StageStatus
@@ -68,6 +68,7 @@ def gate_schema(decision: GateDecision) -> gate_schemas.GateDecision:
     return gate_schemas.GateDecision(
         verdict=decision.verdict,
         criteria=[gate_schemas.GateCriterionResult.model_validate(c) for c in decision.criteria],
+        levels=[gate_schemas.GateLevelResult.model_validate(r) for r in level_results(decision.criteria)],
         evaluated_at=decision.evaluated_at,
         review_status=decision.review_status,
         reviewer=UserRef(id=decision.reviewer_id, name=decision.reviewer_name or decision.reviewer_id)
@@ -165,6 +166,7 @@ def _summary(run: Run, rel: _Related) -> schemas.RunSummary:
         if current
         else None,
         gate_verdict=gate.verdict if gate else None,
+        simulation_verdict=simulation_verdict(gate.criteria) if gate else None,
         parent=_parent(run, rel),
         imported=run.imported,
         gpu_hours=round(sum(s.gpu_seconds for s in all_stages) / 3600.0, 3),

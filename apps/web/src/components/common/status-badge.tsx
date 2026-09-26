@@ -21,11 +21,13 @@ const DOT_CLASSES: Record<StatusTone, string> = {
 interface StatusBadgeProps {
   domain: StatusDomain;
   status: string;
+  /** Names what the status belongs to, e.g. "Sim" gives "Sim passed". */
+  prefix?: string;
   className?: string;
 }
 
 /** The single mapping from run, stage, gate, review and health states to colour and label. */
-export function StatusBadge({ domain, status, className }: StatusBadgeProps) {
+export function StatusBadge({ domain, status, prefix, className }: StatusBadgeProps) {
   const style = statusStyle(domain, status);
   return (
     <span
@@ -46,7 +48,7 @@ export function StatusBadge({ domain, status, className }: StatusBadgeProps) {
         )}
         <span className={cn("relative inline-flex size-1.5 rounded-full", DOT_CLASSES[style.tone])} />
       </span>
-      {style.label}
+      {prefix ? `${prefix} ${style.label.toLowerCase()}` : style.label}
     </span>
   );
 }

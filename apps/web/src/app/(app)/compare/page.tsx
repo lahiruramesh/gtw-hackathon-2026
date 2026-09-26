@@ -18,6 +18,8 @@ import type { CompareResponse, RunPage } from "@/lib/api/types";
 import { formatHeadline } from "@/lib/headline";
 import { requireViewer } from "@/lib/session";
 import { can } from "@/lib/viewer";
+import { LevelHeaderRow } from "@/components/skills/gate-criteria-table";
+import { groupByLevel } from "@/lib/gate-levels";
 
 export const metadata: Metadata = { title: "Compare" };
 
@@ -72,7 +74,7 @@ function Comparison({ data }: { data: CompareResponse }) {
       {data.gate_rows.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Release gate</CardTitle>
+            <CardTitle className="text-sm">Gates</CardTitle>
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <Table>
@@ -83,27 +85,30 @@ function Comparison({ data }: { data: CompareResponse }) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.gate_rows.map((row) => (
-                  <TableRow key={row.label}>
-                    <TableCell>{row.label}</TableCell>
-                    {row.values.map((passed, index) => (
-                      <TableCell key={data.runs[index]?.id ?? index} className="text-right">
-                        {passed === null ? (
-                          <span
-                            className="inline-flex items-center gap-1 text-xs text-muted-foreground"
-                            title="This run has no value for the criterion's metric"
-                          >
-                            <MinusIcon className="size-4" aria-hidden /> not measured
-                          </span>
-                        ) : passed ? (
-                          <CheckIcon className="ml-auto size-4 text-status-success" aria-label="Passed" />
-                        ) : (
-                          <XIcon className="ml-auto size-4 text-status-danger" aria-label="Failed" />
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
+                {groupByLevel(data.gate_rows).map(({ level, items }) => [
+                  <LevelHeaderRow key={level} level={level} colSpan={data.runs.length + 1} />,
+                  ...items.map((row) => (
+                    <TableRow key={row.label}>
+                      <TableCell>{row.label}</TableCell>
+                      {row.values.map((passed, index) => (
+                        <TableCell key={data.runs[index]?.id ?? index} className="text-right">
+                          {passed === null ? (
+                            <span
+                              className="inline-flex items-center gap-1 text-xs text-muted-foreground"
+                              title="This run has no value for the criterion's metric"
+                            >
+                              <MinusIcon className="size-4" aria-hidden /> not measured
+                            </span>
+                          ) : passed ? (
+                            <CheckIcon className="ml-auto size-4 text-status-success" aria-label="Passed" />
+                          ) : (
+                            <XIcon className="ml-auto size-4 text-status-danger" aria-label="Failed" />
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  )),
+                ])}
               </TableBody>
             </Table>
           </CardContent>
